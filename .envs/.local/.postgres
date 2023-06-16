@@ -1,7 +1,7 @@
 # PostgreSQL
 # ------------------------------------------------------------------------------
-POSTGRES_HOST=postgres
+POSTGRES_HOST=host.docker.internal
 POSTGRES_PORT=5432
-POSTGRES_DB=flash
-POSTGRES_USER=hkzQeWedcPCiuNYPdbPmXvjiLETCLaik
-POSTGRES_PASSWORD=c2lMdw3aiy5u3ykE9jHJDSO8gb7NxdtVKCO8YUxhywSQD9gofHB2qmpkmUxHVQqH
+POSTGRES_DB=calonews
+POSTGRES_USER=calo
+POSTGRES_PASSWORD=calo

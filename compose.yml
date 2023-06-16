@@ -12,7 +12,7 @@ services:
     image: flash_local_django
     container_name: flash_local_django
     depends_on:
-      - postgres
+#      - postgres
       - redis
     volumes:
       - .:/app:z
@@ -25,14 +25,14 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
-  postgres:
-    image: postgres:15.1
-    container_name: flash_local_postgres
-    volumes:
-      - flash_local_postgres_data:/var/lib/postgresql/data
-      - flash_local_postgres_data_backups:/backups
-    env_file:
-      - ./.envs/.local/.postgres
+#  postgres:
+#    image: postgres:15.1
+#    container_name: flash_local_postgres
+#    volumes:
+#      - flash_local_postgres_data:/var/lib/postgresql/data
+#      - flash_local_postgres_data_backups:/backups
+#    env_file:
+#      - ./.envs/.local/.postgres
 
   docs:
     image: flash_local_docs
@@ -60,7 +60,7 @@ services:
     container_name: flash_local_celeryworker
     depends_on:
       - redis
-      - postgres
+#      - postgres
     ports: []
     command: /start-celeryworker
 
@@ -70,7 +70,7 @@ services:
     container_name: flash_local_celerybeat
     depends_on:
       - redis
-      - postgres
+#      - postgres
     ports: []
     command: /start-celerybeat
 
