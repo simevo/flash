@@ -7,3 +7,9 @@ class ArticleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Articles
         exclude = ["content", "content_original"]
+
+
+class ArticleSerializerFull(serializers.ModelSerializer):
+    class Meta:
+        model = Articles
+        fields = "__all__"
