@@ -22,12 +22,11 @@ services:
     ports:
       - "8000:8000"
     command: /start
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   postgres:
-    build:
-      context: .
-      dockerfile: ./compose/production/postgres/Dockerfile
-    image: flash_production_postgres
+    image: postgres:15.1
     container_name: flash_local_postgres
     volumes:
       - flash_local_postgres_data:/var/lib/postgresql/data
