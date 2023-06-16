@@ -11,11 +11,7 @@ from django.urls import reverse
 from flash.users.forms import UserAdminChangeForm
 from flash.users.models import User
 from flash.users.tests.factories import UserFactory
-from flash.users.views import (
-    UserRedirectView,
-    UserUpdateView,
-    user_detail_view,
-)
+from flash.users.views import UserRedirectView, UserUpdateView, user_detail_view
 
 pytestmark = pytest.mark.django_db
 
