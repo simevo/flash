@@ -10,7 +10,7 @@ from news.models import Articles
 class ArticleListView(ListView):
     paginate_by = 12
     model = Articles
-    filter = None
+    queryset = Articles.objects.filter(articlesdata__views__gt="0")
     ordering = "-id"
 
 

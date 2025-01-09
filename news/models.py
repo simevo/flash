@@ -27,6 +27,7 @@ class Articles(models.Model):
 
 
 class ArticlesData(models.Model):
+    id = models.OneToOneField("Articles", models.DO_NOTHING, primary_key=True, db_column="id")
     feed_id = models.IntegerField(blank=True, null=True)
     epoch = models.FloatField(blank=True, null=True)
     views = models.BigIntegerField(blank=True, null=True)
