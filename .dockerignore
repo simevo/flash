@@ -9,4 +9,5 @@
 .travis.yml
 venv
 .git
-.venv
+.envs/
+.venv/

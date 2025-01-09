@@ -1,0 +1,8 @@
+{
+  "python.analysis.typeCheckingMode": "basic",
+  "files.exclude": {
+    ".mypy_cache": true,
+    ".venv": true,
+    "**/__pycache__": true
+  }
+}

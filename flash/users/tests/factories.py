@@ -1,18 +1,20 @@
 from collections.abc import Sequence
 from typing import Any
 
-from django.contrib.auth import get_user_model
-from factory import Faker, post_generation
+from factory import Faker
+from factory import post_generation
 from factory.django import DjangoModelFactory
 
+from flash.users.models import User
 
-class UserFactory(DjangoModelFactory):
+
+class UserFactory(DjangoModelFactory[User]):
     username = Faker("user_name")
     email = Faker("email")
     name = Faker("name")
 
     @post_generation
-    def password(self, create: bool, extracted: Sequence[Any], **kwargs):
+    def password(self, create: bool, extracted: Sequence[Any], **kwargs):  # noqa: FBT001
         password = (
             extracted
             if extracted
@@ -27,6 +29,13 @@ class UserFactory(DjangoModelFactory):
         )
         self.set_password(password)
 
+    @classmethod
+    def _after_postgeneration(cls, instance, create, results=None):
+        """Save again the instance if creating and at least one hook ran."""
+        if create and results and not cls._meta.skip_postgeneration_save:
+            # Some post-generation hooks ran, and may have modified us.
+            instance.save()
+
     class Meta:
-        model = get_user_model()
+        model = User
         django_get_or_create = ["username"]

@@ -1,0 +1,56 @@
+volumes:
+  flash_local_postgres_data: {}
+  flash_local_postgres_data_backups: {}
+  flash_local_redis_data: {}
+
+services:
+  django: &django
+    build:
+      context: .
+      dockerfile: ./compose/local/django/Dockerfile
+    image: flash_local_django
+    container_name: flash_local_django
+    depends_on:
+      - redis
+    volumes:
+      - .:/app:z
+    env_file:
+      - ./.envs/.local/.django
+      - ./.envs/.local/.postgres
+    ports:
+      - '8000:8000'
+    command: /start
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  redis:
+    image: docker.io/redis:6
+    container_name: flash_local_redis
+    volumes:
+      - flash_local_redis_data:/data
+
+  celeryworker:
+    <<: *django
+    image: flash_local_celeryworker
+    container_name: flash_local_celeryworker
+    depends_on:
+      - redis
+    ports: []
+    command: /start-celeryworker
+
+  celerybeat:
+    <<: *django
+    image: flash_local_celerybeat
+    container_name: flash_local_celerybeat
+    depends_on:
+      - redis
+    ports: []
+    command: /start-celerybeat
+
+  flower:
+    <<: *django
+    image: flash_local_flower
+    container_name: flash_local_flower
+    ports:
+      - '5555:5555'
+    command: /start-flower
