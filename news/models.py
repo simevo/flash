@@ -17,9 +17,9 @@ class Articles(models.Model):
     content = models.TextField(blank=True, null=True)
     language = models.TextField(blank=True, null=True)
     url = models.TextField(unique=True, blank=True, null=True)
-    comments = models.IntegerField(blank=True, null=True)
+    # comments = models.IntegerField(blank=True, null=True)
     feed = models.ForeignKey("Feeds", models.DO_NOTHING, blank=True, null=True)
-    topic_id = models.IntegerField(blank=True, null=True)
+    # topic_id = models.IntegerField(blank=True, null=True)
 
     class Meta:
         managed = False
