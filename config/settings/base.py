@@ -28,12 +28,13 @@ TIME_ZONE = "UTC"
 # https://docs.djangoproject.com/en/dev/ref/settings/#language-code
 LANGUAGE_CODE = "en-us"
 # https://docs.djangoproject.com/en/dev/ref/settings/#languages
-# from django.utils.translation import gettext_lazy as _
-# LANGUAGES = [
-#     ('en', _('English')),
-#     ('fr-fr', _('French')),
-#     ('pt-br', _('Portuguese')),
-# ]
+from django.utils.translation import gettext_lazy as _
+LANGUAGES = [
+    ('en', _('English')),
+    ('fr-fr', _('French')),
+    ('it-it', _('Italian')),
+    ('pt-br', _('Portuguese')),
+]
 # https://docs.djangoproject.com/en/dev/ref/settings/#site-id
 SITE_ID = 1
 # https://docs.djangoproject.com/en/dev/ref/settings/#use-i18n
@@ -198,6 +199,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.template.context_processors.i18n",
                 "django.template.context_processors.media",
+                "django.template.context_processors.request",
                 "django.template.context_processors.static",
                 "django.template.context_processors.tz",
                 "django.contrib.messages.context_processors.messages",

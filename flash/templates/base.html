@@ -1,5 +1,7 @@
 
-{% load static i18n %}<!DOCTYPE html>
+{% load static %}
+{% load i18n %}
+<!DOCTYPE html>
 {% get_current_language as LANGUAGE_CODE %}
 <html lang="{{ LANGUAGE_CODE }}">
   <head>
@@ -50,6 +52,8 @@
 
 
 {% endblock javascript %}
+{% block meta %}
+{% endblock meta %}
 </head>
 <body class="{% block bodyclass %}{% endblock bodyclass %}">
   {% block body %}
@@ -111,6 +115,12 @@
       </main>
     {% endblock main %}
 
+    <footer>
+      <hr />
+      <div class="container-fluid text-center">
+        {% trans "Powered by" %} <a href="https://gitlab.com/simevo/flash" target="_blank">flash</a> - {% trans "An open-source news platform with aggregation and ranking" %}.
+      </div>
+    </footer>
   {% endblock body %}
   {% block inline_javascript %}
     {% comment %}

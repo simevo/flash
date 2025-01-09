@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% load static %}
+{% load i18n %}
 
 {% block title %}
   User:
@@ -36,6 +37,9 @@
       </div>
     </div>
     <!-- End Action buttons -->
+
+    {# URL provided by django-allauth/account/urls.py #}
+    <a href="{% url 'account_logout' %}">{% translate "Sign Out" %}</a>
   {% endif %}
 </div>
 {% endblock content %}

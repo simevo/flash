@@ -1,8 +1,25 @@
 {% extends "base.html" %}
 
+{% load i18n %}
+
 {% block title %}
   New details {{ object.id }}
 {% endblock title %}
+
+{% block meta %}
+<meta property="og:title" content="{{ object.title }}">
+<meta property="og:description" content="{{ excerpt }} ...">
+<meta property="og:type" content="article">
+<meta property="og:image" content="https://notizie.calomelano.it/icons/{{ object.feed.icon }}">
+<meta property="og:url" content="https://notizie.calomelano.it/article/{{ object.id }}">
+<meta property="og:site_name" content="flash">
+<script type="text/javascript">
+  function linkClick() {
+    window.location.href = "?redirect=true";
+    return false;
+  }
+</script>
+{% endblock meta %}
 
 {% block content %}
 <div class="container my-3">
@@ -22,7 +39,7 @@
       </div>
       <div class="text-muted float-end">
         <small>
-          {{ object.stamp | timesince }} fa ({{ object.stamp | date:"Y-m-d H:i" }})
+          {{ object.stamp | timesince }} {% trans "ago" %} ({{ object.stamp | date:"Y-m-d H:i" }})
         </small>
       </div>
     </div>
@@ -50,9 +67,15 @@
     </div>
   </div>
   <div class="row">
+    {% if object.author %}
+      <div class="col-md-8 offset-md-2 text-muted">
+        <span class="text-muted"> {% trans "By" %} </span>
+        <span>{{ object.author }}</span>
+      </div>
+    {% endif %}
     <div class="col-md-8 offset-md-2 text-muted">
-      <small>Articolo originale: </small>
-      <a target="_blank" href="{{ object.url }}">
+      <small>{% trans "Source link" %}: </small>
+      <a onclick="linkClick()" href="#" title="{{ object.url }}">
         <small style="word-wrap: break-word">{{ object.url }}</small>
       </a>
       <br />
@@ -65,9 +88,9 @@
     </div>
   </div>
   <div class="alert alert-info mt-5 text-center" role="alert">
-    <h4 class="alert-heading">Attenzione!</h4>
+    <h4 class="alert-heading">{% trans "Beware!" %}</h4>
     <p>
-      Per accedere al contenuto completo clicca sul link all'articolo originale oppure effettua il <a href="/res/" title="Login">login</a>.
+      {% trans "This is a preview of the article. To access the full text click on the <b>source link</b> or <a href='/accounts/login/' title='Login'>sign in</a>" %}.
     </p>
   </div>
 </div>

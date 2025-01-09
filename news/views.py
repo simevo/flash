@@ -1,10 +1,11 @@
 import html
 import re
 
+from django.shortcuts import redirect
 from django.views.generic import ListView
 from django.views.generic.detail import DetailView
 
-from news.models import Articles
+from news.models import Articles, ArticlesData
 
 
 class ArticleListView(ListView):
@@ -18,6 +19,19 @@ class ArticleDetailView(DetailView):
     model = Articles
     pk_url_kwarg = "id"
 
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        context = self.get_context_data(object=self.object)
+        if request.GET.get("redirect"):
+            article = context["object"]
+            ad = ArticlesData.objects.get(id=article.id)
+            ad.views += 1
+            ad.save()
+            url = article.url
+            return redirect(url)
+        else:
+            return self.render_to_response(context)
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         content = context["object"].content if context["object"].content else context["object"].content_original
@@ -25,5 +39,11 @@ class ArticleDetailView(DetailView):
         content = re.sub(r'<[^>]*>', "", content)
         # convert html entities to unicode
         content = html.unescape(content)
+        # remove multiple whitespaces
+        content = re.sub(r"[\s]+", " ", content)
+        # remove newlines
+        content = content.replace("\n", "")
+        # trim
+        content = content.strip()
         context["excerpt"] = content[:500]
         return context
