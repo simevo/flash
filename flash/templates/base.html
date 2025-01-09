@@ -54,75 +54,64 @@
 <body class="{% block bodyclass %}{% endblock bodyclass %}">
   {% block body %}
   <div class="mb-1">
-    <nav class="navbar navbar-expand-md navbar-light bg-light">
+    <nav class="navbar navbar-expand-sm navbar-dark bg-secondary shadow-sm">
       <div class="container-fluid">
-        <button class="navbar-toggler navbar-toggler-right"
-                type="button"
-                data-bs-toggle="collapse"
-                data-bs-target="#navbarSupportedContent"
-                aria-controls="navbarSupportedContent"
-                aria-expanded="false"
-                aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
+        <a href="{% url 'home' %}" class="navbar-brand ms-3">
+          <img alt="Flash logo" src="{% static 'images/logo.svg' %}" width="50" />
+        </a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarSupportedContent"
+          aria-controls="navbarSupportedContent"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span class="navbar-toggler-icon" />
         </button>
-        <a class="navbar-brand" href="{% url 'home' %}">flash</a>
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-          <ul class="navbar-nav mr-auto">
-            <li class="nav-item active">
-              <a class="nav-link" href="{% url 'home' %}">Home <span class="visually-hidden">(current)</span></a>
-            </li>
+        <div id="navbarSupportedContent" class="collapse navbar-collapse">
+          <ul class="navbar-nav me-auto mb-2 mb-sm-0">
             <li class="nav-item">
-              <a class="nav-link" href="{% url 'about' %}">About</a>
+              <a
+                class="btn btn-secondary nav-link me-2"
+                href="{% url 'about' %}"
+              >
+                <img
+                  class="inverted-icon icon me-2"
+                  src="{% static 'images/question.svg' %}"
+                  alt="view icon"
+                  width="18"
+                  height="18"
+                />Info
+              </a>
             </li>
-            {% if request.user.is_authenticated %}
-              <li class="nav-item">
-                <a class="nav-link"
-                   href="{% url 'users:detail' request.user.username %}">{% translate "My Profile" %}</a>
-              </li>
-              <li class="nav-item">
-                {# URL provided by django-allauth/account/urls.py #}
-                <a class="nav-link" href="{% url 'account_logout' %}">{% translate "Sign Out" %}</a>
-              </li>
-            {% else %}
-              {% if ACCOUNT_ALLOW_REGISTRATION %}
-                <li class="nav-item">
-                  {# URL provided by django-allauth/account/urls.py #}
-                  <a id="sign-up-link" class="nav-link" href="{% url 'account_signup' %}">{% translate "Sign Up" %}</a>
-                </li>
-              {% endif %}
-              <li class="nav-item">
-                {# URL provided by django-allauth/account/urls.py #}
-                <a id="log-in-link" class="nav-link" href="{% url 'account_login' %}">{% translate "Sign In" %}</a>
-              </li>
-            {% endif %}
+          </ul>
+          <ul class="navbar-nav ms-auto mb-2 mb-sm-0">
+            <li class="nav-item">
+              {# URL provided by django-allauth/account/urls.py #}
+              <a id="log-in-link" class="nav-link" href="{% url 'account_login' %}">
+                <img
+                  class="inverted-icon icon me-2"
+                  src="{% static 'images/lock.svg' %}"
+                  alt="view icon"
+                  width="18"
+                  height="18"
+                />{% translate "Sign In" %}</a>
+            </li>
           </ul>
         </div>
       </div>
     </nav>
-  </div>
-  <div class="container">
-    {% if messages %}
-      {% for message in messages %}
-        <div class="alert alert-dismissible {% if message.tags %}alert-{{ message.tags }}{% endif %}">
-          {{ message }}
-          <button type="button"
-                  class="btn-close"
-                  data-bs-dismiss="alert"
-                  aria-label="Close"></button>
-        </div>
-      {% endfor %}
-    {% endif %}
     {% block main %}
-      {% block content %}
-        <p>Use this document as a way to quick start any new project.</p>
-      {% endblock content %}
+      <main>
+        {% block content %}
+          <p>Use this document as a way to quick start any new project.</p>
+        {% endblock content %}
+      </main>
     {% endblock main %}
 
-  </div>
   {% endblock body %}
-  <!-- /container -->
-  {% block modal %}
-  {% endblock modal %}
   {% block inline_javascript %}
     {% comment %}
     Script tags with only code, no src (defer by default). To run
