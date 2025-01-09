@@ -79,3 +79,21 @@ The following details how to deploy this application.
 ### Docker
 
 See detailed [cookiecutter-django Docker documentation](https://cookiecutter-django.readthedocs.io/en/latest/3-deployment/deployment-with-docker.html).
+
+## Updating JavaScript dependencies
+
+JS and CSS dependencies are managed with `yarnpkg` and the files are put in place with `make` then checked into the repo.
+
+In this way the files are vendored and the repo is self-sufficient, but it's easy to upgrade them and add new dependencies.
+
+To **upgrade** the dependencies:
+
+    yarnpkg upgrade
+
+then reinstall them:
+
+    make
+
+To **add a new dependency**, install it with `yarnpkg add ...` or `yarnpkg add -D ...`, update the `Makefile` to put in place the files you need and `git add ...` them.
+
+Dont't forget to commit your changes!

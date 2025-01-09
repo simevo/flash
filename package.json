@@ -1,0 +1,13 @@
+{
+  "name": "flash",
+  "version": "0.1.0",
+  "description": "An open-source news platform with aggregation and ranking",
+  "main": "index.js",
+  "repository": "https://gitlab.com/simevo/flash",
+  "author": "Paolo Greppi <paolo.greppi@libpf.com>",
+  "license": "AGPL-3.0-or-later",
+  "private": false,
+  "dependencies": {
+    "bootstrap": "^5.3.3"
+  }
+}
