@@ -1,17 +1,118 @@
 {% extends "base.html" %}
 
+{% load static %}
+
 {% block title %}
   Homepage
 {% endblock title %}
 
 {% block content %}
   <div class="container-fluid">
-    <div class="row">
-      <div class="col-sm-12">
-        <h2>
-          Welcome to the homepage
-        </h2>
-        <p>Use this document as a way to quick start any new project.</p>
+    <div class="row my-3">
+      <div class="col-md-12">
+        <ul>
+          {% for article in page_obj %}
+          <li
+            id="{{ article.id }}"
+            style="flex-direction: row; line-height: 1.1"
+            class="card mb-3"
+          >
+            <img
+              style="margin: 5px"
+              class="float-start"
+              width="30"
+              height="30"
+              src="https://notizie.calomelano.it/{{ article.feed.icon }}"
+              alt="feed logo"
+            />
+            <div class="card-body text-secondary" style="padding: 5px">
+              <a
+                class="text-decoration-none"
+                href="{% url 'detail' article.id %}"
+              >
+                {% if article.language != 'it' and article.title %}
+                  <span
+                    class="card-text"
+                    style="margin-bottom: 0px"
+                    lang="{{ article.language }}"
+                    >
+                    [{{ article.title_original }}]&nbsp;
+                  </span>
+                {% endif %}
+                <span lang="{% if article.title %}it{% else %}{{ article.language }}{% endif %}">
+                  {% if article.title %}{{ article.title }}{% else %}{{ article.title_original }}{% endif %}
+                </span>
+                {% if not article.title and not article.title_original %}
+                  <span lang="it">[Senza titolo]</span>
+                {% endif %}
+              </a>
+              <div class="card-text">
+                {% if article.author %}
+                  <small>
+                    <small class="text-muted"> di </small>
+                    <span>{{ article.author }}</span>
+                  </small>
+                {% endif %}
+                <small class="text-muted float-end">
+                  {{ article.stamp | timesince }} fa ({{ article.stamp | date:"Y-m-d H:i" }})
+                </small>
+              </div>
+              <!-- card-text -->
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+
+    <div class="row my-3">
+      <div class="col-md-12">
+
+        <nav aria-label="Page navigation example">
+          <ul class="pagination">
+            {% if page_obj.number == 1 %}
+              <li class="page-item">
+                <span class="page-link disabled">&laquo; 1</span>
+              </li>
+            {% else %}
+              <li class="page-item">
+                <a class="page-link" href="?page=1">&laquo; 1</a>
+              </li>
+            {% endif %}
+            {% if page_obj.has_previous %}
+              <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">&lt; indietro</a>
+              </li>
+            {% else %}
+              <li class="page-item">
+                <span class="page-link disabled">&lt; indietro</span>
+              </li>
+            {% endif %}
+            <li class="page-item">
+              <span class="page-link disabled">
+                pagina {{ page_obj.number }}
+              </span>
+            </li>
+            {% if page_obj.has_next %}
+              <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}">avanti &gt;</a>
+              </li>
+            {% else %}
+              <li class="page-item">
+                <span class="page-link disabled">avanti &gt;</span>
+              </li>
+            {% endif %}
+            {% if page_obj.number == page_obj.paginator.num_pages %}
+              <li class="page-item">
+                <span class="page-link disabled">{{ page_obj.paginator.num_pages }} &raquo;</span>
+              </li>
+            {% else %}
+              <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">{{ page_obj.paginator.num_pages }} &raquo;</a>
+              </li>
+            {% endif %}
+          </ul>
+        </nav>
       </div>
     </div>
   </div>

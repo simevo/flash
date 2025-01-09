@@ -3,7 +3,7 @@ from rest_framework.routers import DefaultRouter
 from rest_framework.routers import SimpleRouter
 
 from flash.users.api.views import UserViewSet
-from news.views import ArticlesSimpleView, ArticlesView, FeedsView
+from news.api.views import ArticlesSimpleView, ArticlesView, FeedsView
 
 router = DefaultRouter() if settings.DEBUG else SimpleRouter()
 

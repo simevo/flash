@@ -1,46 +1,29 @@
-from django.shortcuts import get_object_or_404
-from rest_framework import pagination, permissions, viewsets
-from rest_framework.response import Response
+import html
+import re
 
-from news.models import Articles, Feeds
-from news.serializers import (
-    ArticleSerializer,
-    ArticleSerializerFull,
-    ArticleSerializerSimple,
-    FeedSerializer,
-)
+from django.views.generic import ListView
+from django.views.generic.detail import DetailView
+
+from news.models import Articles
 
 
-class ReadOnly(permissions.BasePermission):
-    def has_permission(self, request, view):
-        return request.method in permissions.SAFE_METHODS
+class ArticleListView(ListView):
+    paginate_by = 12
+    model = Articles
+    filter = None
+    ordering = "-id"
 
 
-class StandardResultsSetPagination(pagination.PageNumberPagination):
-    page_size = 31
+class ArticleDetailView(DetailView):
+    model = Articles
+    pk_url_kwarg = "id"
 
-
-class ArticlesSimpleView(viewsets.ModelViewSet):
-    queryset = Articles.objects.all().order_by("-id")
-    serializer_class = ArticleSerializerSimple
-    permission_classes = [ReadOnly]
-    pagination_class = StandardResultsSetPagination
-
-
-class ArticlesView(viewsets.ModelViewSet):
-    queryset = Articles.objects.all().order_by("-id")
-    serializer_class = ArticleSerializer
-    permission_classes = [ReadOnly, permissions.IsAuthenticated]
-    pagination_class = StandardResultsSetPagination
-
-    def retrieve(self, request, pk=None):
-        queryset = Articles.objects
-        article = get_object_or_404(queryset, pk=pk)
-        serializer = ArticleSerializerFull(article, context={"request": request})
-        return Response(serializer.data)
-
-
-class FeedsView(viewsets.ModelViewSet):
-    queryset = Feeds.objects.all().order_by("-id")
-    serializer_class = FeedSerializer
-    permission_classes = [ReadOnly]
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        content = context["object"].content if context["object"].content else context["object"].content_original
+        # remove html tags
+        content = re.sub(r'<[^>]*>', "", content)
+        # convert html entities to unicode
+        content = html.unescape(content)
+        context["excerpt"] = content[:500]
+        return context

@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}
+  New details {{ object.id }}
+{% endblock title %}
+
+{% block content %}
+<div class="container my-3">
+  <div class="row">
+    <div class="text-center col-md-8 offset-md-2">
+      <div class="float-start">
+        <span class="h2">
+          <img
+            style="margin: 5px"
+            width="30"
+            height="30"
+            src="https://notizie.calomelano.it/{{ object.feed.icon }}"
+            alt="feed logo"
+          />
+          {{ object.feed.title }}
+        </span>
+      </div>
+      <div class="text-muted float-end">
+        <small>
+          {{ object.stamp | timesince }} fa ({{ object.stamp | date:"Y-m-d H:i" }})
+        </small>
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-8 offset-md-2 title">
+      <h1 class="float-start font-weight-bold">
+        <span id="title_tts">
+          {% if object.language != 'it' and object.title %}
+            <span
+              class="card-text"
+              style="margin-bottom: 0px"
+              lang="{{ object.language }}"
+              >
+              [{{ object.title_original }}]&nbsp;
+            </span>
+          {% endif %}
+          <span lang="{% if object.title %}it{% else %}{{ object.language }}{% endif %}">
+            {% if object.title %}{{ object.title }}{% else %}{{ object.title_original }}{% endif %}
+          </span>
+          {% if not object.title and not object.title_original %}
+            <span lang="it">[Senza titolo]</span>
+          {% endif %}
+      </h1>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-8 offset-md-2 text-muted">
+      <small>Articolo originale: </small>
+      <a target="_blank" href="{{ object.url }}">
+        <small style="word-wrap: break-word">{{ object.url }}</small>
+      </a>
+      <br />
+    </div>
+  </div>
+  <div class="row mt-3">
+    <div lang="en" class="content col-md-8 offset-md-2">
+      {{ excerpt }}
+      <span> ...</span>
+    </div>
+  </div>
+  <div class="alert alert-info mt-5 text-center" role="alert">
+    <h4 class="alert-heading">Attenzione!</h4>
+    <p>
+      Per accedere al contenuto completo clicca sul link all'articolo originale oppure effettua il <a href="/res/" title="Login">login</a>.
+    </p>
+  </div>
+</div>
+{% endblock content %}
