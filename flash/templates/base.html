@@ -58,7 +58,7 @@
 <body class="{% block bodyclass %}{% endblock bodyclass %}">
   {% block body %}
   <div class="mb-1">
-    <nav class="navbar navbar-expand-sm navbar-dark bg-secondary shadow-sm">
+    <nav class="navbar navbar-expand-sm shadow-sm" style="background-color: #bbb;">
       <div class="container-fluid">
         <a href="{% url 'home' %}" class="navbar-brand ms-3">
           <img alt="Flash logo" src="{% static 'images/logo.svg' %}" width="50" />
@@ -82,7 +82,7 @@
                 href="{% url 'about' %}"
               >
                 <img
-                  class="inverted-icon icon me-2"
+                  class="icon me-2"
                   src="{% static 'images/question.svg' %}"
                   alt="view icon"
                   width="18"
@@ -94,9 +94,9 @@
           <ul class="navbar-nav ms-auto mb-2 mb-sm-0">
             <li class="nav-item">
               {# URL provided by django-allauth/account/urls.py #}
-              <a id="log-in-link" class="nav-link" href="{% url 'account_login' %}">
+              <a id="log-in-link" class="btn btn-secondary nav-link" href="{% url 'account_login' %}">
                 <img
-                  class="inverted-icon icon me-2"
+                  class="icon me-2"
                   src="{% static 'images/lock.svg' %}"
                   alt="view icon"
                   width="18"

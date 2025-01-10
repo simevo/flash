@@ -45,5 +45,5 @@ class ArticleDetailView(DetailView):
         content = content.replace("\n", "")
         # trim
         content = content.strip()
-        context["excerpt"] = content[:500]
+        context["excerpt"] = content[:200]
         return context

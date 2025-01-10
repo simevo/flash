@@ -54,3 +54,26 @@ services:
     ports:
       - '5555:5555'
     command: /start-flower
+
+  frontend:
+    container_name: flash_local_frontend
+    restart: unless-stopped
+    build:
+      context: ./frontend
+      dockerfile: ./Dockerfile
+      target: frontend-builder
+    image: flash_local_frontend
+    command: yarn dev --port 80 --host 0
+    volumes:
+      - ./frontend/public:/app/public
+      - ./frontend/src:/app/src
+
+  flash:
+    image: nginx:1.27.3-bookworm
+    ports:
+      - 8100:80
+    depends_on:
+      - django
+      - frontend
+    volumes:
+      - ./compose/local/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro

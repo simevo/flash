@@ -3,14 +3,13 @@ from rest_framework.routers import DefaultRouter
 from rest_framework.routers import SimpleRouter
 
 from flash.users.api.views import UserViewSet
-from news.api.views import ArticlesSimpleView, ArticlesView, FeedsView
+from news.api.views import ArticlesView, FeedsView
 
 router = DefaultRouter() if settings.DEBUG else SimpleRouter()
 
 router.register("users", UserViewSet)
 router.register("articles", ArticlesView, basename="articles")
-router.register("public/feeds", FeedsView, basename="public-feeds")
-router.register("public/articles", ArticlesSimpleView, basename="public-articles")
+router.register("feeds", FeedsView, basename="public-feeds")
 
 
 app_name = "api"

@@ -19,19 +19,6 @@ class FeedSerializer(serializers.ModelSerializer):
         exclude = ["iconblob"]
 
 
-class ArticleSerializerSimple(serializers.ModelSerializer):
-    feed = FeedSerializerSimple()
-    stamp = serializers.SerializerMethodField()
-
-    @extend_schema_field(OpenApiTypes.NUMBER)
-    def get_stamp(self, obj):
-        return int(obj.stamp.timestamp())
-
-    class Meta:
-        model = Articles
-        exclude = ["content", "content_original"]
-
-
 class ArticleSerializer(serializers.ModelSerializer):
     feed = FeedSerializerSimple()
     stamp = serializers.SerializerMethodField()
