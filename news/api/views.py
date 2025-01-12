@@ -2,11 +2,12 @@ from django_filters import rest_framework as filters
 from django.contrib.postgres.search import SearchVector
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema
-from rest_framework import pagination, permissions, viewsets
+from rest_framework import pagination, permissions, viewsets, mixins
 from rest_framework.response import Response
 
 from news.models import Articles, Feeds
 from news.api.serializers import (
+    ArticleReadSerializer,
     ArticleSerializer,
     ArticleSerializerFull,
     FeedSerializer,
@@ -33,12 +34,16 @@ class ArticlesFilter(filters.FilterSet):
         fields = ["feed_id", ]
 
 
-class ArticlesView(viewsets.ModelViewSet):
+class ArticlesView(viewsets.ModelViewSet, mixins.CreateModelMixin):
     queryset = Articles.objects.all().order_by("-id")
-    serializer_class = ArticleSerializer
-    permission_classes = [ReadOnly, permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
     filterset_class = ArticlesFilter
     pagination_class = StandardResultsSetPagination
+
+    def get_serializer_class(self):
+         if self.request.method in ['GET']:
+             return ArticleReadSerializer
+         return ArticleSerializer
 
     @extend_schema(
         responses={200: ArticleSerializerFull},

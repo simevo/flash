@@ -6,7 +6,7 @@ import { RouterLink, RouterView } from "vue-router"
   <nav class="navbar navbar-expand-md bg-primary" data-bs-theme="dark">
     <div class="container-fluid">
       <RouterLink to="/" class="navbar-brand ms-3">
-        <img alt="Calo.news logo" src="./assets/logo.svg" width="50" />
+        <img alt="Flash logo" src="./assets/logo.svg" width="50" />
       </RouterLink>
       <button
         class="navbar-toggler"
@@ -21,7 +21,7 @@ import { RouterLink, RouterView } from "vue-router"
       </button>
       <div id="navbarSupportedContent" class="collapse navbar-collapse">
         <ul class="navbar-nav me-auto mb-2 mb-md-0">
-          <li class="nav-item">
+          <li class="nav-item" v-show="false">
             <a
               class="active btn btn-primary nav-link me-2"
               role="button"
@@ -36,7 +36,7 @@ import { RouterLink, RouterView } from "vue-router"
               />Salvati
             </a>
           </li>
-          <li class="nav-item">
+          <li class="nav-item" v-show="false">
             <a
               class="btn btn-primary nav-link me-2"
               title="Cronologia degli articoli già letti"
@@ -53,11 +53,12 @@ import { RouterLink, RouterView } from "vue-router"
             </a>
           </li>
           <li class="nav-item">
-            <a
+            <RouterLink
               class="btn btn-primary nav-link me-2"
               title="Segnala un articolo"
               role="button"
               type="button"
+              to="/new_article"
             >
               <img
                 class="inverted-icon icon me-2"
@@ -66,14 +67,15 @@ import { RouterLink, RouterView } from "vue-router"
                 width="18"
                 height="18"
               />Nuovo
-            </a>
+            </RouterLink>
           </li>
           <li class="nav-item">
-            <a
+            <RouterLink
               class="btn btn-primary nav-link me-2"
               title="Da dove arrivano gli artcoli"
               role="button"
               type="button"
+              to="/feeds"
             >
               <img
                 class="inverted-icon icon me-2"
@@ -82,9 +84,9 @@ import { RouterLink, RouterView } from "vue-router"
                 width="18"
                 height="18"
               />Fonti
-            </a>
+            </RouterLink>
           </li>
-          <li class="nav-item">
+          <li class="nav-item" v-show="false">
             <a
               class="btn btn-primary nav-link me-2"
               title="Configura l'aggregatore al meglio"
@@ -152,6 +154,7 @@ $primary: #7b5140; // "dark" Mocha Mousse
 $secondary: #febe98; // Peach Fuzz
 
 @import "bootstrap";
+@import "quill/dist/quill.snow.css";
 
 .inverted-icon {
   filter: invert(1);

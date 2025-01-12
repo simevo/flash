@@ -20,6 +20,12 @@ class FeedSerializer(serializers.ModelSerializer):
 
 
 class ArticleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Articles
+        fields = "__all__"
+
+
+class ArticleReadSerializer(serializers.ModelSerializer):
     feed = FeedSerializerSimple()
     stamp = serializers.SerializerMethodField()
     excerpt = serializers.SerializerMethodField()

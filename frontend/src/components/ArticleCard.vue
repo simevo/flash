@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { components } from "../generated/schema.d.ts"
-// import CardActions from "./CardActions.vue"
 import { secondsToString, secondsToString1 } from "./sts"
 
 type Article = components["schemas"]["Article"]
@@ -54,10 +53,7 @@ defineProps<{
             >
           </h5>
         </div>
-        <div
-          class="text-justify small"
-          style="font-family: serif"
-        >
+        <div class="text-justify small" style="font-family: serif">
           <span v-html="article.excerpt"></span>...
         </div>
       </router-link>
@@ -85,7 +81,6 @@ defineProps<{
         </div>
       </div>
       <div class="d-flex align-items-center">
-        <!-- <CardActions class="flex-grow-1" :article="article" :index="index" /> -->
         <small
           class="text-muted"
           data-toggle="tooltip"

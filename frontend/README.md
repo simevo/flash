@@ -1,6 +1,4 @@
-# calo.news2
-
-Next-gen UI prototype for [calo.news](https://gitlab.com/simevo/calo.news/-/issues/196).
+# flash frontend
 
 # TL;DR
 

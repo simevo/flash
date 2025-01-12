@@ -9,7 +9,7 @@ from django.views.generic import TemplateView
 from drf_spectacular.views import SpectacularAPIView
 from drf_spectacular.views import SpectacularSwaggerView
 from rest_framework.authtoken.views import obtain_auth_token
-from news.views import ArticleDetailView, ArticleListView
+from news.views import ArticleDetailView, ArticleListView, ProxyView
 
 urlpatterns = [
     path("", ArticleListView.as_view(template_name="pages/home.html"), name="home"),
@@ -19,6 +19,7 @@ urlpatterns = [
     path(
         "article/<int:id>", ArticleDetailView.as_view(template_name="pages/detail.html"), name="detail"
     ),
+    path("proxy/<path:url>", ProxyView.as_view(), name="proxy"),
     # Django Admin, use {% url 'admin:index' %}
     path(settings.ADMIN_URL, admin.site.urls),
     # User management

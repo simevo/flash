@@ -57,11 +57,10 @@ const not_filtering = computed(
 
 const filtered_articles = computed(() => {
   if (not_filtering.value) {
-    return articles
+    return articles.value
   } else {
     return articles.value.filter((article) => {
       let found = true
-      return found
       if (filters.what) {
         const text =
           article.excerpt +

@@ -16,6 +16,18 @@ const router = createRouter({
       component: () => import("../views/ArticleView.vue"),
     },
     {
+      path: "/feeds/",
+      name: "feeds",
+      props: true,
+      component: () => import("../views/FeedsView.vue"),
+    },
+    {
+      path: "/new_article/",
+      name: "new_article",
+      props: true,
+      component: () => import("../views/NewArticle.vue"),
+    },
+    {
       path: "/feed/:id",
       name: "feed",
       props: true,

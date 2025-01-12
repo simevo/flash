@@ -1,7 +1,11 @@
 import html
 import re
+import requests
 
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import HttpResponse
 from django.shortcuts import redirect
+from django.views import View
 from django.views.generic import ListView
 from django.views.generic.detail import DetailView
 
@@ -47,3 +51,9 @@ class ArticleDetailView(DetailView):
         content = content.strip()
         context["excerpt"] = content[:200]
         return context
+
+
+class ProxyView(LoginRequiredMixin, View):
+    def get(self, request, url):
+        response = requests.get(url)
+        return HttpResponse(response.content, content_type=response.headers["Content-Type"])

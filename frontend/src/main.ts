@@ -19,5 +19,4 @@ app.use(Vue3Toastify, {
 } as ToastContainerOptions)
 app.mount("#app")
 
-app.config.globalProperties.discourse_base_url = "https://commenti.example.com"
 app.config.globalProperties.base_language = "it"

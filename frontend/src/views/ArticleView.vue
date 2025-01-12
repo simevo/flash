@@ -100,20 +100,6 @@
         <small class="text-muted">Licenza: {{ article.feed.license }}</small>
       </div>
     </div>
-    <!--
-    <div class="row mt-1">
-      <div class="col-md-8 offset-md-2">
-        <ArticleActions
-          :ids="props.id"
-          :clean="false"
-          :share="true"
-          class="float-start"
-          :translatable="article.language != base_language && !article.content"
-        />
-        <CardActions class="float-end" :article="article" :index="0" />
-      </div>
-    </div>
-    -->
     <div class="row mt-3" v-if="article.language == base_language">
       <!-- eslint-disable -->
       <div
@@ -161,8 +147,6 @@
 import { fetch_wrapper } from "../utils"
 import { computed, onMounted, ref, watch, type Ref } from "vue"
 import { RouterLink, useRoute } from "vue-router"
-// import ArticleActions from "@/components/ArticleActions.vue"
-// import CardActions from "@/components/CardActions.vue"
 import type { components } from "../generated/schema.d.ts"
 import { secondsToString, secondsToString1 } from "@/components/sts"
 
@@ -194,7 +178,7 @@ const article_length = computed(() => {
   if (article.value) {
     if (article.value.content) {
       return article.value.content.length
-    } else {
+    } else if (article.value.content_original) {
       return article.value.content_original.length
     }
   }
