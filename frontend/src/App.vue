@@ -123,7 +123,7 @@ import { RouterLink, RouterView } from "vue-router"
             <a
               href="/accounts/logout/"
               class="btn btn-primary nav-link me-2"
-              title="Sign out of flash"
+              title="Esci dall'aggregatore"
               role="button"
               type="button"
             >
@@ -133,7 +133,7 @@ import { RouterLink, RouterView } from "vue-router"
                 alt="view icon"
                 width="18"
                 height="18"
-              />Sign out
+              />Esci
             </a>
           </li>
         </ul>

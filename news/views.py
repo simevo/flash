@@ -18,6 +18,12 @@ class ArticleListView(ListView):
     queryset = Articles.objects.filter(articlesdata__views__gt="0")
     ordering = "-id"
 
+    def get(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return redirect("/res/")
+        else:
+            return super().get(request, *args, **kwargs)
+
 
 class ArticleDetailView(DetailView):
     model = Articles
@@ -26,6 +32,10 @@ class ArticleDetailView(DetailView):
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
         context = self.get_context_data(object=self.object)
+        if request.user.is_authenticated:
+            article = context["object"]
+            url = f"/res/article/{article.id}"
+            return redirect(url)
         if request.GET.get("redirect"):
             article = context["object"]
             ad = ArticlesData.objects.get(id=article.id)
