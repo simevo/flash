@@ -170,10 +170,7 @@
               </select>
             </div>
             <!-- form-group -->
-            <div
-              class="form-group my-3"
-              :class="{ 'is-invalid': errors['content'] }"
-            >
+            <div class="form-group my-3">
               <label for="content">Testo completo dell'articolo</label>
               <button
                 type="button"
@@ -253,15 +250,13 @@ function convert(s: string): string {
   return base_language
 }
 
-function find_candidates(elements) {
-  let candidates = []
+function find_candidates(elements: NodeListOf<Element>) {
+  let candidates: string[] = []
   let j
   for (j = 0; j < elements.length; j++) {
     const e = elements[j]
-    candidates = candidates.concat([e.textContent])
+    if (e.textContent) candidates = candidates.concat([e.textContent])
   }
-  console.log(candidates)
-  // https://stackoverflow.com/a/14438954
   candidates = candidates.filter(function (value, index, self) {
     return self.indexOf(value) === index
   })
@@ -275,7 +270,7 @@ function guess_author(doc: Document) {
   const metaList = doc.getElementsByTagName("META")
   let candidate
   for (i = 0; i < metaList.length; i++) {
-    const m = metaList[i]
+    const m = metaList[i] as HTMLMetaElement
     if (m.getAttribute("property") == "author") {
       candidate = m.content.replace(/\s+/g, " ")
       if (candidate) {
@@ -345,18 +340,20 @@ function guess_author(doc: Document) {
 }
 
 function guess_language() {
-  let text = quill.getText()
-  // strip HTML tags
-  const regex = /(<([^>]+)>)/gi
-  text = text.replace(regex, "")
-  // convert HTML entities
-  const textarea = document.createElement("textarea")
-  textarea.innerHTML = text
-  text = textarea.value
-  const language = franc(article.value.title + ". " + text, {
-    only: ["arb", "fra", "eng", "ita", "nld", "por", "rus", "spa", "deu"],
-  })
-  article.value.language = convert(language)
+  if (quill) {
+    let text = quill.getText()
+    // strip HTML tags
+    const regex = /(<([^>]+)>)/gi
+    text = text.replace(regex, "")
+    // convert HTML entities
+    const textarea = document.createElement("textarea")
+    textarea.innerHTML = text
+    text = textarea.value
+    const language = franc(article.value.title + ". " + text, {
+      only: ["arb", "fra", "eng", "ita", "nld", "por", "rus", "spa", "deu"],
+    })
+    article.value.language = convert(language)
+  }
 }
 
 function try_it() {
@@ -375,13 +372,17 @@ function send() {
     language: article.value.language,
     url: article.value.url,
     feed: 0,
+    title: "",
+    title_original: "",
+    content: "",
+    content_original: "",
   }
   if (article.value.language == base_language) {
     data["title"] = article.value.title
-    data["content"] = quill.root.innerHTML
+    if (quill) data["content"] = quill.root.innerHTML
   } else {
     data["title_original"] = article.value.title
-    data["content_original"] = quill.root.innerHTML
+    if (quill) data["content_original"] = quill.root.innerHTML
   }
 
   // send the data to the server
@@ -415,7 +416,7 @@ function send() {
 function clean() {
   trying.value = false
   received.value = false
-  quill.setText("")
+  if (quill) quill.setText("")
   article.value.author = ""
   article.value.title = ""
   article.value.language = base_language
@@ -447,7 +448,7 @@ function prefill() {
         const a = r.parse()
         if (a) {
           article.value.title = a.title
-          quill.clipboard.dangerouslyPasteHTML(0, a.content)
+          if (quill) quill.clipboard.dangerouslyPasteHTML(0, a.content)
           guess_language()
         }
       } catch (error) {
@@ -472,6 +473,6 @@ function resetTitle() {
 }
 
 function resetContent() {
-  quill.setText("")
+  if (quill) quill.setText("")
 }
 </script>

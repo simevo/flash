@@ -1,3 +1,5 @@
+---
+
 volumes:
   flash_local_postgres_data: {}
   flash_local_postgres_data_backups: {}
@@ -67,6 +69,14 @@ services:
     volumes:
       - ./frontend/public:/app/public
       - ./frontend/src:/app/src
+
+  readability:
+    container_name: flash_local_readability
+    build:
+      context: ./compose/local/readability
+    image: flash_local_readability
+    ports:
+      - '8081:8081'
 
   flash:
     image: nginx:1.27.3-bookworm

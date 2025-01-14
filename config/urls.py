@@ -17,7 +17,9 @@ urlpatterns = [
         "about/", TemplateView.as_view(template_name="pages/about.html"), name="about"
     ),
     path(
-        "article/<int:id>", ArticleDetailView.as_view(template_name="pages/detail.html"), name="detail"
+        "article/<int:id>",
+        ArticleDetailView.as_view(template_name="pages/detail.html"),
+        name="detail",
     ),
     path("proxy/<path:url>", ProxyView.as_view(), name="proxy"),
     # Django Admin, use {% url 'admin:index' %}

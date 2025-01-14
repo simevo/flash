@@ -1,0 +1,11 @@
+{
+  "name": "readsvc",
+  "version": "1.0.0",
+  "description": "readability as a service",
+  "main": "readability.js",
+  "license": "MIT",
+  "dependencies": {
+    "@mozilla/readability": "^0.5.0",
+    "jsdom": "^26.0.0"
+  }
+}

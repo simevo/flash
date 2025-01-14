@@ -4,7 +4,8 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
-from news.models import Articles, Feeds
+from news.models import Articles
+from news.models import Feeds
 
 
 class FeedSerializerSimple(serializers.ModelSerializer):
@@ -39,15 +40,16 @@ class ArticleReadSerializer(serializers.ModelSerializer):
     def get_length(self, obj):
         if obj.content:
             return obj.content.__len__()
-        else:
-            return obj.content_original.__len__()
+        return obj.content_original.__len__()
 
     def get_excerpt(self, obj):
         if obj.content:
             stripped_content = re.sub(r"[\s]+", " ", re.sub(r"<.+?>", "", obj.content))
         else:
             stripped_content = re.sub(
-                r"[\s]+", " ", re.sub(r"<.+?>", "", obj.content_original)
+                r"[\s]+",
+                " ",
+                re.sub(r"<.+?>", "", obj.content_original),
             )
         return stripped_content[:400]
 

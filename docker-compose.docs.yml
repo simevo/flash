@@ -1,3 +1,5 @@
+---
+
 services:
   docs:
     image: flash_local_docs

@@ -1,11 +1,16 @@
 # flash
 
-An open-source news platform with aggregation and ranking
+An open-source news platform with aggregation and ranking.
+
+Second iteration born from the ashes of [**calo.news** ("An open-source news platform with aggregation, ranking and conversations")](https://gitlab.com/simevo/calo.news), sharing the same Postgres DB structure but:
+
+- without PHP
+- based on a modern Python web framework (Django and Django REST Framework) for the back-end
+- using TypeScript and an up-to-date vite-based tooling for the Vue.js frontend
+- and ready for deployment on a Kubernetes cluster.
 
 [![Built with Cookiecutter Django](https://img.shields.io/badge/built%20with-Cookiecutter%20Django-ff69b4.svg?logo=cookiecutter)](https://github.com/cookiecutter/cookiecutter-django/)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
-
-License: GPLv3
 
 ## Settings
 
@@ -97,3 +102,23 @@ then reinstall them:
 To **add a new dependency**, install it with `yarnpkg add ...` or `yarnpkg add -D ...`, update the `Makefile` to put in place the files you need and `git add ...` them.
 
 Dont't forget to commit your changes!
+
+## License
+
+**flash** an open-source news platform with aggregation and ranking
+
+Copyright (C) 2017-2025 Paolo Greppi
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program (file [LICENSE](/LICENSE)).
+If not, see <https://www.gnu.org/licenses/>.

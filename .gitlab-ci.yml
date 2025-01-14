@@ -1,13 +1,20 @@
+---
+
 stages:
   - lint
+  - prepare
+  - build deps images
+  - lint javascript
+  - build final images
   - test
 
 variables:
   POSTGRES_USER: 'flash'
   POSTGRES_PASSWORD: ''
   POSTGRES_DB: 'test_flash'
-  POSTGRES_HOST_AUTH_METHOD: trust
+  POSTGRES_HOST: '127.0.0.1'
   REDIS_URL: 'redis://redis:6379/0'
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
 
 precommit:
   stage: lint
@@ -22,16 +29,162 @@ precommit:
   script:
     - pre-commit run --show-diff-on-failure --color=always --all-files
 
+lint-dockerfile:
+  stage: lint
+  image: hadolint/hadolint:latest-debian
+  script:
+    - hadolint --ignore DL3008 --ignore DL3006 compose/local/readability/Dockerfile
+    - hadolint --ignore DL3008 --ignore DL3006 compose/production/django/Dockerfile
+    - hadolint --ignore DL3008 --ignore DL3006 compose/production/nginx/Dockerfile
+    - hadolint --ignore DL3008 --ignore DL3006 frontend/Dockerfile
+
+prepare:
+  stage: prepare
+  image:
+    name: alpine/git
+    entrypoint: [""]
+  variables:
+    # disable shallow cloning or `git rev-list --count` used below won't work
+    GIT_DEPTH: 0
+  script:
+    - GIT_VERSION=$(git log -n1 --pretty='%h')
+    - TAG=${GIT_VERSION}-${CI_PIPELINE_ID}
+    - DEPS_BACKEND_COMMIT_HASH=$(git rev-list -1 HEAD -- compose/production/django requirements/)
+    - DEPS_BACKEND_COMMIT_COUNT=$(git rev-list --count "$DEPS_BACKEND_COMMIT_HASH")
+    - DEPS_FRONTEND_COMMIT_HASH=$(git rev-list -1 HEAD -- frontend/Dockerfile frontend/package.json frontend/yarn.lock)
+    - DEPS_FRONTEND_COMMIT_COUNT=$(git rev-list --count "$DEPS_FRONTEND_COMMIT_HASH")
+    # yields tags like `deps-20201129-0-89-56fcfcc403a7-main` which ensure that
+    # deps images are rebuilt when:
+    #
+    # 1. the DEPS_STAMP variable is bumped
+    # 2. a new commit touches files under `compose/` or `requirements/` or `package.json` or `yarn.lock`
+    #
+    # otherwise existing images are re-used on a per-branch basis, skipping the
+    # most time-consuming steps in the pipeline
+    - DEPS_BACKEND_TAG="deps-${DEPS_STAMP}-${DEPS_BACKEND_COMMIT_COUNT}-${DEPS_BACKEND_COMMIT_HASH}-${CI_COMMIT_REF_SLUG}"
+    - DEPS_FRONTEND_TAG="deps-${DEPS_STAMP}-${DEPS_FRONTEND_COMMIT_COUNT}-${DEPS_FRONTEND_COMMIT_HASH}-${CI_COMMIT_REF_SLUG}"
+    - echo "TAG=$TAG" | tee -a build-env.txt
+    - echo "DEPS_BACKEND_TAG=$DEPS_BACKEND_TAG" | tee -a build-env.txt
+    - echo "DEPS_FRONTEND_TAG=$DEPS_FRONTEND_TAG" | tee -a build-env.txt
+  artifacts:
+    reports:
+      dotenv: build-env.txt
+
+.build-docker-image:
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  variables:
+    CONTEXT: .
+    ARGS: ''
+  script:
+    - TAG="${JOB_TAG:-${TAG}}"
+    - mkdir -p /kaniko/.docker/
+    # makes use of Gitlab's Predefined environment variables, see:
+    # https://docs.gitlab.com/ee/ci/variables/predefined_variables.html
+    - echo "CI_REGISTRY = $CI_REGISTRY"
+    - echo "CI_REGISTRY_USER = $CI_REGISTRY_USER"
+    - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
+    - mkdir /kaniko/tmp/
+    - echo "FROM $REPO:$TAG" > /kaniko/tmp/Dockerfile
+    - |
+      if /kaniko/executor --context=/kaniko/tmp --verbosity=panic --no-push
+      then
+        echo "⏩ Image $REPO:$TAG already exists, skip rebuilding it"
+        exit 0
+      else
+        echo "👷 Image $REPO:$TAG not found, build it"
+      fi
+    - set -x;
+      /kaniko/executor
+        --context "$CONTEXT"
+        --dockerfile "$DOCKERFILE"
+        --destination "$REPO:$TAG"
+        $ARGS
+        --skip-unused-stages;
+      set +x
+    - echo "✅ Pushed $REPO:$TAG"
+
+build-docker-image-deps-backend:
+  extends: .build-docker-image
+  stage: build deps images
+  variables:
+    DOCKERFILE: ./compose/production/django/Dockerfile
+    REPO: $CI_REGISTRY_IMAGE/deps-backend
+    JOB_TAG: $DEPS_BACKEND_TAG
+    ARGS:
+      --target deps-backend-base
+
+build-docker-image-deps-frontend:
+  extends: .build-docker-image
+  stage: build deps images
+  variables:
+    DOCKERFILE: ./frontend/Dockerfile
+    REPO: $CI_REGISTRY_IMAGE/deps-frontend
+    JOB_TAG: $DEPS_FRONTEND_TAG
+    CONTEXT: ./frontend
+    ARGS:
+      --target deps-frontend-base
+
+lint-javascript:
+  stage: lint javascript
+  image: $CI_REGISTRY_IMAGE/deps-frontend:$DEPS_FRONTEND_TAG
+  before_script:
+    - cd frontend/
+    - yarn
+  script:
+    - yarn type-check
+    - yarn lint
+    - yarn format-check
+
+build-docker-image-backend:
+  extends: .build-docker-image
+  stage: build final images
+  variables:
+    DOCKERFILE: ./compose/production/django/Dockerfile
+    REPO: $CI_REGISTRY_IMAGE/backend
+    ARGS:
+      --target backend
+      --build-arg APP_BASE_IMAGE=$CI_REGISTRY_IMAGE/deps-backend:$DEPS_BACKEND_TAG
+
+build-docker-image-frontend:
+  extends: .build-docker-image
+  stage: build final images
+  variables:
+    DOCKERFILE: ./frontend/Dockerfile
+    REPO: $CI_REGISTRY_IMAGE/frontend
+    CONTEXT: ./frontend
+    ARGS:
+      --target frontend
+      --build-arg FRONTEND_BASE_IMAGE=$CI_REGISTRY_IMAGE/deps-frontend:$DEPS_FRONTEND_TAG
+
+build-docker-image-readability:
+  extends: .build-docker-image
+  stage: build final images
+  variables:
+    DOCKERFILE: ./compose/local/readability/Dockerfile
+    REPO: $CI_REGISTRY_IMAGE/readability
+    CONTEXT: ./compose/local/readability
+
 pytest:
   stage: test
-  image: docker:25.0
-  services:
-    - docker:dind
+  variables:
+    USE_DOCKER: "no"
+  image:
+    name: $CI_REGISTRY_IMAGE/backend:$TAG
+    entrypoint: [""]
+    docker:
+      user: root
+  cache:
+    paths:
+      - .cache/pip
   before_script:
-    - docker compose -f docker-compose.local.yml build
-    - docker compose -f docker-compose.docs.yml build
-    # Ensure celerybeat does not crash due to non-existent tables
-    - docker compose -f docker-compose.local.yml run --rm django python manage.py migrate
-    - docker compose -f docker-compose.local.yml up -d
+    - apt update
+    - apt install -y postgresql
+    - /usr/bin/pg_ctlcluster 15 main start
+    - pip3 install -r requirements/local.txt
+    - su - postgres -c 'psql -c "create role '"${POSTGRES_USER}"' with login password '"'${POSTGRES_PASSWORD}';"'"'
+    - su - postgres -c "createdb -O ${POSTGRES_USER} test_${POSTGRES_DB}"
+    - export DATABASE_URL="postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}"
   script:
-    - docker compose -f docker-compose.local.yml run django pytest
+    - /usr/local/bin/pytest

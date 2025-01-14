@@ -1,17 +1,19 @@
-from django_filters import rest_framework as filters
 from django.contrib.postgres.search import SearchVector
 from django.shortcuts import get_object_or_404
+from django_filters import rest_framework as filters
 from drf_spectacular.utils import extend_schema
-from rest_framework import pagination, permissions, viewsets, mixins
+from rest_framework import mixins
+from rest_framework import pagination
+from rest_framework import permissions
+from rest_framework import viewsets
 from rest_framework.response import Response
 
-from news.models import Articles, Feeds
-from news.api.serializers import (
-    ArticleReadSerializer,
-    ArticleSerializer,
-    ArticleSerializerFull,
-    FeedSerializer,
-)
+from news.api.serializers import ArticleReadSerializer
+from news.api.serializers import ArticleSerializer
+from news.api.serializers import ArticleSerializerFull
+from news.api.serializers import FeedSerializer
+from news.models import Articles
+from news.models import Feeds
 
 
 class ReadOnly(permissions.BasePermission):
@@ -24,14 +26,17 @@ class StandardResultsSetPagination(pagination.PageNumberPagination):
 
 
 class ArticlesFilter(filters.FilterSet):
-    search_author = filters.CharFilter(method='filter_search_author', field_name='author')
+    search_author = filters.CharFilter(
+        method="filter_search_author",
+        field_name="author",
+    )
 
     def filter_search_author(self, queryset, name, value):
-        return queryset.annotate(search=SearchVector('author')).filter(search=value)
+        return queryset.annotate(search=SearchVector("author")).filter(search=value)
 
     class Meta:
         model = Articles
-        fields = ["feed_id", ]
+        fields = ["feed_id"]
 
 
 class ArticlesView(viewsets.ModelViewSet, mixins.CreateModelMixin):
@@ -41,9 +46,9 @@ class ArticlesView(viewsets.ModelViewSet, mixins.CreateModelMixin):
     pagination_class = StandardResultsSetPagination
 
     def get_serializer_class(self):
-         if self.request.method in ['GET']:
-             return ArticleReadSerializer
-         return ArticleSerializer
+        if self.request.method in ["GET"]:
+            return ArticleReadSerializer
+        return ArticleSerializer
 
     @extend_schema(
         responses={200: ArticleSerializerFull},

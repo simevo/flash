@@ -5,6 +5,7 @@ import ssl
 from pathlib import Path
 
 import environ
+from django.utils.translation import gettext_lazy as _
 
 BASE_DIR = Path(__file__).resolve(strict=True).parent.parent.parent
 # flash/
@@ -28,12 +29,11 @@ TIME_ZONE = "UTC"
 # https://docs.djangoproject.com/en/dev/ref/settings/#language-code
 LANGUAGE_CODE = "en-us"
 # https://docs.djangoproject.com/en/dev/ref/settings/#languages
-from django.utils.translation import gettext_lazy as _
 LANGUAGES = [
-    ('en', _('English')),
-    ('fr-fr', _('French')),
-    ('it-it', _('Italian')),
-    ('pt-br', _('Portuguese')),
+    ("en", _("English")),
+    ("fr-fr", _("French")),
+    ("it-it", _("Italian")),
+    ("pt-br", _("Portuguese")),
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#site-id
 SITE_ID = 1

@@ -1,7 +1,7 @@
 import html
 import re
-import requests
 
+import requests
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse
 from django.shortcuts import redirect
@@ -9,7 +9,8 @@ from django.views import View
 from django.views.generic import ListView
 from django.views.generic.detail import DetailView
 
-from news.models import Articles, ArticlesData
+from news.models import Articles
+from news.models import ArticlesData
 
 
 class ArticleListView(ListView):
@@ -21,8 +22,7 @@ class ArticleListView(ListView):
     def get(self, request, *args, **kwargs):
         if request.user.is_authenticated:
             return redirect("/res/")
-        else:
-            return super().get(request, *args, **kwargs)
+        return super().get(request, *args, **kwargs)
 
 
 class ArticleDetailView(DetailView):
@@ -43,14 +43,17 @@ class ArticleDetailView(DetailView):
             ad.save()
             url = article.url
             return redirect(url)
-        else:
-            return self.render_to_response(context)
+        return self.render_to_response(context)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        content = context["object"].content if context["object"].content else context["object"].content_original
+        content = (
+            context["object"].content
+            if context["object"].content
+            else context["object"].content_original
+        )
         # remove html tags
-        content = re.sub(r'<[^>]*>', "", content)
+        content = re.sub(r"<[^>]*>", "", content)
         # convert html entities to unicode
         content = html.unescape(content)
         # remove multiple whitespaces
@@ -65,5 +68,8 @@ class ArticleDetailView(DetailView):
 
 class ProxyView(LoginRequiredMixin, View):
     def get(self, request, url):
-        response = requests.get(url)
-        return HttpResponse(response.content, content_type=response.headers["Content-Type"])
+        response = requests.get(url, timeout=30)
+        return HttpResponse(
+            response.content,
+            content_type=response.headers["Content-Type"],
+        )
