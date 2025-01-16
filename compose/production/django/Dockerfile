@@ -6,6 +6,7 @@ FROM docker.io/python:3.12.8-slim-bookworm AS python
 # Python build stage
 FROM python as deps-backend-base
 
+ARG APP_HOME=/app
 ARG BUILD_ENVIRONMENT=production
 
 WORKDIR ${APP_HOME}

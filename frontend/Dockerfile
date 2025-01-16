@@ -17,5 +17,5 @@ FROM frontend-builder AS frontend-built
 RUN yarn build
 
 FROM nginx AS frontend
-COPY --from=frontend-built /app/dist /usr/share/nginx/html
+COPY --from=frontend-built /app/dist /usr/share/nginx/html/res
 COPY ./nginx/default.conf /etc/nginx/conf.d/default.conf
