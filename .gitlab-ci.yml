@@ -10,7 +10,7 @@ stages:
 
 variables:
   POSTGRES_USER: 'flash'
-  POSTGRES_PASSWORD: ''
+  POSTGRES_PASSWORD: 'flash'
   POSTGRES_DB: 'test_flash'
   POSTGRES_HOST: '127.0.0.1'
   REDIS_URL: 'redis://redis:6379/0'
