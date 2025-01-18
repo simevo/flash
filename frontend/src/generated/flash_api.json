@@ -16,8 +16,7 @@
             "schema": {
               "type": "integer",
               "maximum": 2147483647,
-              "minimum": -2147483648,
-              "nullable": true
+              "minimum": -2147483648
             }
           },
           {
@@ -51,7 +50,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PaginatedArticleList"
+                  "$ref": "#/components/schemas/PaginatedArticleReadList"
                 }
               }
             },
@@ -855,8 +854,52 @@
             "type": "integer",
             "readOnly": true
           },
+          "stamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "author": {
+            "type": "string",
+            "nullable": true
+          },
+          "title_original": {
+            "type": "string",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "content_original": {
+            "type": "string",
+            "nullable": true
+          },
+          "content": {
+            "type": "string",
+            "nullable": true
+          },
+          "language": {
+            "type": "string",
+            "nullable": true
+          },
+          "url": {
+            "type": "string",
+            "nullable": true
+          },
           "feed": {
-            "$ref": "#/components/schemas/FeedSerializerSimple"
+            "type": "integer",
+            "maximum": 2147483647,
+            "minimum": -2147483648
+          }
+        },
+        "required": ["feed", "id"]
+      },
+      "ArticleRead": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "readOnly": true
           },
           "stamp": {
             "type": "number",
@@ -889,6 +932,11 @@
           "url": {
             "type": "string",
             "nullable": true
+          },
+          "feed": {
+            "type": "integer",
+            "maximum": 2147483647,
+            "minimum": -2147483648
           }
         },
         "required": ["excerpt", "feed", "id", "length", "stamp"]
@@ -1001,10 +1049,6 @@
             "type": "boolean",
             "nullable": true
           },
-          "tags": {
-            "type": "string",
-            "nullable": true
-          },
           "salt_url": {
             "type": "boolean",
             "nullable": true
@@ -1050,31 +1094,6 @@
         },
         "required": ["homepage", "icon", "id", "language", "title", "url"]
       },
-      "FeedSerializerSimple": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "maximum": 2147483647,
-            "minimum": -2147483648
-          },
-          "title": {
-            "type": "string"
-          },
-          "icon": {
-            "type": "string"
-          },
-          "premium": {
-            "type": "boolean",
-            "nullable": true
-          },
-          "license": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "required": ["icon", "id", "title"]
-      },
       "Nested": {
         "type": "object",
         "properties": {
@@ -1113,10 +1132,6 @@
           },
           "incomplete": {
             "type": "boolean",
-            "nullable": true
-          },
-          "tags": {
-            "type": "string",
             "nullable": true
           },
           "salt_url": {
@@ -1178,7 +1193,7 @@
           "url"
         ]
       },
-      "PaginatedArticleList": {
+      "PaginatedArticleReadList": {
         "type": "object",
         "required": ["count", "results"],
         "properties": {
@@ -1201,7 +1216,7 @@
           "results": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/Article"
+              "$ref": "#/components/schemas/ArticleRead"
             }
           }
         }
@@ -1213,20 +1228,9 @@
             "type": "integer",
             "readOnly": true
           },
-          "feed": {
-            "$ref": "#/components/schemas/FeedSerializerSimple"
-          },
           "stamp": {
-            "type": "number",
-            "readOnly": true
-          },
-          "excerpt": {
             "type": "string",
-            "readOnly": true
-          },
-          "length": {
-            "type": "number",
-            "readOnly": true
+            "format": "date-time"
           },
           "author": {
             "type": "string",
@@ -1240,6 +1244,14 @@
             "type": "string",
             "nullable": true
           },
+          "content_original": {
+            "type": "string",
+            "nullable": true
+          },
+          "content": {
+            "type": "string",
+            "nullable": true
+          },
           "language": {
             "type": "string",
             "nullable": true
@@ -1247,6 +1259,11 @@
           "url": {
             "type": "string",
             "nullable": true
+          },
+          "feed": {
+            "type": "integer",
+            "maximum": 2147483647,
+            "minimum": -2147483648
           }
         }
       },
@@ -1288,10 +1305,6 @@
           },
           "incomplete": {
             "type": "boolean",
-            "nullable": true
-          },
-          "tags": {
-            "type": "string",
             "nullable": true
           },
           "salt_url": {

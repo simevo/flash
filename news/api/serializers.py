@@ -27,7 +27,6 @@ class ArticleSerializer(serializers.ModelSerializer):
 
 
 class ArticleReadSerializer(serializers.ModelSerializer):
-    feed = FeedSerializerSimple()
     stamp = serializers.SerializerMethodField()
     excerpt = serializers.SerializerMethodField()
     length = serializers.SerializerMethodField()

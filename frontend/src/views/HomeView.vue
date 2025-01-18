@@ -7,10 +7,14 @@ import FormFilter from "../components/FormFilter.vue"
 
 import type { components } from "../generated/schema.d.ts"
 
-type Article = components["schemas"]["Article"]
-type PaginatedArticleList = components["schemas"]["PaginatedArticleList"]
+type ArticleRead = components["schemas"]["ArticleRead"]
+type Feed = components["schemas"]["Feed"]
+type PaginatedArticleReadList =
+  components["schemas"]["PaginatedArticleReadList"]
 
-const articles: Ref<Article[]> = ref([])
+const articles: Ref<ArticleRead[]> = ref([])
+const feeds: Ref<Feed[]> = ref([])
+const count_fetch = ref(2)
 
 const no_filters: Filters = {
   what: "",
@@ -27,20 +31,22 @@ const filterActions = useFiltersStore()
 
 const feed_counts = computed(() => {
   const feed_counts: FeedCounts = {}
+  if (articles.value.length === 0 || feeds.value.length === 0) {
+    return feed_counts
+  }
   for (const article of articles.value) {
-    if (article.feed.id in feed_counts) {
-      feed_counts[article.feed.id].count += 1
+    if (article.feed in feed_counts) {
+      feed_counts[article.feed].count += 1
     } else {
-      feed_counts[article.feed.id] = {
-        feed: article.feed.title,
-        icon: article.feed.icon,
+      feed_counts[article.feed] = {
+        feed: feed_dict.value[article.feed].title,
+        icon: feed_dict.value[article.feed].icon,
         count: 1,
-        feed_id: article.feed.id,
+        feed_id: article.feed,
       }
     }
   }
-  const feeds = Object.values(feed_counts).sort((a, b) => b.count - a.count)
-  return feeds
+  return Object.values(feed_counts).sort((a, b) => b.count - a.count)
 })
 
 const not_filtering = computed(
@@ -86,7 +92,7 @@ const filtered_articles = computed(() => {
       }
       if (filters.feed_ids.indexOf(-1) === -1) {
         found =
-          found && filters.feed_ids.some((value) => article.feed.id === value)
+          found && filters.feed_ids.some((value) => article.feed === value)
       }
       return found
     })
@@ -98,14 +104,35 @@ async function fetchArticles() {
   if (response.status == 403) {
     document.location = "/accounts/"
   } else {
-    const data: PaginatedArticleList = await response.json()
+    const data: PaginatedArticleReadList = await response.json()
     articles.value = data.results
+    count_fetch.value -= 1
   }
 }
+
+async function fetchFeeds() {
+  const response = await fetch_wrapper(`../../api/feeds/`)
+  if (response.status == 403) {
+    document.location = "/accounts/"
+  } else {
+    const data: Feed[] = await response.json()
+    feeds.value = data
+    count_fetch.value -= 1
+  }
+}
+
+const feed_dict = computed(() => {
+  const feed_dict: { [key: number]: Feed } = {}
+  feeds.value.forEach((feed) => {
+    feed_dict[feed.id] = feed
+  })
+  return feed_dict
+})
 
 onMounted(() => {
   console.log("HomePage mounted")
   fetchArticles()
+  fetchFeeds()
 })
 </script>
 
@@ -136,7 +163,7 @@ onMounted(() => {
       height="18"
     />
   </button>
-  <div class="container-fluid" v-if="articles.length > 0">
+  <div class="container-fluid" v-if="count_fetch == 0">
     <div class="row my-3">
       <div class="col-md-12">
         <div class="wrapper">
@@ -144,6 +171,7 @@ onMounted(() => {
             v-for="article in filtered_articles"
             :key="article.id"
             :article="article"
+            :feed_dict="feed_dict"
             :index="1"
           />
         </div>
@@ -179,6 +207,7 @@ onMounted(() => {
     <div class="offcanvas-body">
       <FormFilter
         :articles="articles"
+        :feeds="feeds"
         :filters="filters"
         :feed-counts="feed_counts"
         :not-filtering="not_filtering"

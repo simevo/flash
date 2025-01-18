@@ -158,7 +158,19 @@ export interface components {
   schemas: {
     Article: {
       readonly id: number
-      feed: components["schemas"]["FeedSerializerSimple"]
+      /** Format: date-time */
+      stamp?: string
+      author?: string | null
+      title_original?: string | null
+      title?: string | null
+      content_original?: string | null
+      content?: string | null
+      language?: string | null
+      url?: string | null
+      feed: number
+    }
+    ArticleRead: {
+      readonly id: number
       readonly stamp: number
       readonly excerpt: string
       readonly length: number
@@ -167,6 +179,7 @@ export interface components {
       title?: string | null
       language?: string | null
       url?: string | null
+      feed: number
     }
     ArticleSerializerFull: {
       readonly id: number
@@ -197,7 +210,6 @@ export interface components {
       /** Format: date-time */
       last_polled?: string | null
       incomplete?: boolean | null
-      tags?: string | null
       salt_url?: boolean | null
       rating?: number | null
       premium?: boolean | null
@@ -208,13 +220,6 @@ export interface components {
       asy?: boolean | null
       script?: string | null
       frequency?: string | null
-    }
-    FeedSerializerSimple: {
-      id: number
-      title: string
-      icon: string
-      premium?: boolean | null
-      license?: string | null
     }
     Nested: {
       id: number
@@ -228,7 +233,6 @@ export interface components {
       /** Format: date-time */
       last_polled?: string | null
       incomplete?: boolean | null
-      tags?: string | null
       salt_url?: boolean | null
       rating?: number | null
       premium?: boolean | null
@@ -242,7 +246,7 @@ export interface components {
       script?: string | null
       frequency?: string | null
     }
-    PaginatedArticleList: {
+    PaginatedArticleReadList: {
       /** @example 123 */
       count: number
       /**
@@ -255,19 +259,20 @@ export interface components {
        * @example http://api.example.org/accounts/?page=2
        */
       previous?: string | null
-      results: components["schemas"]["Article"][]
+      results: components["schemas"]["ArticleRead"][]
     }
     PatchedArticle: {
       readonly id?: number
-      feed?: components["schemas"]["FeedSerializerSimple"]
-      readonly stamp?: number
-      readonly excerpt?: string
-      readonly length?: number
+      /** Format: date-time */
+      stamp?: string
       author?: string | null
       title_original?: string | null
       title?: string | null
+      content_original?: string | null
+      content?: string | null
       language?: string | null
       url?: string | null
+      feed?: number
     }
     PatchedFeed: {
       id?: number
@@ -281,7 +286,6 @@ export interface components {
       /** Format: date-time */
       last_polled?: string | null
       incomplete?: boolean | null
-      tags?: string | null
       salt_url?: boolean | null
       rating?: number | null
       premium?: boolean | null
@@ -321,7 +325,7 @@ export interface operations {
   articles_list: {
     parameters: {
       query?: {
-        feed_id?: number | null
+        feed_id?: number
         /** @description A page number within the paginated result set. */
         page?: number
         search_author?: string
@@ -337,7 +341,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          "application/json": components["schemas"]["PaginatedArticleList"]
+          "application/json": components["schemas"]["PaginatedArticleReadList"]
         }
       }
     }

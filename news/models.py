@@ -12,7 +12,7 @@ class Articles(models.Model):
     content = models.TextField(blank=True, null=True)  # noqa: DJ001
     language = models.TextField(blank=True, null=True)  # noqa: DJ001
     url = models.TextField(unique=True, blank=True, null=True)
-    feed = models.ForeignKey("Feeds", models.DO_NOTHING, blank=True, null=True)
+    feed = models.ForeignKey("Feeds", models.DO_NOTHING)
 
     class Meta:
         managed = False
