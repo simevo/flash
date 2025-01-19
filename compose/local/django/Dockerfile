@@ -40,9 +40,13 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
   wait-for-it \
   # Translations dependencies
   gettext \
+  # To run pre-commit
+  git \
   # cleaning up unused files
   && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
   && rm -rf /var/lib/apt/lists/*
+
+RUN echo [safe]\\ndirectory = /app > /root/.gitconfig
 
 # All absolute dir copies ignore workdir instruction. All relative dir copies are wrt to the workdir instruction
 # copy python dependency wheels from python-build-stage
