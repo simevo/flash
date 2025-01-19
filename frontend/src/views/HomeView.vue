@@ -1,6 +1,14 @@
 <script setup lang="ts">
 import { fetch_wrapper } from "../utils"
-import { computed, onMounted, ref, type Ref } from "vue"
+import {
+  computed,
+  onActivated,
+  onDeactivated,
+  onMounted,
+  onUnmounted,
+  ref,
+  type Ref,
+} from "vue"
 import type { Filters, FeedCounts } from "../types/Filters"
 import ArticleCard from "../components/ArticleCard.vue"
 import FormFilter from "../components/FormFilter.vue"
@@ -133,6 +141,18 @@ onMounted(() => {
   console.log("HomePage mounted")
   fetchArticles()
   fetchFeeds()
+})
+
+onUnmounted(() => {
+  console.log("HomePage unmounted")
+})
+
+onActivated(() => {
+  console.log("HomePage activated")
+})
+
+onDeactivated(() => {
+  console.log("HomePage deactivated")
 })
 </script>
 

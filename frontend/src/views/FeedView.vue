@@ -1,15 +1,15 @@
 <template>
   <div class="container-fluid my-3" v-if="count_fetch == 0">
     <div class="row">
-      <h1>Fonte: {{ feed_dict[Number(id)].title }}</h1>
+      <h1>Fonte: {{ feed_dict[Number(feed_id)].title }}</h1>
       <div>
         <span class="float-start">
-          <a :href="feed_dict[Number(id)].url" target="_blank">{{
-            feed_dict[Number(id)].url
+          <a :href="feed_dict[Number(feed_id)].url" target="_blank">{{
+            feed_dict[Number(feed_id)].url
           }}</a>
         </span>
         <span class="float-end">
-          {{ feed_dict[Number(id)].tags }}
+          {{ feed_dict[Number(feed_id)].tags }}
         </span>
       </div>
     </div>
@@ -41,7 +41,7 @@
 
 <script setup lang="ts">
 import { fetch_wrapper } from "../utils"
-import { computed, watch } from "vue"
+import { computed, onActivated, watch } from "vue"
 import { useRoute } from "vue-router"
 import { ref, onMounted, type Ref } from "vue"
 import type { components } from "../generated/schema.d.ts"
@@ -59,23 +59,16 @@ const count_fetch = ref(2)
 const route = useRoute()
 
 export interface Props {
-  id: string
+  feed_id: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  id: "",
+  feed_id: "",
 })
-
-watch(
-  () => route.params.id,
-  async (newId) => {
-    alert(newId)
-  },
-)
 
 async function fetchArticles() {
   const response = await fetch_wrapper(
-    `../../api/articles/?feed_id=${props.id}`,
+    `../../api/articles/?feed_id=${props.feed_id}`,
   )
   if (response.status == 403) {
     document.location = "/accounts/"
@@ -110,4 +103,19 @@ onMounted(() => {
   fetchArticles()
   fetchFeeds()
 })
+
+onActivated(() => {
+  console.log("FeedView activated")
+})
+
+watch(
+  () => route.params.feed_id,
+  async (newId, oldId) => {
+    console.log(`FeedView watch id, newId = [${newId}] oldId = [${oldId}]`)
+    if (newId && newId != oldId) {
+      count_fetch.value += 1
+      await fetchArticles()
+    }
+  },
+)
 </script>

@@ -145,7 +145,7 @@
 
 <script setup lang="ts">
 import { fetch_wrapper } from "../utils"
-import { computed, onMounted, ref, watch, type Ref } from "vue"
+import { computed, onActivated, onMounted, ref, watch, type Ref } from "vue"
 import { RouterLink, useRoute } from "vue-router"
 import type { components } from "../generated/schema.d.ts"
 import { secondsToString, secondsToString1 } from "@/components/sts"
@@ -157,15 +157,15 @@ type Article = components["schemas"]["ArticleSerializerFull"]
 const article: Ref<Article | null> = ref(null)
 
 export interface Props {
-  id: string
+  article_id: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  id: "",
+  article_id: "",
 })
 
 async function fetchArticle() {
-  const response = await fetch_wrapper(`../../api/articles/${props.id}`)
+  const response = await fetch_wrapper(`../../api/articles/${props.article_id}`)
   if (response.status == 403) {
     document.location = "/accounts/"
   } else {
@@ -190,10 +190,18 @@ onMounted(() => {
   fetchArticle()
 })
 
+onActivated(() => {
+  console.log("ArticleView activated")
+})
+
 watch(
-  () => route.params.id,
-  async (newId) => {
-    alert(newId)
+  () => route.params.article_id,
+  async (newId, oldId) => {
+    console.log(`ArticleView watch, newId = [${newId}] oldId = [${oldId}]`)
+    if (newId && newId !== oldId) {
+      article.value = null
+      await fetchArticle()
+    }
   },
 )
 </script>

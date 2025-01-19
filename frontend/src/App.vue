@@ -141,7 +141,11 @@ import { RouterLink, RouterView } from "vue-router"
     </div>
   </nav>
   <main>
-    <RouterView />
+    <RouterView v-slot="{ Component }">
+      <KeepAlive>
+        <component :is="Component" />
+      </KeepAlive>
+    </RouterView>
   </main>
 </template>
 

@@ -28,7 +28,7 @@
 
 <script setup lang="ts">
 import { fetch_wrapper } from "../utils"
-import { watch } from "vue"
+import { onActivated, watch } from "vue"
 import { useRoute } from "vue-router"
 import { computed, ref, onMounted, type Ref } from "vue"
 import type { components } from "../generated/schema.d.ts"
@@ -52,13 +52,6 @@ export interface Props {
 const props = withDefaults(defineProps<Props>(), {
   author: "",
 })
-
-watch(
-  () => route.params.author,
-  async (newAuthor) => {
-    alert(newAuthor)
-  },
-)
 
 async function fetchArticles() {
   const response = await fetch_wrapper(
@@ -97,4 +90,21 @@ onMounted(() => {
   fetchArticles()
   fetchFeeds()
 })
+
+onActivated(() => {
+  console.log("AuthorView activated")
+})
+
+watch(
+  () => route.params.author,
+  async (newAuthor, oldAuthor) => {
+    console.log(
+      `AuthorView watch author, newAuthor = [${newAuthor}] oldAuthor = [${oldAuthor}]`,
+    )
+    if (newAuthor && newAuthor != oldAuthor) {
+      count_fetch.value += 1
+      await fetchArticles()
+    }
+  },
+)
 </script>
