@@ -36,7 +36,8 @@ import ArticleCard from "../components/ArticleCard.vue"
 
 type ArticleRead = components["schemas"]["ArticleRead"]
 type Feed = components["schemas"]["Feed"]
-type PaginatedArticleReadList = components["schemas"]["PaginatedArticleReadList"]
+type PaginatedArticleReadList =
+  components["schemas"]["PaginatedArticleReadList"]
 
 const articles: Ref<ArticleRead[]> = ref([])
 const feeds: Ref<Feed[]> = ref([])

@@ -1,5 +1,6 @@
 import datetime
 
+from django.contrib.postgres.fields import ArrayField
 from django.db import models
 
 
@@ -71,6 +72,7 @@ class Feeds(models.Model):
     iconblob = models.BinaryField(blank=True, null=True)
     script = models.TextField(blank=True, null=True)  # noqa: DJ001
     frequency = models.TextField(blank=True, null=True)  # noqa: DJ001
+    tags = ArrayField(models.TextField(), blank=True, null=True)
 
     class Meta:
         managed = False

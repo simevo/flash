@@ -61,6 +61,6 @@ class ArticlesView(viewsets.ModelViewSet, mixins.CreateModelMixin):
 
 
 class FeedsView(viewsets.ModelViewSet):
-    queryset = Feeds.objects.all().order_by("-id")
+    queryset = Feeds.objects.all().order_by("id")
     serializer_class = FeedSerializer
     permission_classes = [ReadOnly, permissions.IsAuthenticated]

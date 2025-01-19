@@ -1,7 +1,20 @@
 <template>
-  <div class="container-fluid" v-if="count_fetch == 0">
-    <div class="row my-3">
-      <h1>Feed: {{ id }}</h1>
+  <div class="container-fluid my-3" v-if="count_fetch == 0">
+    <div class="row">
+      <h1>Fonte: {{ feed_dict[Number(id)].title }}</h1>
+      <div>
+        <span class="float-start">
+          <a :href="feed_dict[Number(id)].url" target="_blank">{{
+            feed_dict[Number(id)].url
+          }}</a>
+        </span>
+        <span class="float-end">
+          {{ feed_dict[Number(id)].tags }}
+        </span>
+      </div>
+    </div>
+    <hr />
+    <div class="row">
       <div class="col-md-12">
         <div class="wrapper">
           <ArticleCard
@@ -36,7 +49,8 @@ import ArticleCard from "../components/ArticleCard.vue"
 
 type ArticleRead = components["schemas"]["ArticleRead"]
 type Feed = components["schemas"]["Feed"]
-type PaginatedArticleReadList = components["schemas"]["PaginatedArticleReadList"]
+type PaginatedArticleReadList =
+  components["schemas"]["PaginatedArticleReadList"]
 
 const articles: Ref<ArticleRead[]> = ref([])
 const feeds: Ref<Feed[]> = ref([])

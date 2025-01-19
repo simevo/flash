@@ -220,6 +220,7 @@ export interface components {
       asy?: boolean | null
       script?: string | null
       frequency?: string | null
+      tags?: string[] | null
     }
     Nested: {
       id: number
@@ -245,6 +246,7 @@ export interface components {
       readonly iconblob: string | null
       script?: string | null
       frequency?: string | null
+      tags?: string[] | null
     }
     PaginatedArticleReadList: {
       /** @example 123 */
@@ -296,6 +298,7 @@ export interface components {
       asy?: boolean | null
       script?: string | null
       frequency?: string | null
+      tags?: string[] | null
     }
     PatchedUser: {
       /** @description Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only. */
