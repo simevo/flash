@@ -49,15 +49,6 @@ LOCALE_PATHS = [str(BASE_DIR / "locale")]
 # https://docs.djangoproject.com/en/dev/ref/settings/#databases
 DATABASES = {
     "default": env.db("DATABASE_URL"),
-    "calonews": {
-        "ENGINE": "django.db.backends.postgresql",
-        # "OPTIONS": {"options": "-c search_path=meteoidro"},
-        "NAME": "calonews",
-        "USER": "calo",
-        "PASSWORD": "calo",
-        "HOST": "host.docker.internal",
-        "PORT": "5433",
-    },
 }
 DATABASES["default"]["ATOMIC_REQUESTS"] = True
 # https://docs.djangoproject.com/en/stable/ref/settings/#std:setting-DEFAULT_AUTO_FIELD
