@@ -86,21 +86,22 @@ import { RouterLink, RouterView } from "vue-router"
               />Fonti
             </RouterLink>
           </li>
-          <li class="nav-item" v-show="false">
-            <a
+          <li class="nav-item">
+            <RouterLink
               class="btn btn-primary nav-link me-2"
               title="Configura l'aggregatore al meglio"
               role="button"
               type="button"
+              to="/settings"
             >
               <img
                 class="inverted-icon icon me-2"
-                src="~bootstrap-icons/icons/gear-fill.svg"
-                alt="view icon"
+                src="~bootstrap-icons/icons/sliders.svg"
+                alt="settings icon"
                 width="18"
                 height="18"
               />Impostazioni
-            </a>
+            </RouterLink>
           </li>
           <li class="nav-item">
             <a

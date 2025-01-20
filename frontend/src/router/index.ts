@@ -39,6 +39,12 @@ const router = createRouter({
       props: true,
       component: () => import("../views/AuthorView.vue"),
     },
+    {
+      path: "/settings/",
+      name: "settings",
+      props: true,
+      component: () => import("../views/SettingsView.vue"),
+    },
   ],
 })
 

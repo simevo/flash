@@ -84,6 +84,22 @@ export interface paths {
     patch: operations["feeds_partial_update"]
     trace?: never
   }
+  "/api/profile/{id}/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations["profile_retrieve"]
+    put: operations["profile_update"]
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch: operations["profile_partial_update"]
+    trace?: never
+  }
   "/api/schema/": {
     parameters: {
       query?: never
@@ -300,6 +316,31 @@ export interface components {
       frequency?: string | null
       tags?: string[] | null
     }
+    PatchedProfile: {
+      readonly id?: number
+      newsletter?: boolean
+      list_email?: string
+      list_frequency?: string
+      list_news?: number
+      list_format?: string
+      whitelist?: string[]
+      blacklist?: string[]
+      whitelist_authors?: string[]
+      sociality_weight?: number
+      /** Format: double */
+      gravity?: number
+      /** Format: double */
+      age_divider?: number
+      feed_weight?: number
+      list_weight?: number
+      /** Format: date-time */
+      last_access?: string | null
+      bow?: unknown
+      tags?: string[]
+      languages?: string[]
+      list_hour?: number
+      list_fulltext?: boolean
+    }
     PatchedUser: {
       /** @description Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only. */
       username?: string
@@ -307,6 +348,31 @@ export interface components {
       name?: string
       /** Format: uri */
       readonly url?: string
+    }
+    Profile: {
+      readonly id: number
+      newsletter?: boolean
+      list_email?: string
+      list_frequency?: string
+      list_news?: number
+      list_format?: string
+      whitelist?: string[]
+      blacklist?: string[]
+      whitelist_authors?: string[]
+      sociality_weight?: number
+      /** Format: double */
+      gravity?: number
+      /** Format: double */
+      age_divider?: number
+      feed_weight?: number
+      list_weight?: number
+      /** Format: date-time */
+      last_access?: string | null
+      bow?: unknown
+      tags?: string[]
+      languages?: string[]
+      list_hour?: number
+      list_fulltext?: boolean
     }
     User: {
       /** @description Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only. */
@@ -637,6 +703,81 @@ export interface operations {
         }
         content: {
           "application/json": components["schemas"]["Feed"]
+        }
+      }
+    }
+  }
+  profile_retrieve: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["Profile"]
+        }
+      }
+    }
+  }
+  profile_update: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        "application/json": components["schemas"]["Profile"]
+        "application/x-www-form-urlencoded": components["schemas"]["Profile"]
+        "multipart/form-data": components["schemas"]["Profile"]
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["Profile"]
+        }
+      }
+    }
+  }
+  profile_partial_update: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        "application/json": components["schemas"]["PatchedProfile"]
+        "application/x-www-form-urlencoded": components["schemas"]["PatchedProfile"]
+        "multipart/form-data": components["schemas"]["PatchedProfile"]
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["Profile"]
         }
       }
     }
