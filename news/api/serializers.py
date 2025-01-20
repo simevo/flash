@@ -6,6 +6,7 @@ from rest_framework import serializers
 
 from news.models import Articles
 from news.models import Feeds
+from news.models import Profile
 
 
 class FeedSerializerSimple(serializers.ModelSerializer):
@@ -68,3 +69,9 @@ class ArticleSerializerFull(serializers.ModelSerializer):
         model = Articles
         fields = "__all__"
         depth = 1
+
+
+class ProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Profile
+        exclude = ["user"]

@@ -12,6 +12,7 @@ from news.api.serializers import ArticleReadSerializer
 from news.api.serializers import ArticleSerializer
 from news.api.serializers import ArticleSerializerFull
 from news.api.serializers import FeedSerializer
+from news.api.serializers import ProfileSerializer
 from news.models import Articles
 from news.models import Feeds
 
@@ -64,3 +65,15 @@ class FeedsView(viewsets.ModelViewSet):
     queryset = Feeds.objects.all().order_by("id")
     serializer_class = FeedSerializer
     permission_classes = [ReadOnly, permissions.IsAuthenticated]
+
+
+class ProfileView(
+    mixins.UpdateModelMixin,
+    mixins.RetrieveModelMixin,
+    viewsets.GenericViewSet,
+):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = ProfileSerializer
+
+    def get_object(self):
+        return self.request.user.profile

@@ -1,5 +1,6 @@
 import datetime
 
+from django.conf import settings
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 
@@ -77,6 +78,36 @@ class Feeds(models.Model):
     class Meta:
         managed = False
         db_table = "feeds"
+
+    def __str__(self):
+        return self.id
+
+
+class Profile(models.Model):
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+    )
+    newsletter = models.BooleanField(default=False)
+    list_email = models.TextField(blank=True)
+    list_frequency = models.TextField(default="daily")
+    list_news = models.IntegerField(default=10)
+    list_format = models.TextField(default="pdf")
+    whitelist = ArrayField(models.TextField(), default=list)
+    whitelist_authors = ArrayField(models.TextField(), default=list)
+    blacklist = ArrayField(models.TextField(), default=list)
+    blacklist_authors = ArrayField(models.TextField(), default=list)
+    sociality_weight = models.IntegerField(default=0)
+    gravity = models.FloatField(default=2.0)
+    age_divider = models.FloatField(default=100.0)
+    feed_weight = models.IntegerField(default=0)
+    list_weight = models.IntegerField(default=0)
+    last_access = models.DateTimeField(blank=True, null=True)
+    bow = models.JSONField(default=dict)
+    tags = ArrayField(models.TextField(), default=list)
+    languages = ArrayField(models.TextField(), default=list)
+    list_hour = models.IntegerField(default=7)
+    list_fulltext = models.BooleanField(default=False)
 
     def __str__(self):
         return self.id
