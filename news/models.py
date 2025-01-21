@@ -21,7 +21,7 @@ class Articles(models.Model):
         db_table = "articles"
 
     def __str__(self):
-        return self.id
+        return f"{self.id}"
 
 
 class ArticlesData(models.Model):
@@ -48,7 +48,7 @@ class ArticlesData(models.Model):
         db_table = "articles_data"
 
     def __str__(self):
-        return self.id
+        return f"{self.id}"
 
 
 class Feeds(models.Model):
@@ -80,7 +80,7 @@ class Feeds(models.Model):
         db_table = "feeds"
 
     def __str__(self):
-        return self.id
+        return f"{self.id}"
 
 
 class Profile(models.Model):
@@ -110,4 +110,64 @@ class Profile(models.Model):
     list_fulltext = models.BooleanField(default=False)
 
     def __str__(self):
-        return self.id
+        return f"{self.id}"
+
+
+class UserArticleLists(models.Model):
+    id = models.AutoField(primary_key=True)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+    )
+    name = models.TextField()
+    articles = models.ManyToManyField(Articles, through="ArticleLists")
+    automatic = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = (("user", "name"),)
+
+    def __str__(self):
+        return f"{self.id}"
+
+
+class ArticleLists(models.Model):
+    id = models.AutoField(primary_key=True)
+    article = models.ForeignKey(Articles, models.CASCADE)
+    list = models.ForeignKey(UserArticleLists, models.CASCADE)
+
+    def __str__(self):
+        return f"{self.id}"
+
+
+class UserArticles(models.Model):
+    id = models.AutoField(primary_key=True)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+    )
+    article = models.ForeignKey(Articles, models.CASCADE)
+    read = models.BooleanField(default=False)
+    rating = models.IntegerField(default=0)
+    dismissed = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = (("user", "article"),)
+
+    def __str__(self):
+        return f"{self.id}"
+
+
+class UserFeeds(models.Model):
+    id = models.AutoField(primary_key=True)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+    )
+    feed = models.ForeignKey(Feeds, models.CASCADE)
+    rating = models.IntegerField(default=0)
+
+    class Meta:
+        unique_together = (("user", "feed"),)
+
+    def __str__(self):
+        return f"{self.id}"
