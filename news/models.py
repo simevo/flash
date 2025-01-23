@@ -31,21 +31,41 @@ class ArticlesData(models.Model):
         primary_key=True,
         db_column="id",
     )
-    feed_id = models.IntegerField(blank=True, null=True)
-    epoch = models.FloatField(blank=True, null=True)
-    views = models.BigIntegerField(blank=True, null=True)
-    rating = models.DecimalField(
-        max_digits=65535,
-        decimal_places=65535,
-        blank=True,
-        null=True,
-    )
-    to_reads = models.BigIntegerField(blank=True, null=True)
-    length = models.IntegerField(blank=True, null=True)
+    views = models.BigIntegerField()
+    rating = models.FloatField()
+    to_reads = models.FloatField()
+    length = models.IntegerField()
+    excerpt = models.TextField(null=True)  # noqa: DJ001
 
     class Meta:
         managed = False
         db_table = "articles_data"
+
+    def __str__(self):
+        return f"{self.id}"
+
+
+class ArticlesCombined(models.Model):
+    id = models.IntegerField(primary_key=True)
+
+    stamp = models.DateTimeField()
+    author = models.TextField(blank=True, null=True)  # noqa: DJ001
+    title_original = models.TextField(blank=True, null=True)  # noqa: DJ001
+    title = models.TextField(blank=True, null=True)  # noqa: DJ001
+    content_original = models.TextField(blank=True, null=True)  # noqa: DJ001
+    content = models.TextField(blank=True, null=True)  # noqa: DJ001
+    language = models.TextField(blank=True, null=True)  # noqa: DJ001
+    url = models.TextField(unique=True, blank=True, null=True)
+    feed_id = models.IntegerField()
+    views = models.BigIntegerField()
+    rating = models.FloatField()
+    to_reads = models.FloatField()
+    length = models.IntegerField()
+    excerpt = models.TextField(null=True)  # noqa: DJ001
+
+    class Meta:
+        managed = False  # Created from a view. Don't remove.
+        db_table = "articles_combined"
 
     def __str__(self):
         return f"{self.id}"
