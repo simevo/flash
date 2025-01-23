@@ -111,9 +111,11 @@
             "in": "path",
             "name": "id",
             "schema": {
-              "type": "integer"
+              "type": "integer",
+              "maximum": 2147483647,
+              "minimum": -2147483648
             },
-            "description": "A unique integer value identifying this articles.",
+            "description": "A unique value identifying this articles combined.",
             "required": true
           }
         ],
@@ -146,9 +148,11 @@
             "in": "path",
             "name": "id",
             "schema": {
-              "type": "integer"
+              "type": "integer",
+              "maximum": 2147483647,
+              "minimum": -2147483648
             },
-            "description": "A unique integer value identifying this articles.",
+            "description": "A unique value identifying this articles combined.",
             "required": true
           }
         ],
@@ -201,9 +205,11 @@
             "in": "path",
             "name": "id",
             "schema": {
-              "type": "integer"
+              "type": "integer",
+              "maximum": 2147483647,
+              "minimum": -2147483648
             },
-            "description": "A unique integer value identifying this articles.",
+            "description": "A unique value identifying this articles combined.",
             "required": true
           }
         ],
@@ -255,9 +261,11 @@
             "in": "path",
             "name": "id",
             "schema": {
-              "type": "integer"
+              "type": "integer",
+              "maximum": 2147483647,
+              "minimum": -2147483648
             },
-            "description": "A unique integer value identifying this articles.",
+            "description": "A unique value identifying this articles combined.",
             "required": true
           }
         ],
@@ -1041,17 +1049,10 @@
         "properties": {
           "id": {
             "type": "integer",
-            "readOnly": true
+            "maximum": 2147483647,
+            "minimum": -2147483648
           },
           "stamp": {
-            "type": "number",
-            "readOnly": true
-          },
-          "excerpt": {
-            "type": "string",
-            "readOnly": true
-          },
-          "length": {
             "type": "number",
             "readOnly": true
           },
@@ -1075,20 +1076,52 @@
             "type": "string",
             "nullable": true
           },
+          "views": {
+            "type": "integer",
+            "maximum": 9223372036854775807,
+            "minimum": -9223372036854775808,
+            "format": "int64"
+          },
+          "rating": {
+            "type": "number",
+            "format": "double"
+          },
+          "to_reads": {
+            "type": "number",
+            "format": "double"
+          },
+          "length": {
+            "type": "integer",
+            "maximum": 2147483647,
+            "minimum": -2147483648
+          },
+          "excerpt": {
+            "type": "string",
+            "nullable": true
+          },
           "feed": {
             "type": "integer",
             "maximum": 2147483647,
             "minimum": -2147483648
           }
         },
-        "required": ["excerpt", "feed", "id", "length", "stamp"]
+        "required": [
+          "feed",
+          "id",
+          "length",
+          "rating",
+          "stamp",
+          "to_reads",
+          "views"
+        ]
       },
       "ArticleSerializerFull": {
         "type": "object",
         "properties": {
           "id": {
             "type": "integer",
-            "readOnly": true
+            "maximum": 2147483647,
+            "minimum": -2147483648
           },
           "stamp": {
             "type": "number",
@@ -1122,6 +1155,29 @@
             "type": "string",
             "nullable": true
           },
+          "views": {
+            "type": "integer",
+            "maximum": 9223372036854775807,
+            "minimum": -9223372036854775808,
+            "format": "int64"
+          },
+          "rating": {
+            "type": "number",
+            "format": "double"
+          },
+          "to_reads": {
+            "type": "number",
+            "format": "double"
+          },
+          "length": {
+            "type": "integer",
+            "maximum": 2147483647,
+            "minimum": -2147483648
+          },
+          "excerpt": {
+            "type": "string",
+            "nullable": true
+          },
           "feed": {
             "allOf": [
               {
@@ -1131,7 +1187,15 @@
             "readOnly": true
           }
         },
-        "required": ["feed", "id", "stamp"]
+        "required": [
+          "feed",
+          "id",
+          "length",
+          "rating",
+          "stamp",
+          "to_reads",
+          "views"
+        ]
       },
       "AuthToken": {
         "type": "object",
@@ -1544,13 +1608,19 @@
               "type": "string"
             }
           },
+          "whitelist_authors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "blacklist": {
             "type": "array",
             "items": {
               "type": "string"
             }
           },
-          "whitelist_authors": {
+          "blacklist_authors": {
             "type": "array",
             "items": {
               "type": "string"
@@ -1658,13 +1728,19 @@
               "type": "string"
             }
           },
+          "whitelist_authors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "blacklist": {
             "type": "array",
             "items": {
               "type": "string"
             }
           },
-          "whitelist_authors": {
+          "blacklist_authors": {
             "type": "array",
             "items": {
               "type": "string"

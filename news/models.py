@@ -56,7 +56,7 @@ class ArticlesCombined(models.Model):
     content = models.TextField(blank=True, null=True)  # noqa: DJ001
     language = models.TextField(blank=True, null=True)  # noqa: DJ001
     url = models.TextField(unique=True, blank=True, null=True)
-    feed_id = models.IntegerField()
+    feed = models.ForeignKey("Feeds", models.DO_NOTHING)
     views = models.BigIntegerField()
     rating = models.FloatField()
     to_reads = models.FloatField()

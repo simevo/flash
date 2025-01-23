@@ -13,7 +13,7 @@ from news.api.serializers import ArticleSerializer
 from news.api.serializers import ArticleSerializerFull
 from news.api.serializers import FeedSerializer
 from news.api.serializers import ProfileSerializer
-from news.models import Articles
+from news.models import ArticlesCombined
 from news.models import Feeds
 
 
@@ -36,12 +36,12 @@ class ArticlesFilter(filters.FilterSet):
         return queryset.annotate(search=SearchVector("author")).filter(search=value)
 
     class Meta:
-        model = Articles
+        model = ArticlesCombined
         fields = ["feed_id"]
 
 
 class ArticlesView(viewsets.ModelViewSet, mixins.CreateModelMixin):
-    queryset = Articles.objects.all().order_by("-id")
+    queryset = ArticlesCombined.objects.all().order_by("-id")
     permission_classes = [permissions.IsAuthenticated]
     filterset_class = ArticlesFilter
     pagination_class = StandardResultsSetPagination
@@ -55,7 +55,7 @@ class ArticlesView(viewsets.ModelViewSet, mixins.CreateModelMixin):
         responses={200: ArticleSerializerFull},
     )
     def retrieve(self, request, pk=None):
-        queryset = Articles.objects
+        queryset = ArticlesCombined.objects
         article = get_object_or_404(queryset, pk=pk)
         serializer = ArticleSerializerFull(article, context={"request": request})
         return Response(serializer.data)

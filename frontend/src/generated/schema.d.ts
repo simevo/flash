@@ -186,19 +186,25 @@ export interface components {
       feed: number
     }
     ArticleRead: {
-      readonly id: number
+      id: number
       readonly stamp: number
-      readonly excerpt: string
-      readonly length: number
       author?: string | null
       title_original?: string | null
       title?: string | null
       language?: string | null
       url?: string | null
+      /** Format: int64 */
+      views: number
+      /** Format: double */
+      rating: number
+      /** Format: double */
+      to_reads: number
+      length: number
+      excerpt?: string | null
       feed: number
     }
     ArticleSerializerFull: {
-      readonly id: number
+      id: number
       readonly stamp: number
       author?: string | null
       title_original?: string | null
@@ -207,6 +213,14 @@ export interface components {
       content?: string | null
       language?: string | null
       url?: string | null
+      /** Format: int64 */
+      views: number
+      /** Format: double */
+      rating: number
+      /** Format: double */
+      to_reads: number
+      length: number
+      excerpt?: string | null
       readonly feed: components["schemas"]["Nested"]
     }
     AuthToken: {
@@ -324,8 +338,9 @@ export interface components {
       list_news?: number
       list_format?: string
       whitelist?: string[]
-      blacklist?: string[]
       whitelist_authors?: string[]
+      blacklist?: string[]
+      blacklist_authors?: string[]
       sociality_weight?: number
       /** Format: double */
       gravity?: number
@@ -357,8 +372,9 @@ export interface components {
       list_news?: number
       list_format?: string
       whitelist?: string[]
-      blacklist?: string[]
       whitelist_authors?: string[]
+      blacklist?: string[]
+      blacklist_authors?: string[]
       sociality_weight?: number
       /** Format: double */
       gravity?: number
@@ -445,7 +461,7 @@ export interface operations {
       query?: never
       header?: never
       path: {
-        /** @description A unique integer value identifying this articles. */
+        /** @description A unique value identifying this articles combined. */
         id: number
       }
       cookie?: never
@@ -467,7 +483,7 @@ export interface operations {
       query?: never
       header?: never
       path: {
-        /** @description A unique integer value identifying this articles. */
+        /** @description A unique value identifying this articles combined. */
         id: number
       }
       cookie?: never
@@ -495,7 +511,7 @@ export interface operations {
       query?: never
       header?: never
       path: {
-        /** @description A unique integer value identifying this articles. */
+        /** @description A unique value identifying this articles combined. */
         id: number
       }
       cookie?: never
@@ -516,7 +532,7 @@ export interface operations {
       query?: never
       header?: never
       path: {
-        /** @description A unique integer value identifying this articles. */
+        /** @description A unique value identifying this articles combined. */
         id: number
       }
       cookie?: never

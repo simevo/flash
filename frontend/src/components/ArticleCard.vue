@@ -5,6 +5,11 @@ import { secondsToString, secondsToString1 } from "./sts"
 type ArticleRead = components["schemas"]["ArticleRead"]
 type Feed = components["schemas"]["Feed"]
 
+function stripHtml(html: string): string {
+  const doc = new DOMParser().parseFromString(html, "text/html")
+  return doc.body.textContent || ""
+}
+
 defineProps<{
   article: ArticleRead
   feed_dict: { [key: number]: Feed }
@@ -56,7 +61,7 @@ defineProps<{
           </h5>
         </div>
         <div class="text-justify small" style="font-family: serif">
-          <span v-html="article.excerpt"></span>...
+          <span v-html="stripHtml(article.excerpt || '')"></span>...
         </div>
       </router-link>
     </div>
