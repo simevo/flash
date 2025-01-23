@@ -12,7 +12,7 @@ def create_views(apps, schema_editor):
         cursor.execute("DROP VIEW IF EXISTS articlelists_count_view")
         cursor.execute("""
                        CREATE TABLE articles_data (
-                            id integer NOT NULL,
+                            id integer NOT NULL UNIQUE,
                             views bigint NOT NULL DEFAULT 0,
                             rating numeric NOT NULL DEFAULT 0.0,
                             to_reads numeric NOT NULL DEFAULT 0.0,
@@ -62,6 +62,29 @@ def create_views(apps, schema_editor):
                                 LEFT OUTER JOIN articlelists_count_view ON articles.id = articlelists_count_view.article_id
                             GROUP BY articles.id""")
 
+        cursor.execute("DROP TRIGGER IF EXISTS update_articles_data ON articles")
+        cursor.execute("DROP FUNCTION IF EXISTS uad")
+
+        cursor.execute("""
+                       CREATE FUNCTION uad() RETURNS trigger AS $$
+                            BEGIN
+                                INSERT INTO articles_data
+                                    SELECT articles_data_view.*
+                                    FROM articles_data_view
+                                    WHERE id = NEW.id
+                                ON CONFLICT (id) DO UPDATE
+                                    SET
+                                        views = EXCLUDED.views,
+                                        rating = EXCLUDED.rating,
+                                        to_reads = EXCLUDED.to_reads,
+                                        length = EXCLUDED.length,
+                                        excerpt = EXCLUDED.excerpt;
+                                RETURN NEW;
+                            END;
+                            $$ LANGUAGE plpgsql STRICT;
+                        """)
+
+        cursor.execute("CREATE TRIGGER update_articles_data AFTER INSERT OR UPDATE ON articles FOR EACH ROW EXECUTE FUNCTION uad()")
 
 
 def delete_views(apps, schema_editor):
@@ -69,6 +92,8 @@ def delete_views(apps, schema_editor):
     db_alias = schema_editor.connection.alias
 
     with schema_editor.connection.cursor() as cursor:
+        cursor.execute("DROP TRIGGER IF EXISTS update_articles_data ON articles")
+        cursor.execute("DROP FUNCTION IF EXISTS uad")
         cursor.execute("DROP VIEW IF EXISTS articles_combined")
         cursor.execute("DROP TABLE IF EXISTS articles_data")
         cursor.execute("DROP VIEW IF EXISTS articles_data_view")
