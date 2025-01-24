@@ -51,14 +51,14 @@ def create_views(apps, schema_editor):
                        CREATE VIEW articles_data_view AS
                             SELECT
                                 articles.id,
-                                COALESCE(COUNT(CASE WHEN user_articles.read THEN 1 END), 0) AS views,
-                                COALESCE(AVG(user_articles.rating), 0) AS rating,
+                                COALESCE(COUNT(CASE WHEN news_userarticles.read THEN 1 END), 0) AS views,
+                                COALESCE(AVG(news_userarticles.rating), 0) AS rating,
                                 COALESCE(AVG(articlelists_count_view.count), 0) AS to_reads,
                                 COALESCE(LENGTH(articles.content), LENGTH(articles.content_original)) as length,
                                 SUBSTRING((CASE WHEN LENGTH(TRIM(articles.content))>0 THEN articles.content ELSE articles.content_original END) FOR 500) AS excerpt
                             FROM
                                 articles
-                                LEFT OUTER JOIN user_articles ON articles.id = user_articles.article_id
+                                LEFT OUTER JOIN news_userarticles ON articles.id = news_userarticles.article_id
                                 LEFT OUTER JOIN articlelists_count_view ON articles.id = articlelists_count_view.article_id
                             GROUP BY articles.id""")
 
@@ -86,6 +86,29 @@ def create_views(apps, schema_editor):
 
         cursor.execute("CREATE TRIGGER update_articles_data AFTER INSERT OR UPDATE ON articles FOR EACH ROW EXECUTE FUNCTION uad()")
 
+        cursor.execute("DROP TRIGGER IF EXISTS update_articles_data2 ON news_userarticles")
+        cursor.execute("DROP FUNCTION IF EXISTS uad2")
+
+        cursor.execute("""
+                       CREATE FUNCTION uad2() RETURNS trigger AS $$
+                            BEGIN
+                                INSERT INTO articles_data
+                                    SELECT articles_data_view.*
+                                    FROM articles_data_view
+                                    WHERE id = NEW.article_id
+                                ON CONFLICT (id) DO UPDATE
+                                    SET
+                                        views = EXCLUDED.views,
+                                        rating = EXCLUDED.rating,
+                                        to_reads = EXCLUDED.to_reads,
+                                        length = EXCLUDED.length,
+                                        excerpt = EXCLUDED.excerpt;
+                                RETURN NEW;
+                            END;
+                            $$ LANGUAGE plpgsql STRICT;
+                       """)
+
+        cursor.execute("CREATE TRIGGER update_articles_data2 AFTER INSERT OR UPDATE ON news_userarticles FOR EACH ROW EXECUTE FUNCTION uad2()")
 
 def delete_views(apps, schema_editor):
 
@@ -94,6 +117,8 @@ def delete_views(apps, schema_editor):
     with schema_editor.connection.cursor() as cursor:
         cursor.execute("DROP TRIGGER IF EXISTS update_articles_data ON articles")
         cursor.execute("DROP FUNCTION IF EXISTS uad")
+        cursor.execute("DROP TRIGGER IF EXISTS update_articles_data2 ON news_userarticles")
+        cursor.execute("DROP FUNCTION IF EXISTS uad2")
         cursor.execute("DROP VIEW IF EXISTS articles_combined")
         cursor.execute("DROP TABLE IF EXISTS articles_data")
         cursor.execute("DROP VIEW IF EXISTS articles_data_view")

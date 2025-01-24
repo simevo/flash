@@ -37,18 +37,3 @@ CREATE TABLE public.articles (
     feed_id integer REFERENCES feeds(id),
     topic_id integer
 );
-
-CREATE TABLE user_articles (
-    user_id integer NOT NULL,
-    article_id integer NOT NULL,
-    read boolean DEFAULT false,
-    rating integer DEFAULT 0,
-    to_read boolean DEFAULT false,
-    dismissed boolean DEFAULT false
-);
-
-CREATE TABLE user_feeds (
-    user_id integer NOT NULL,
-    feed_id integer NOT NULL,
-    rating integer
-);

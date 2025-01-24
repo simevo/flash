@@ -58,6 +58,14 @@ class ArticlesView(viewsets.ModelViewSet, mixins.CreateModelMixin):
         queryset = ArticlesCombined.objects
         article = get_object_or_404(queryset, pk=pk)
         serializer = ArticleSerializerFull(article, context={"request": request})
+        user = request.user
+        user_articles = user.userarticles_set.filter(article_id=article.id)
+        if user_articles.exists():
+            user_article = user_articles.first()
+            user_article.read = True
+            user_article.save()
+        else:
+            user.userarticles_set.create(article_id=article.id, read=True)
         return Response(serializer.data)
 
 
