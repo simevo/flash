@@ -7,6 +7,7 @@ stages:
   - lint javascript
   - build final images
   - test
+  - tag
 
 variables:
   POSTGRES_USER: 'flash'
@@ -193,3 +194,31 @@ pytest:
     - export DATABASE_URL="postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}"
   script:
     - /usr/local/bin/pytest
+
+tag-latest-docker-images:
+  stage: tag
+  image: debian:bookworm-slim
+  before_script:
+    - apt update && apt install -y --no-install-recommends
+        skopeo
+        openssh-client
+        ca-certificates
+  variables:
+    AUTH: $CI_REGISTRY_USER:$CI_REGISTRY_PASSWORD
+    TAG_NEW: latest
+    TAG: $CI_COMMIT_SHORT_SHA
+  script:
+    - |
+      for I in backend frontend readability
+      do
+        IMAGE="${CI_REGISTRY_IMAGE}/${I}"
+        echo Tagging "${IMAGE}:${TAG}"
+        skopeo copy --src-creds "$AUTH" --dest-creds "$AUTH" docker://"${IMAGE}:${TAG}" docker://"${IMAGE}:${TAG_NEW}"
+        echo 🏷️ Tagged "${IMAGE}:${TAG_NEW}"
+      done
+  rules:
+    - if: '$CI_MERGE_REQUEST_ID'
+      when: never
+    - if: '$CI_DEFAULT_BRANCH == $CI_COMMIT_BRANCH'
+      when: on_success
+    - when: never
