@@ -2,10 +2,17 @@
 import type { components } from "../generated/schema.d.ts"
 import { secondsToString, secondsToString1 } from "./sts"
 
-type Article = components["schemas"]["Article"]
+type ArticleRead = components["schemas"]["ArticleRead"]
+type Feed = components["schemas"]["Feed"]
+
+function stripHtml(html: string): string {
+  const doc = new DOMParser().parseFromString(html, "text/html")
+  return doc.body.textContent || ""
+}
 
 defineProps<{
-  article: Article
+  article: ArticleRead
+  feed_dict: { [key: number]: Feed }
   index: number
 }>()
 </script>
@@ -14,16 +21,16 @@ defineProps<{
   <div class="card m-1">
     <div class="card-body">
       <router-link
-        :to="`/feed/${article.feed.id}`"
+        :to="`/feed/${article.feed}`"
         class="float-start"
-        :title="`vai a tutti gli articoli della fonte ${article.feed.title}`"
+        :title="`vai a tutti gli articoli della fonte ${feed_dict[article.feed].title}`"
       >
         <img
           style="margin: 5px"
           class="card-img-start"
           width="30"
           height="30"
-          :src="`https://notizie.calomelano.it/${article.feed.icon}`"
+          :src="`https://notizie.calomelano.it/${feed_dict[article.feed].icon}`"
           alt="feed logo"
         />
       </router-link>
@@ -54,7 +61,7 @@ defineProps<{
           </h5>
         </div>
         <div class="text-justify small" style="font-family: serif">
-          <span v-html="article.excerpt"></span>...
+          <span v-html="stripHtml(article.excerpt || '')"></span>...
         </div>
       </router-link>
     </div>

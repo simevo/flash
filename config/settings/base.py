@@ -49,15 +49,6 @@ LOCALE_PATHS = [str(BASE_DIR / "locale")]
 # https://docs.djangoproject.com/en/dev/ref/settings/#databases
 DATABASES = {
     "default": env.db("DATABASE_URL"),
-    "calonews": {
-        "ENGINE": "django.db.backends.postgresql",
-        # "OPTIONS": {"options": "-c search_path=meteoidro"},
-        "NAME": "calonews",
-        "USER": "calo",
-        "PASSWORD": "calo",
-        "HOST": "host.docker.internal",
-        "PORT": "5433",
-    },
 }
 DATABASES["default"]["ATOMIC_REQUESTS"] = True
 # https://docs.djangoproject.com/en/stable/ref/settings/#std:setting-DEFAULT_AUTO_FIELD
@@ -82,6 +73,7 @@ DJANGO_APPS = [
     # "django.contrib.humanize", # Handy template tags
     "django.contrib.admin",
     "django.forms",
+    "django.contrib.postgres",
 ]
 THIRD_PARTY_APPS = [
     "crispy_forms",
@@ -359,7 +351,7 @@ SPECTACULAR_SETTINGS = {
     "TITLE": "flash API",
     "DESCRIPTION": "Documentation of API endpoints of flash",
     "VERSION": "1.0.0",
-    "SERVE_PERMISSIONS": ["rest_framework.permissions.AllowAny"],
+    "SERVE_PERMISSIONS": ["rest_framework.permissions.IsAdminUser"],
     "SCHEMA_PATH_PREFIX": "/api/",
 }
 # Your stuff...

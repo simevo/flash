@@ -84,6 +84,22 @@ export interface paths {
     patch: operations["feeds_partial_update"]
     trace?: never
   }
+  "/api/profile/{id}/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations["profile_retrieve"]
+    put: operations["profile_update"]
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch: operations["profile_partial_update"]
+    trace?: never
+  }
   "/api/schema/": {
     parameters: {
       query?: never
@@ -158,18 +174,37 @@ export interface components {
   schemas: {
     Article: {
       readonly id: number
-      feed: components["schemas"]["FeedSerializerSimple"]
+      /** Format: date-time */
+      stamp?: string
+      author?: string | null
+      title_original?: string | null
+      title?: string | null
+      content_original?: string | null
+      content?: string | null
+      language?: string | null
+      url?: string | null
+      feed: number
+    }
+    ArticleRead: {
+      id: number
       readonly stamp: number
-      readonly excerpt: string
-      readonly length: number
       author?: string | null
       title_original?: string | null
       title?: string | null
       language?: string | null
       url?: string | null
+      /** Format: int64 */
+      views: number
+      /** Format: double */
+      rating: number
+      /** Format: double */
+      to_reads: number
+      length: number
+      excerpt?: string | null
+      feed: number
     }
     ArticleSerializerFull: {
-      readonly id: number
+      id: number
       readonly stamp: number
       author?: string | null
       title_original?: string | null
@@ -178,6 +213,14 @@ export interface components {
       content?: string | null
       language?: string | null
       url?: string | null
+      /** Format: int64 */
+      views: number
+      /** Format: double */
+      rating: number
+      /** Format: double */
+      to_reads: number
+      length: number
+      excerpt?: string | null
       readonly feed: components["schemas"]["Nested"]
     }
     AuthToken: {
@@ -197,7 +240,6 @@ export interface components {
       /** Format: date-time */
       last_polled?: string | null
       incomplete?: boolean | null
-      tags?: string | null
       salt_url?: boolean | null
       rating?: number | null
       premium?: boolean | null
@@ -208,13 +250,7 @@ export interface components {
       asy?: boolean | null
       script?: string | null
       frequency?: string | null
-    }
-    FeedSerializerSimple: {
-      id: number
-      title: string
-      icon: string
-      premium?: boolean | null
-      license?: string | null
+      tags?: string[] | null
     }
     Nested: {
       id: number
@@ -228,7 +264,6 @@ export interface components {
       /** Format: date-time */
       last_polled?: string | null
       incomplete?: boolean | null
-      tags?: string | null
       salt_url?: boolean | null
       rating?: number | null
       premium?: boolean | null
@@ -241,8 +276,9 @@ export interface components {
       readonly iconblob: string | null
       script?: string | null
       frequency?: string | null
+      tags?: string[] | null
     }
-    PaginatedArticleList: {
+    PaginatedArticleReadList: {
       /** @example 123 */
       count: number
       /**
@@ -255,19 +291,20 @@ export interface components {
        * @example http://api.example.org/accounts/?page=2
        */
       previous?: string | null
-      results: components["schemas"]["Article"][]
+      results: components["schemas"]["ArticleRead"][]
     }
     PatchedArticle: {
       readonly id?: number
-      feed?: components["schemas"]["FeedSerializerSimple"]
-      readonly stamp?: number
-      readonly excerpt?: string
-      readonly length?: number
+      /** Format: date-time */
+      stamp?: string
       author?: string | null
       title_original?: string | null
       title?: string | null
+      content_original?: string | null
+      content?: string | null
       language?: string | null
       url?: string | null
+      feed?: number
     }
     PatchedFeed: {
       id?: number
@@ -281,7 +318,6 @@ export interface components {
       /** Format: date-time */
       last_polled?: string | null
       incomplete?: boolean | null
-      tags?: string | null
       salt_url?: boolean | null
       rating?: number | null
       premium?: boolean | null
@@ -292,6 +328,33 @@ export interface components {
       asy?: boolean | null
       script?: string | null
       frequency?: string | null
+      tags?: string[] | null
+    }
+    PatchedProfile: {
+      readonly id?: number
+      newsletter?: boolean
+      list_email?: string
+      list_frequency?: string
+      list_news?: number
+      list_format?: string
+      whitelist?: string[]
+      whitelist_authors?: string[]
+      blacklist?: string[]
+      blacklist_authors?: string[]
+      sociality_weight?: number
+      /** Format: double */
+      gravity?: number
+      /** Format: double */
+      age_divider?: number
+      feed_weight?: number
+      list_weight?: number
+      /** Format: date-time */
+      last_access?: string | null
+      bow?: unknown
+      tags?: string[]
+      languages?: string[]
+      list_hour?: number
+      list_fulltext?: boolean
     }
     PatchedUser: {
       /** @description Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only. */
@@ -300,6 +363,32 @@ export interface components {
       name?: string
       /** Format: uri */
       readonly url?: string
+    }
+    Profile: {
+      readonly id: number
+      newsletter?: boolean
+      list_email?: string
+      list_frequency?: string
+      list_news?: number
+      list_format?: string
+      whitelist?: string[]
+      whitelist_authors?: string[]
+      blacklist?: string[]
+      blacklist_authors?: string[]
+      sociality_weight?: number
+      /** Format: double */
+      gravity?: number
+      /** Format: double */
+      age_divider?: number
+      feed_weight?: number
+      list_weight?: number
+      /** Format: date-time */
+      last_access?: string | null
+      bow?: unknown
+      tags?: string[]
+      languages?: string[]
+      list_hour?: number
+      list_fulltext?: boolean
     }
     User: {
       /** @description Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only. */
@@ -321,7 +410,7 @@ export interface operations {
   articles_list: {
     parameters: {
       query?: {
-        feed_id?: number | null
+        feed_id?: number
         /** @description A page number within the paginated result set. */
         page?: number
         search_author?: string
@@ -337,7 +426,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          "application/json": components["schemas"]["PaginatedArticleList"]
+          "application/json": components["schemas"]["PaginatedArticleReadList"]
         }
       }
     }
@@ -372,7 +461,7 @@ export interface operations {
       query?: never
       header?: never
       path: {
-        /** @description A unique integer value identifying this articles. */
+        /** @description A unique value identifying this articles combined. */
         id: number
       }
       cookie?: never
@@ -394,7 +483,7 @@ export interface operations {
       query?: never
       header?: never
       path: {
-        /** @description A unique integer value identifying this articles. */
+        /** @description A unique value identifying this articles combined. */
         id: number
       }
       cookie?: never
@@ -422,7 +511,7 @@ export interface operations {
       query?: never
       header?: never
       path: {
-        /** @description A unique integer value identifying this articles. */
+        /** @description A unique value identifying this articles combined. */
         id: number
       }
       cookie?: never
@@ -443,7 +532,7 @@ export interface operations {
       query?: never
       header?: never
       path: {
-        /** @description A unique integer value identifying this articles. */
+        /** @description A unique value identifying this articles combined. */
         id: number
       }
       cookie?: never
@@ -630,6 +719,81 @@ export interface operations {
         }
         content: {
           "application/json": components["schemas"]["Feed"]
+        }
+      }
+    }
+  }
+  profile_retrieve: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["Profile"]
+        }
+      }
+    }
+  }
+  profile_update: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        "application/json": components["schemas"]["Profile"]
+        "application/x-www-form-urlencoded": components["schemas"]["Profile"]
+        "multipart/form-data": components["schemas"]["Profile"]
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["Profile"]
+        }
+      }
+    }
+  }
+  profile_partial_update: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        "application/json": components["schemas"]["PatchedProfile"]
+        "application/x-www-form-urlencoded": components["schemas"]["PatchedProfile"]
+        "multipart/form-data": components["schemas"]["PatchedProfile"]
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["Profile"]
         }
       }
     }

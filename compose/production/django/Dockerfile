@@ -1,10 +1,12 @@
+ARG APP_BASE_IMAGE=deps-backend-base
 
 # define an alias for the specific python version used in this file.
 FROM docker.io/python:3.12.8-slim-bookworm AS python
 
 # Python build stage
-FROM python AS python-build-stage
+FROM python as deps-backend-base
 
+ARG APP_HOME=/app
 ARG BUILD_ENVIRONMENT=production
 
 WORKDIR ${APP_HOME}
@@ -25,7 +27,7 @@ RUN pip wheel --wheel-dir /usr/src/app/wheels  \
 
 
 # Python 'run' stage
-FROM python AS python-run-stage
+FROM ${APP_BASE_IMAGE} as backend
 
 ARG BUILD_ENVIRONMENT=production
 ARG APP_HOME=/app
@@ -53,8 +55,8 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
   && rm -rf /var/lib/apt/lists/*
 
 # All absolute dir copies ignore workdir instruction. All relative dir copies are wrt to the workdir instruction
-# copy python dependency wheels from python-build-stage
-COPY --from=python-build-stage /usr/src/app/wheels  /wheels/
+# copy python dependency wheels from deps-backend-base
+COPY --from=deps-backend-base /usr/src/app/wheels  /wheels/
 
 # use wheels to install python dependencies
 RUN pip install --no-cache-dir --no-index --find-links=/wheels/ /wheels/* \

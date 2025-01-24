@@ -11,3 +11,5 @@ venv
 .git
 .envs/
 .venv/
+node_modules/
+frontend/node_modules/

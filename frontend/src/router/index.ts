@@ -10,7 +10,7 @@ const router = createRouter({
       component: ResHomeView,
     },
     {
-      path: "/article/:id",
+      path: "/article/:article_id",
       name: "article",
       props: true,
       component: () => import("../views/ArticleView.vue"),
@@ -28,7 +28,7 @@ const router = createRouter({
       component: () => import("../views/NewArticle.vue"),
     },
     {
-      path: "/feed/:id",
+      path: "/feed/:feed_id",
       name: "feed",
       props: true,
       component: () => import("../views/FeedView.vue"),
@@ -38,6 +38,12 @@ const router = createRouter({
       name: "author",
       props: true,
       component: () => import("../views/AuthorView.vue"),
+    },
+    {
+      path: "/settings/",
+      name: "settings",
+      props: true,
+      component: () => import("../views/SettingsView.vue"),
     },
   ],
 })

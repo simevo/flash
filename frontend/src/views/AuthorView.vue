@@ -1,5 +1,5 @@
 <template>
-  <div class="container-fluid" v-if="articles.length > 0">
+  <div class="container-fluid" v-if="count_fetch == 0">
     <div class="row my-3">
       <h1>Author: {{ author }}</h1>
       <div class="col-md-12">
@@ -8,6 +8,7 @@
             v-for="article in articles"
             :key="article.id"
             :article="article"
+            :feed_dict="feed_dict"
             :index="1"
           />
         </div>
@@ -27,16 +28,20 @@
 
 <script setup lang="ts">
 import { fetch_wrapper } from "../utils"
-import { watch } from "vue"
+import { onActivated, watch } from "vue"
 import { useRoute } from "vue-router"
-import { ref, onMounted, type Ref } from "vue"
+import { computed, ref, onMounted, type Ref } from "vue"
 import type { components } from "../generated/schema.d.ts"
 import ArticleCard from "../components/ArticleCard.vue"
 
-type Article = components["schemas"]["Article"]
-type PaginatedArticleList = components["schemas"]["PaginatedArticleList"]
+type ArticleRead = components["schemas"]["ArticleRead"]
+type Feed = components["schemas"]["Feed"]
+type PaginatedArticleReadList =
+  components["schemas"]["PaginatedArticleReadList"]
 
-const articles: Ref<Article[]> = ref([])
+const articles: Ref<ArticleRead[]> = ref([])
+const feeds: Ref<Feed[]> = ref([])
+const count_fetch = ref(2)
 
 const route = useRoute()
 
@@ -48,13 +53,6 @@ const props = withDefaults(defineProps<Props>(), {
   author: "",
 })
 
-watch(
-  () => route.params.author,
-  async (newAuthor) => {
-    alert(newAuthor)
-  },
-)
-
 async function fetchArticles() {
   const response = await fetch_wrapper(
     `../../api/articles/?search_author=${props.author}`,
@@ -62,13 +60,51 @@ async function fetchArticles() {
   if (response.status == 403) {
     document.location = "/accounts/"
   } else {
-    const data: PaginatedArticleList = await response.json()
+    const data: PaginatedArticleReadList = await response.json()
     articles.value = data.results
+    count_fetch.value -= 1
   }
 }
 
-onMounted(() => {
-  console.log("HomePage mounted")
-  fetchArticles()
+async function fetchFeeds() {
+  const response = await fetch_wrapper(`../../api/feeds/`)
+  if (response.status == 403) {
+    document.location = "/accounts/"
+  } else {
+    const data: Feed[] = await response.json()
+    feeds.value = data
+    count_fetch.value -= 1
+  }
+}
+
+const feed_dict = computed(() => {
+  const feed_dict: { [key: number]: Feed } = {}
+  feeds.value.forEach((feed) => {
+    feed_dict[feed.id] = feed
+  })
+  return feed_dict
 })
+
+onMounted(() => {
+  console.log("AuthorView mounted")
+  fetchArticles()
+  fetchFeeds()
+})
+
+onActivated(() => {
+  console.log("AuthorView activated")
+})
+
+watch(
+  () => route.params.author,
+  async (newAuthor, oldAuthor) => {
+    console.log(
+      `AuthorView watch author, newAuthor = [${newAuthor}] oldAuthor = [${oldAuthor}]`,
+    )
+    if (newAuthor && newAuthor != oldAuthor) {
+      count_fetch.value += 1
+      await fetchArticles()
+    }
+  },
+)
 </script>

@@ -10,11 +10,13 @@ stages:
 
 variables:
   POSTGRES_USER: 'flash'
-  POSTGRES_PASSWORD: ''
-  POSTGRES_DB: 'test_flash'
+  POSTGRES_PASSWORD: 'flash'
+  POSTGRES_DB: 'flash'
   POSTGRES_HOST: '127.0.0.1'
+  POSTGRES_PORT: '5432'
   REDIS_URL: 'redis://redis:6379/0'
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  USE_DOCKER: yes
 
 precommit:
   stage: lint
@@ -185,6 +187,9 @@ pytest:
     - pip3 install -r requirements/local.txt
     - su - postgres -c 'psql -c "create role '"${POSTGRES_USER}"' with login password '"'${POSTGRES_PASSWORD}';"'"'
     - su - postgres -c "createdb -O ${POSTGRES_USER} test_${POSTGRES_DB}"
+    - PGPASSWORD=${POSTGRES_PASSWORD} psql -h ${POSTGRES_HOST} -U ${POSTGRES_USER} test_${POSTGRES_DB} -f tables.sql
+    - export DATABASE_URL="postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/test_${POSTGRES_DB}"
+    - python3 manage.py migrate
     - export DATABASE_URL="postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}"
   script:
     - /usr/local/bin/pytest

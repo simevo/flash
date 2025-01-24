@@ -1,16 +1,18 @@
 <template>
-  <div class="container-fluid" v-if="feeds.length > 0">
+  <div class="container" v-if="feeds.length > 0">
     <div class="row my-3">
       <div class="col-md-12">
-        <ul>
-          <li v-for="feed in feeds" :key="feed.id">
-            <router-link
-              :to="'/feed/' + feed.id"
-              :title="'vai a tutti gli articoli di ' + feed.title"
-              ><span>{{ feed.title }}</span>
-            </router-link>
-          </li>
-        </ul>
+        <h1>Fonti</h1>
+        <select
+          :value="language"
+          class="form-select mb-3"
+          aria-label="Filtra per lingua"
+        >
+          <option value="" selected>Tutte le lingue</option>
+          <option value="it">Italiano</option>
+          <option value="en">Inglese</option>
+        </select>
+        <FeedCard v-for="feed in feeds" :key="feed.id" :feed="feed" />
       </div>
     </div>
   </div>
@@ -30,9 +32,12 @@ import { fetch_wrapper } from "../utils"
 import { ref, onMounted, type Ref } from "vue"
 import type { components } from "../generated/schema.d.ts"
 
+import FeedCard from "../components/FeedCard.vue"
+
 type Feed = components["schemas"]["Feed"]
 
 const feeds: Ref<Feed[]> = ref([])
+const language = ref("")
 
 async function fetchFeeds() {
   const response = await fetch_wrapper(`../../api/feeds/`)

@@ -1,9 +1,6 @@
 ---
 
 volumes:
-  production_postgres_data: {}
-  production_postgres_data_backups: {}
-  production_traefik: {}
   production_django_media: {}
   production_redis_data: {}
 
@@ -12,54 +9,31 @@ services:
     build:
       context: .
       dockerfile: ./compose/production/django/Dockerfile
-
     image: flash_production_django
     volumes:
       - production_django_media:/app/flash/media
     depends_on:
-      - postgres
       - redis
     env_file:
       - ./.envs/.production/.django
       - ./.envs/.production/.postgres
     command: /start
-
-  postgres:
-    build:
-      context: .
-      dockerfile: ./compose/production/postgres/Dockerfile
-    image: flash_production_postgres
-    volumes:
-      - production_postgres_data:/var/lib/postgresql/data
-      - production_postgres_data_backups:/backups
-    env_file:
-      - ./.envs/.production/.postgres
-
-  traefik:
-    build:
-      context: .
-      dockerfile: ./compose/production/traefik/Dockerfile
-    image: flash_production_traefik
-    depends_on:
-      - django
-    volumes:
-      - production_traefik:/etc/traefik/acme
-    ports:
-      - '0.0.0.0:80:80'
-      - '0.0.0.0:443:443'
-      - '0.0.0.0:5555:5555'
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   redis:
     image: docker.io/redis:6
-
     volumes:
       - production_redis_data:/data
-
 
   celeryworker:
     <<: *django
     image: flash_production_celeryworker
     command: /start-celeryworker
+    volumes:
+      - ./cookies_46.txt:/app/cookies_46.txt
+      - ./cookies_127.txt:/app/cookies_127.txt
+      - ./cookies_148.txt:/app/cookies_148.txt
 
   celerybeat:
     <<: *django
@@ -71,12 +45,22 @@ services:
     image: flash_production_flower
     command: /start-flower
 
-  nginx:
+  readability:
+    container_name: flash_local_readability
     build:
-      context: .
-      dockerfile: ./compose/production/nginx/Dockerfile
-    image: flash_production_nginx
+      context: ./compose/local/readability
+    image: flash_local_readability
+    ports:
+      - '8081:8081'
+
+  flash:
+    build:
+      context: ./frontend
+      dockerfile: ./Dockerfile
+    image: flash_production_flash
     depends_on:
       - django
+    ports:
+      - 8100:80
     volumes:
       - production_django_media:/usr/share/nginx/media:ro

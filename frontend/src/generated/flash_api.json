@@ -16,8 +16,7 @@
             "schema": {
               "type": "integer",
               "maximum": 2147483647,
-              "minimum": -2147483648,
-              "nullable": true
+              "minimum": -2147483648
             }
           },
           {
@@ -51,7 +50,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PaginatedArticleList"
+                  "$ref": "#/components/schemas/PaginatedArticleReadList"
                 }
               }
             },
@@ -112,9 +111,11 @@
             "in": "path",
             "name": "id",
             "schema": {
-              "type": "integer"
+              "type": "integer",
+              "maximum": 2147483647,
+              "minimum": -2147483648
             },
-            "description": "A unique integer value identifying this articles.",
+            "description": "A unique value identifying this articles combined.",
             "required": true
           }
         ],
@@ -147,9 +148,11 @@
             "in": "path",
             "name": "id",
             "schema": {
-              "type": "integer"
+              "type": "integer",
+              "maximum": 2147483647,
+              "minimum": -2147483648
             },
-            "description": "A unique integer value identifying this articles.",
+            "description": "A unique value identifying this articles combined.",
             "required": true
           }
         ],
@@ -202,9 +205,11 @@
             "in": "path",
             "name": "id",
             "schema": {
-              "type": "integer"
+              "type": "integer",
+              "maximum": 2147483647,
+              "minimum": -2147483648
             },
-            "description": "A unique integer value identifying this articles.",
+            "description": "A unique value identifying this articles combined.",
             "required": true
           }
         ],
@@ -256,9 +261,11 @@
             "in": "path",
             "name": "id",
             "schema": {
-              "type": "integer"
+              "type": "integer",
+              "maximum": 2147483647,
+              "minimum": -2147483648
             },
-            "description": "A unique integer value identifying this articles.",
+            "description": "A unique value identifying this articles combined.",
             "required": true
           }
         ],
@@ -579,6 +586,148 @@
         }
       }
     },
+    "/api/profile/{id}/": {
+      "get": {
+        "operationId": "profile_retrieve",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "tags": ["profile"],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "tokenAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Profile"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      },
+      "put": {
+        "operationId": "profile_update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "tags": ["profile"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Profile"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/Profile"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Profile"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "tokenAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Profile"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      },
+      "patch": {
+        "operationId": "profile_partial_update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "tags": ["profile"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchedProfile"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchedProfile"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchedProfile"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "tokenAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Profile"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/schema/": {
       "get": {
         "operationId": "schema_retrieve",
@@ -855,18 +1004,55 @@
             "type": "integer",
             "readOnly": true
           },
+          "stamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "author": {
+            "type": "string",
+            "nullable": true
+          },
+          "title_original": {
+            "type": "string",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "content_original": {
+            "type": "string",
+            "nullable": true
+          },
+          "content": {
+            "type": "string",
+            "nullable": true
+          },
+          "language": {
+            "type": "string",
+            "nullable": true
+          },
+          "url": {
+            "type": "string",
+            "nullable": true
+          },
           "feed": {
-            "$ref": "#/components/schemas/FeedSerializerSimple"
+            "type": "integer",
+            "maximum": 2147483647,
+            "minimum": -2147483648
+          }
+        },
+        "required": ["feed", "id"]
+      },
+      "ArticleRead": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "maximum": 2147483647,
+            "minimum": -2147483648
           },
           "stamp": {
-            "type": "number",
-            "readOnly": true
-          },
-          "excerpt": {
-            "type": "string",
-            "readOnly": true
-          },
-          "length": {
             "type": "number",
             "readOnly": true
           },
@@ -889,16 +1075,53 @@
           "url": {
             "type": "string",
             "nullable": true
+          },
+          "views": {
+            "type": "integer",
+            "maximum": 9223372036854775807,
+            "minimum": -9223372036854775808,
+            "format": "int64"
+          },
+          "rating": {
+            "type": "number",
+            "format": "double"
+          },
+          "to_reads": {
+            "type": "number",
+            "format": "double"
+          },
+          "length": {
+            "type": "integer",
+            "maximum": 2147483647,
+            "minimum": -2147483648
+          },
+          "excerpt": {
+            "type": "string",
+            "nullable": true
+          },
+          "feed": {
+            "type": "integer",
+            "maximum": 2147483647,
+            "minimum": -2147483648
           }
         },
-        "required": ["excerpt", "feed", "id", "length", "stamp"]
+        "required": [
+          "feed",
+          "id",
+          "length",
+          "rating",
+          "stamp",
+          "to_reads",
+          "views"
+        ]
       },
       "ArticleSerializerFull": {
         "type": "object",
         "properties": {
           "id": {
             "type": "integer",
-            "readOnly": true
+            "maximum": 2147483647,
+            "minimum": -2147483648
           },
           "stamp": {
             "type": "number",
@@ -932,6 +1155,29 @@
             "type": "string",
             "nullable": true
           },
+          "views": {
+            "type": "integer",
+            "maximum": 9223372036854775807,
+            "minimum": -9223372036854775808,
+            "format": "int64"
+          },
+          "rating": {
+            "type": "number",
+            "format": "double"
+          },
+          "to_reads": {
+            "type": "number",
+            "format": "double"
+          },
+          "length": {
+            "type": "integer",
+            "maximum": 2147483647,
+            "minimum": -2147483648
+          },
+          "excerpt": {
+            "type": "string",
+            "nullable": true
+          },
           "feed": {
             "allOf": [
               {
@@ -941,7 +1187,15 @@
             "readOnly": true
           }
         },
-        "required": ["feed", "id", "stamp"]
+        "required": [
+          "feed",
+          "id",
+          "length",
+          "rating",
+          "stamp",
+          "to_reads",
+          "views"
+        ]
       },
       "AuthToken": {
         "type": "object",
@@ -1001,10 +1255,6 @@
             "type": "boolean",
             "nullable": true
           },
-          "tags": {
-            "type": "string",
-            "nullable": true
-          },
           "salt_url": {
             "type": "boolean",
             "nullable": true
@@ -1046,34 +1296,16 @@
           "frequency": {
             "type": "string",
             "nullable": true
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
           }
         },
         "required": ["homepage", "icon", "id", "language", "title", "url"]
-      },
-      "FeedSerializerSimple": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "maximum": 2147483647,
-            "minimum": -2147483648
-          },
-          "title": {
-            "type": "string"
-          },
-          "icon": {
-            "type": "string"
-          },
-          "premium": {
-            "type": "boolean",
-            "nullable": true
-          },
-          "license": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "required": ["icon", "id", "title"]
       },
       "Nested": {
         "type": "object",
@@ -1113,10 +1345,6 @@
           },
           "incomplete": {
             "type": "boolean",
-            "nullable": true
-          },
-          "tags": {
-            "type": "string",
             "nullable": true
           },
           "salt_url": {
@@ -1166,6 +1394,13 @@
           "frequency": {
             "type": "string",
             "nullable": true
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
           }
         },
         "required": [
@@ -1178,7 +1413,7 @@
           "url"
         ]
       },
-      "PaginatedArticleList": {
+      "PaginatedArticleReadList": {
         "type": "object",
         "required": ["count", "results"],
         "properties": {
@@ -1201,7 +1436,7 @@
           "results": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/Article"
+              "$ref": "#/components/schemas/ArticleRead"
             }
           }
         }
@@ -1213,20 +1448,9 @@
             "type": "integer",
             "readOnly": true
           },
-          "feed": {
-            "$ref": "#/components/schemas/FeedSerializerSimple"
-          },
           "stamp": {
-            "type": "number",
-            "readOnly": true
-          },
-          "excerpt": {
             "type": "string",
-            "readOnly": true
-          },
-          "length": {
-            "type": "number",
-            "readOnly": true
+            "format": "date-time"
           },
           "author": {
             "type": "string",
@@ -1240,6 +1464,14 @@
             "type": "string",
             "nullable": true
           },
+          "content_original": {
+            "type": "string",
+            "nullable": true
+          },
+          "content": {
+            "type": "string",
+            "nullable": true
+          },
           "language": {
             "type": "string",
             "nullable": true
@@ -1247,6 +1479,11 @@
           "url": {
             "type": "string",
             "nullable": true
+          },
+          "feed": {
+            "type": "integer",
+            "maximum": 2147483647,
+            "minimum": -2147483648
           }
         }
       },
@@ -1290,10 +1527,6 @@
             "type": "boolean",
             "nullable": true
           },
-          "tags": {
-            "type": "string",
-            "nullable": true
-          },
           "salt_url": {
             "type": "boolean",
             "nullable": true
@@ -1335,6 +1568,112 @@
           "frequency": {
             "type": "string",
             "nullable": true
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          }
+        }
+      },
+      "PatchedProfile": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "readOnly": true
+          },
+          "newsletter": {
+            "type": "boolean"
+          },
+          "list_email": {
+            "type": "string"
+          },
+          "list_frequency": {
+            "type": "string"
+          },
+          "list_news": {
+            "type": "integer",
+            "maximum": 2147483647,
+            "minimum": -2147483648
+          },
+          "list_format": {
+            "type": "string"
+          },
+          "whitelist": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "whitelist_authors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "blacklist": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "blacklist_authors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "sociality_weight": {
+            "type": "integer",
+            "maximum": 2147483647,
+            "minimum": -2147483648
+          },
+          "gravity": {
+            "type": "number",
+            "format": "double"
+          },
+          "age_divider": {
+            "type": "number",
+            "format": "double"
+          },
+          "feed_weight": {
+            "type": "integer",
+            "maximum": 2147483647,
+            "minimum": -2147483648
+          },
+          "list_weight": {
+            "type": "integer",
+            "maximum": 2147483647,
+            "minimum": -2147483648
+          },
+          "last_access": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "bow": {},
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "languages": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "list_hour": {
+            "type": "integer",
+            "maximum": 2147483647,
+            "minimum": -2147483648
+          },
+          "list_fulltext": {
+            "type": "boolean"
           }
         }
       },
@@ -1358,6 +1697,106 @@
             "readOnly": true
           }
         }
+      },
+      "Profile": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "readOnly": true
+          },
+          "newsletter": {
+            "type": "boolean"
+          },
+          "list_email": {
+            "type": "string"
+          },
+          "list_frequency": {
+            "type": "string"
+          },
+          "list_news": {
+            "type": "integer",
+            "maximum": 2147483647,
+            "minimum": -2147483648
+          },
+          "list_format": {
+            "type": "string"
+          },
+          "whitelist": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "whitelist_authors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "blacklist": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "blacklist_authors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "sociality_weight": {
+            "type": "integer",
+            "maximum": 2147483647,
+            "minimum": -2147483648
+          },
+          "gravity": {
+            "type": "number",
+            "format": "double"
+          },
+          "age_divider": {
+            "type": "number",
+            "format": "double"
+          },
+          "feed_weight": {
+            "type": "integer",
+            "maximum": 2147483647,
+            "minimum": -2147483648
+          },
+          "list_weight": {
+            "type": "integer",
+            "maximum": 2147483647,
+            "minimum": -2147483648
+          },
+          "last_access": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "bow": {},
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "languages": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "list_hour": {
+            "type": "integer",
+            "maximum": 2147483647,
+            "minimum": -2147483648
+          },
+          "list_fulltext": {
+            "type": "boolean"
+          }
+        },
+        "required": ["id"]
       },
       "User": {
         "type": "object",

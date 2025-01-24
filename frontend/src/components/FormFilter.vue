@@ -8,22 +8,20 @@ import type {
   FeedCount,
 } from "../types/Filters"
 
-import { fetch_wrapper } from "../utils"
-
 import type { CheckBoxValue } from "../types/CheckBoxValue"
 import ThreeStateCheckBox from "./ThreeStateCheckBox.vue"
 import type { Ref } from "vue"
 import { computed, onMounted, ref } from "vue"
 const all_feeds: Ref<CheckBoxValue> = ref(true)
-const feeds: Ref<Feed[]> = ref([])
 
 import type { components } from "../generated/schema.d.ts"
 
-type Article = components["schemas"]["Article"]
+type ArticleRead = components["schemas"]["ArticleRead"]
 type Feed = components["schemas"]["Feed"]
 
 const props = defineProps<{
-  articles: Article[]
+  articles: ArticleRead[]
+  feeds: Feed[]
   filters: Filters
   feedCounts: FeedCounts
   notFiltering: boolean
@@ -44,19 +42,9 @@ function changeAllFeeds(value: CheckBoxValue) {
   emit("toggle_all_feeds", value, [])
 }
 
-async function fetchFeeds() {
-  const response = await fetch_wrapper(`../../api/feeds/`)
-  if (response.status == 403) {
-    document.location = "/accounts/"
-  } else {
-    const data: Feed[] = await response.json()
-    feeds.value = data
-  }
-}
-
 const mergedFeedCounts = computed(() => {
   const mfc = props.feedCounts
-  feeds.value.forEach((feed) => {
+  props.feeds.forEach((feed) => {
     if (!(feed.id in mfc)) {
       mfc[feed.id] = {
         feed: feed.title,
@@ -71,7 +59,6 @@ const mergedFeedCounts = computed(() => {
 
 onMounted(() => {
   console.log("FormFilter mounted")
-  fetchFeeds()
 })
 </script>
 <template>
