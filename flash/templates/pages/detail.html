@@ -6,7 +6,8 @@
   New details {{ object.id }}
 {% endblock title %}
 {% block meta %}
-  <meta property="og:title" content="{{ object.title }}" />
+  <meta property="og:title"
+        content="{{ object.title_original | default:object.title }}" />
   <meta property="og:description" content="{{ excerpt }} ..." />
   <meta property="og:type" content="article" />
   <meta property="og:image"
