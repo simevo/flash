@@ -52,6 +52,8 @@ class ArticleDetailView(DetailView):
             if context["object"].content
             else context["object"].content_original
         )
+        if content is None:
+            content = ""
         # remove html tags
         content = re.sub(r"<[^>]*>", "", content)
         # convert html entities to unicode
