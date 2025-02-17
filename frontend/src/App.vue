@@ -72,7 +72,7 @@ import { RouterLink, RouterView } from "vue-router"
           <li class="nav-item">
             <RouterLink
               class="btn btn-primary nav-link me-2"
-              title="Da dove arrivano gli artcoli"
+              title="Da dove arrivano gli articoli"
               role="button"
               type="button"
               to="/feeds"
