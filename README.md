@@ -12,13 +12,39 @@ Second iteration born from the ashes of [**calo.news** ("An open-source news pla
 [![Built with Cookiecutter Django](https://img.shields.io/badge/built%20with-Cookiecutter%20Django-ff69b4.svg?logo=cookiecutter)](https://github.com/cookiecutter/cookiecutter-django/)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
-## TL;DR
+## Local development
 
 Start flash:
 
+    docker-compose -f docker-compose.local.yml up
+
+Now you can:
+
+- Open the **public UI** at: http://localhost:8100/ (initially the articles list will be empty: "_Non ci sono articoli da visualizzare_")
+
+- Browse the database schema and tables with [Adminer](https://www.adminer.org/): [http://localhost:8090](http://localhost:8090/?pgsql=postgres&username=hkzQeWedcPCiuNYPdbPmXvjiLETCLaik&db=flash&ns=public) (use `c2lMdw3aiy5u3ykE9jHJDSO8gb7NxdtVKCO8YUxhywSQD9gofHB2qmpkmUxHVQqH` as password)
+
+- Access the PostgreSQL database with `PGPASSWORD=c2lMdw3aiy5u3ykE9jHJDSO8gb7NxdtVKCO8YUxhywSQD9gofHB2qmpkmUxHVQqH psql -p 5433 -h localhost -U hkzQeWedcPCiuNYPdbPmXvjiLETCLaik flash`.
+
+After signing in (use superuser account credentials, see below):
+
+- Access the **reserved-access UI** at: http://localhost:8100/res/
+
+- Access the full Django REST framework API at http://localhost:8100/api/
+
+- Access the OpenApi-generated API docs at http://localhost:8100/api/docs/
+
+- Open the Django administration Site: http://localhost:8100/admin/
+
+The feeds are pre-populated with 4 sample sources: [RAI Televideo](https://www.servizitelevideo.rai.it/televideo/pub/index.jsp), [Il Post](https://www.ilpost.it), [Unicorn Riot](https://www.unicornriot.ninja) and [Al Jazeera](https://www.aljazeera.com/).
+
+Initially also the articles list in the the reserved-access UI will be empty, but at the 4th minute of the hour the sources will be polled and the first articles will start to appear there.
+
+If you are eager to start the polling earlier, you can change the minute and/or the frequency in `config/celery_app.py`. If on the other hand you do not want to run the polling and the other auxiliary services, start the docker compose specifying to start just the `flash` service and its dependencies:
+
     docker-compose -f docker-compose.local.yml up flash
 
-then open the UI at: http://localhost:8100/.
+Finally once some articles have been read in the reserved-access UI, they will show up in the public UI.
 
 ## Settings
 

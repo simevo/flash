@@ -24,7 +24,7 @@ CREATE TABLE feeds (
 );
 
 CREATE TABLE public.articles (
-    id integer NOT NULL PRIMARY KEY,
+    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     stamp timestamp with time zone DEFAULT now() NOT NULL,
     author text,
     title_original text,
