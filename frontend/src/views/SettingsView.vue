@@ -211,13 +211,18 @@
       </div>
     </div>
     <div class="text-center mt-3">
-      <button type="button" class="btn btn-primary" :disabled="!dirty">
+      <button
+        type="button"
+        class="btn btn-primary"
+        :disabled="!dirty"
+        @click="save"
+      >
         Salva le modifiche
       </button>
       <button
         type="button"
         class="btn btn-danger ms-3"
-        @click="fetchProfile"
+        @click="clearAll"
         :disabled="!dirty"
       >
         Annulla le modifiche
@@ -318,6 +323,27 @@ onMounted(() => {
   console.log("SettingsView mounted")
   fetchProfile()
 })
+
+async function save() {
+  const response = await fetch_wrapper(`../../api/profile/me/`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(profile.value),
+  })
+  if (response.ok) {
+    original_profile.value = JSON.parse(JSON.stringify(profile.value))
+  } else {
+    console.error("Failed to save profile")
+  }
+}
+
+function clearAll() {
+  if (window.confirm("Sei sicuro di voler annullare tutte le modifiche?")) {
+    fetchProfile()
+  }
+}
 </script>
 
 <style scoped>
