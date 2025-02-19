@@ -70,7 +70,13 @@ class ArticleDetailView(DetailView):
 
 class ProxyView(LoginRequiredMixin, View):
     def get(self, request, url):
-        response = requests.get(url, timeout=30)
+        headers = {
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                "(KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
+            ),
+        }
+        response = requests.get(url, headers=headers, timeout=30)
         return HttpResponse(
             response.content,
             content_type=response.headers["Content-Type"],
