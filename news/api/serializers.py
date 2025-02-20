@@ -5,6 +5,7 @@ from rest_framework import serializers
 from news.models import Articles
 from news.models import ArticlesCombined
 from news.models import Feeds
+from news.models import FeedsCombined
 from news.models import Profile
 
 
@@ -16,7 +17,7 @@ class FeedSerializerSimple(serializers.ModelSerializer):
 
 class FeedSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Feeds
+        model = FeedsCombined
         exclude = ["iconblob"]
 
 
