@@ -98,9 +98,11 @@ class Feeds(models.Model):
     class Meta:
         managed = False
         db_table = "feeds"
+        verbose_name_plural = "feeds"
+        verbose_name = "feed"
 
     def __str__(self):
-        return f"{self.id}"
+        return f"{self.id} - {self.title}"
 
 
 class FeedsCombined(models.Model):
