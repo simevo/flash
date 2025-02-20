@@ -12,6 +12,24 @@ Second iteration born from the ashes of [**calo.news** ("An open-source news pla
 [![Built with Cookiecutter Django](https://img.shields.io/badge/built%20with-Cookiecutter%20Django-ff69b4.svg?logo=cookiecutter)](https://github.com/cookiecutter/cookiecutter-django/)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
+The aggregator presents to the anonymous visitor a restricted list of news items (only articles which some logged-in user has already read):
+
+![Home page](homepage.jpeg)
+
+Clicking on an article opens an interstitial page:
+
+![Article detail](article_detail.jpeg)
+
+which teases the user to log in to read the full text:
+
+![Reserved article detail](res_article_detail.jpeg)
+
+Logged in users also see more information on the home page (for example an extract of the article):
+
+![Reserved home page](res_homepage.jpeg)
+
+Anonymous pages are easy to recognize by the gray color of the header (after logging in the header color changes to "dark" [Mocha Mousse](https://www.pantone.com/eu/it/color-of-the-year/2025)), but they also differ because they are Server-side-rendered by Django, whereas the reserved pages are part of a client-rendered Single Page Application.
+
 ## Local development
 
 Start flash:
@@ -134,6 +152,20 @@ then reinstall them:
 To **add a new dependency**, install it with `yarnpkg add ...` or `yarnpkg add -D ...`, update the `Makefile` to put in place the files you need and `git add ...` them.
 
 Dont't forget to commit your changes!
+
+## Database schema
+
+The Entity-Relationship diagram of the main tables and their relationships is:
+
+![Entity-Relationship diagram](er-diagram.png)
+
+The two main tables are `feeds` and `articles`. Each of them has a supplementary table for expensive-to-compute values (`feeds_data` and `articles_data` respectively) which are "manual", pseudo materialized views, selectively refreshed by triggers that react on the input data processed by the `feeds_data_view` and `articles_data_view` (not shown on the diagram).
+
+Many articles can be aggregated from a single feed, therefore the two tables are linked by a one-to-many relationship from `feed.id` to `articles.feed_id`.
+
+Feeds can be rated by users, whereas articles can be rated, read and dismissed. These user - feed/article many-to-many relationships are stored through the `news_userfeeds` and `news_userarticles` tables.
+
+Additionally users can bookmark articles in separate lists, or get different automatic newsfeeds. To flexibly handle all these different lists, the lists metadata are stored in the `news_userarticleslists` table with a one-to-many relationship from `users_user.id` to `news_userarticleslists.user_id`. The actual article lists (which are many-to-many relationships between the `articles` and the `news_userarticleslists` tables) are stored though the `news_userarticles` table.
 
 ## License
 
