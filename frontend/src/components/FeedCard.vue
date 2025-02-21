@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { RouterLink } from "vue-router"
+import RatingToolbar from "./RatingToolbar.vue"
 
 import type { components } from "../generated/schema.d.ts"
 type Feed = components["schemas"]["Feed"]
@@ -38,6 +39,11 @@ defineProps<{
         >
         <span class="float-end">
           {{ feed.tags }}
+          <RatingToolbar
+            :id="'rating_' + feed.id"
+            endpoint="feeds"
+            v-bind:item="feed"
+          ></RatingToolbar>
         </span>
       </div>
     </div>

@@ -1223,6 +1223,10 @@
             "maximum": 2147483647,
             "minimum": -2147483648
           },
+          "my_rating": {
+            "type": "number",
+            "readOnly": true
+          },
           "homepage": {
             "type": "string"
           },
@@ -1323,7 +1327,15 @@
             "nullable": true
           }
         },
-        "required": ["homepage", "icon", "id", "language", "title", "url"]
+        "required": [
+          "homepage",
+          "icon",
+          "id",
+          "language",
+          "my_rating",
+          "title",
+          "url"
+        ]
       },
       "Nested": {
         "type": "object",
@@ -1512,6 +1524,10 @@
             "type": "integer",
             "maximum": 2147483647,
             "minimum": -2147483648
+          },
+          "my_rating": {
+            "type": "number",
+            "readOnly": true
           },
           "homepage": {
             "type": "string"

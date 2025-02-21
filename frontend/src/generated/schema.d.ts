@@ -230,6 +230,7 @@ export interface components {
     }
     Feed: {
       id: number
+      readonly my_rating: number
       homepage: string
       url: string
       language: string
@@ -313,6 +314,7 @@ export interface components {
     }
     PatchedFeed: {
       id?: number
+      readonly my_rating?: number
       homepage?: string
       url?: string
       language?: string
