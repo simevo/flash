@@ -184,7 +184,14 @@ onDeactivated(() => {
     />
   </button>
   <div class="container-fluid" v-if="count_fetch == 0">
-    <div class="row my-3">
+    <div class="row my-3" v-if="filtered_articles.length == 0">
+      <div class="col-md-12">
+        <div class="alert alert-warning text-center" role="alert">
+          Non ci sono articoli da visualizzare.
+        </div>
+      </div>
+    </div>
+    <div class="row my-3" v-else>
       <div class="col-md-12">
         <div class="wrapper">
           <ArticleCard

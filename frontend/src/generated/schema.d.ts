@@ -251,6 +251,11 @@ export interface components {
       script?: string | null
       frequency?: string | null
       tags?: string[] | null
+      /** Format: double */
+      last_polled_epoch?: number | null
+      /** Format: int64 */
+      article_count?: number | null
+      average_time_from_last_post?: number | null
     }
     Nested: {
       id: number
@@ -329,6 +334,11 @@ export interface components {
       script?: string | null
       frequency?: string | null
       tags?: string[] | null
+      /** Format: double */
+      last_polled_epoch?: number | null
+      /** Format: int64 */
+      article_count?: number | null
+      average_time_from_last_post?: number | null
     }
     PatchedProfile: {
       readonly id?: number
@@ -629,7 +639,7 @@ export interface operations {
       query?: never
       header?: never
       path: {
-        /** @description A unique value identifying this feeds. */
+        /** @description A unique value identifying this feeds combined. */
         id: number
       }
       cookie?: never
@@ -651,7 +661,7 @@ export interface operations {
       query?: never
       header?: never
       path: {
-        /** @description A unique value identifying this feeds. */
+        /** @description A unique value identifying this feeds combined. */
         id: number
       }
       cookie?: never
@@ -679,7 +689,7 @@ export interface operations {
       query?: never
       header?: never
       path: {
-        /** @description A unique value identifying this feeds. */
+        /** @description A unique value identifying this feeds combined. */
         id: number
       }
       cookie?: never
@@ -700,7 +710,7 @@ export interface operations {
       query?: never
       header?: never
       path: {
-        /** @description A unique value identifying this feeds. */
+        /** @description A unique value identifying this feeds combined. */
         id: number
       }
       cookie?: never

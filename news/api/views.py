@@ -14,7 +14,7 @@ from news.api.serializers import ArticleSerializerFull
 from news.api.serializers import FeedSerializer
 from news.api.serializers import ProfileSerializer
 from news.models import ArticlesCombined
-from news.models import Feeds
+from news.models import FeedsCombined
 
 
 class ReadOnly(permissions.BasePermission):
@@ -70,7 +70,7 @@ class ArticlesView(viewsets.ModelViewSet, mixins.CreateModelMixin):
 
 
 class FeedsView(viewsets.ModelViewSet):
-    queryset = Feeds.objects.all().order_by("id")
+    queryset = FeedsCombined.objects.all().order_by("id")
     serializer_class = FeedSerializer
     permission_classes = [ReadOnly, permissions.IsAuthenticated]
 

@@ -31,7 +31,7 @@ defineProps<{
           :title="'vai a tutti gli articoli di ' + feed.title"
           :style="{ cursor: 'pointer' }"
         >
-          <h5>{{ feed.title }}</h5>
+          <h5>{{ feed.title }} ({{ feed.article_count }} articoli)</h5>
         </RouterLink>
         <span
           ><a :href="feed.url" target="_blank">{{ feed.url }}</a></span

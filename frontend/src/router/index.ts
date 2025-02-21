@@ -8,6 +8,9 @@ const router = createRouter({
       path: "/",
       name: "home",
       component: ResHomeView,
+      meta: {
+        title: "Home",
+      },
     },
     {
       path: "/article/:article_id",
@@ -20,12 +23,18 @@ const router = createRouter({
       name: "feeds",
       props: true,
       component: () => import("../views/FeedsView.vue"),
+      meta: {
+        title: "Fonti",
+      },
     },
     {
       path: "/new_article/",
       name: "new_article",
       props: true,
       component: () => import("../views/NewArticle.vue"),
+      meta: {
+        title: "Nuovo articolo",
+      },
     },
     {
       path: "/feed/:feed_id",
@@ -44,8 +53,24 @@ const router = createRouter({
       name: "settings",
       props: true,
       component: () => import("../views/SettingsView.vue"),
+      meta: {
+        title: "Impostazioni",
+      },
     },
   ],
+})
+
+router.beforeEach((to, from, next) => {
+  if (to.params.article_id) {
+    document.title = `Articolo ${to.params.article_id} - Flash`
+  } else if (to.params.feed_id) {
+    document.title = `Fonte ${to.params.feed_id} - Flash`
+  } else if (to.params.author) {
+    document.title = `Autore ${to.params.author} - Flash`
+  } else {
+    document.title = `${to.meta?.title ?? ""} - Flash`
+  }
+  next()
 })
 
 export default router

@@ -188,7 +188,7 @@ pytest:
     - pip3 install -r requirements/local.txt
     - su - postgres -c 'psql -c "create role '"${POSTGRES_USER}"' with login password '"'${POSTGRES_PASSWORD}';"'"'
     - su - postgres -c "createdb -O ${POSTGRES_USER} test_${POSTGRES_DB}"
-    - PGPASSWORD=${POSTGRES_PASSWORD} psql -h ${POSTGRES_HOST} -U ${POSTGRES_USER} test_${POSTGRES_DB} -f tables.sql
+    - PGPASSWORD=${POSTGRES_PASSWORD} psql -h ${POSTGRES_HOST} -U ${POSTGRES_USER} test_${POSTGRES_DB} -f sql/00_tables.sql
     - export DATABASE_URL="postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/test_${POSTGRES_DB}"
     - python3 manage.py migrate
     - export DATABASE_URL="postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}"

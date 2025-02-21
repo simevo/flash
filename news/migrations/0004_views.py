@@ -5,11 +5,9 @@ from django.db import migrations
 
 def create_views(apps, schema_editor):
 
+    delete_views(apps, schema_editor)
+
     with schema_editor.connection.cursor() as cursor:
-        cursor.execute("DROP VIEW IF EXISTS articles_combined")
-        cursor.execute("DROP TABLE IF EXISTS articles_data")
-        cursor.execute("DROP VIEW IF EXISTS articles_data_view")
-        cursor.execute("DROP VIEW IF EXISTS articlelists_count_view")
         cursor.execute("""
                        CREATE TABLE articles_data (
                             id integer NOT NULL UNIQUE,
@@ -62,8 +60,56 @@ def create_views(apps, schema_editor):
                                 LEFT OUTER JOIN articlelists_count_view ON articles.id = articlelists_count_view.article_id
                             GROUP BY articles.id""")
 
-        cursor.execute("DROP TRIGGER IF EXISTS update_articles_data ON articles")
-        cursor.execute("DROP FUNCTION IF EXISTS uad")
+        cursor.execute("""
+                        CREATE TABLE feeds_data (
+                            id integer NOT NULL UNIQUE,
+                            last_polled_epoch double precision,
+                            article_count bigint,
+                            average_time_from_last_post integer
+                        )""")
+        cursor.execute("""
+                       CREATE VIEW feeds_data_view AS
+                            WITH aa AS (
+                                SELECT articles.id,
+                                articles.feed_id
+                                FROM articles
+                                GROUP BY articles.id
+                            ), aaa AS (
+                                SELECT feeds.id,
+                                date_part('epoch'::text, feeds.last_polled) AS last_polled_epoch,
+                                count(aa.*) AS article_count
+                                FROM
+                                feeds
+                                LEFT JOIN aa ON (feeds.id = aa.feed_id)
+                                GROUP BY feeds.id
+                            ), diffs AS (
+                                SELECT articles.feed_id,
+                                (articles.stamp - lag(articles.stamp, 1) OVER (PARTITION BY articles.feed_id ORDER BY articles.stamp)) AS time_from_last_post
+                                FROM articles
+                                WHERE (date_part('epoch'::text, (now() - articles.stamp)) < (((3600 * 24) * 365))::double precision)
+                            ), tflp AS (
+                                SELECT diffs.feed_id,
+                                (date_part('epoch'::text, avg(diffs.time_from_last_post)))::integer AS average_time_from_last_post
+                                FROM diffs
+                                GROUP BY diffs.feed_id
+                            )
+                            SELECT aaa.id,
+                                aaa.last_polled_epoch,
+                                aaa.article_count,
+                                tflp.average_time_from_last_post
+                            FROM (aaa
+                                LEFT JOIN tflp ON ((aaa.id = tflp.feed_id)))
+                            ORDER BY aaa.id""")
+        cursor.execute("""
+                       CREATE VIEW feeds_combined AS (
+                            SELECT
+                                feeds.*,
+                                feeds_data.last_polled_epoch,
+                                feeds_data.article_count,
+                                feeds_data.average_time_from_last_post
+                            FROM
+                                feeds
+                                JOIN feeds_data ON feeds.id = feeds_data.id)""")
 
         cursor.execute("""
                        CREATE FUNCTION uad() RETURNS trigger AS $$
@@ -86,9 +132,6 @@ def create_views(apps, schema_editor):
 
         cursor.execute("CREATE TRIGGER update_articles_data AFTER INSERT OR UPDATE ON articles FOR EACH ROW EXECUTE FUNCTION uad()")
 
-        cursor.execute("DROP TRIGGER IF EXISTS update_articles_data2 ON news_userarticles")
-        cursor.execute("DROP FUNCTION IF EXISTS uad2")
-
         cursor.execute("""
                        CREATE FUNCTION uad2() RETURNS trigger AS $$
                             BEGIN
@@ -110,20 +153,60 @@ def create_views(apps, schema_editor):
 
         cursor.execute("CREATE TRIGGER update_articles_data2 AFTER INSERT OR UPDATE ON news_userarticles FOR EACH ROW EXECUTE FUNCTION uad2()")
 
-def delete_views(apps, schema_editor):
+        cursor.execute("""
+                       CREATE FUNCTION ufd() RETURNS trigger AS $$
+                            BEGIN
+                                RAISE NOTICE 'Ufd fired for article with ID: %', NEW.id;
+                                INSERT INTO feeds_data
+                                    SELECT feeds_data_view.*
+                                    FROM feeds_data_view
+                                    WHERE id = NEW.feed_id
+                                ON CONFLICT (id) DO UPDATE
+                                SET
+                                    last_polled_epoch = EXCLUDED.last_polled_epoch,
+                                    article_count = EXCLUDED.article_count,
+                                    average_time_from_last_post = EXCLUDED.average_time_from_last_post;
+                                RETURN NEW;
+                            END;
+                            $$ LANGUAGE plpgsql STRICT""")
+        cursor.execute("CREATE TRIGGER update_feeds_data AFTER INSERT OR UPDATE ON articles FOR EACH ROW EXECUTE FUNCTION ufd()")
 
-    db_alias = schema_editor.connection.alias
+        cursor.execute("""
+                       CREATE FUNCTION ufd2() RETURNS trigger AS $$
+                            BEGIN
+                                RAISE NOTICE 'Ufd fired for article with ID: %', NEW.id;
+                                INSERT INTO feeds_data
+                                    SELECT feeds_data_view.*
+                                    FROM feeds_data_view
+                                    WHERE id = NEW.id
+                                ON CONFLICT (id) DO UPDATE
+                                SET
+                                    last_polled_epoch = EXCLUDED.last_polled_epoch,
+                                    article_count = EXCLUDED.article_count,
+                                    average_time_from_last_post = EXCLUDED.average_time_from_last_post;
+                                RETURN NEW;
+                            END;
+                            $$ LANGUAGE plpgsql STRICT""")
+        cursor.execute("CREATE TRIGGER update_feeds_data AFTER INSERT OR UPDATE ON feeds FOR EACH ROW EXECUTE FUNCTION ufd2()")
+
+def delete_views(apps, schema_editor):
 
     with schema_editor.connection.cursor() as cursor:
         cursor.execute("DROP TRIGGER IF EXISTS update_articles_data ON articles")
         cursor.execute("DROP FUNCTION IF EXISTS uad")
         cursor.execute("DROP TRIGGER IF EXISTS update_articles_data2 ON news_userarticles")
         cursor.execute("DROP FUNCTION IF EXISTS uad2")
+        cursor.execute("DROP TRIGGER IF EXISTS update_feeds_data ON articles")
+        cursor.execute("DROP FUNCTION IF EXISTS ufd")
+        cursor.execute("DROP TRIGGER IF EXISTS update_feeds_data ON feeds")
+        cursor.execute("DROP FUNCTION IF EXISTS ufd2")
         cursor.execute("DROP VIEW IF EXISTS articles_combined")
+        cursor.execute("DROP VIEW IF EXISTS feeds_combined")
         cursor.execute("DROP TABLE IF EXISTS articles_data")
+        cursor.execute("DROP TABLE IF EXISTS feeds_data")
         cursor.execute("DROP VIEW IF EXISTS articles_data_view")
         cursor.execute("DROP VIEW IF EXISTS articlelists_count_view")
-
+        cursor.execute("DROP VIEW IF EXISTS feeds_data_view")
 
 
 class Migration(migrations.Migration):

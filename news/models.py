@@ -98,6 +98,57 @@ class Feeds(models.Model):
     class Meta:
         managed = False
         db_table = "feeds"
+        verbose_name_plural = "feeds"
+        verbose_name = "feed"
+
+    def __str__(self):
+        return f"{self.id} - {self.title}"
+
+
+class FeedsCombined(models.Model):
+    id = models.IntegerField(primary_key=True)
+    homepage = models.TextField()
+    url = models.TextField()
+    language = models.TextField()
+    title = models.TextField()
+    license = models.TextField(blank=True, null=True)  # noqa: DJ001
+    icon = models.TextField()
+    active = models.BooleanField(blank=True, null=True)
+    last_polled = models.DateTimeField(blank=True, null=True)
+    incomplete = models.BooleanField(blank=True, null=True)
+    salt_url = models.BooleanField(blank=True, null=True)
+    rating = models.IntegerField(blank=True, null=True)
+    premium = models.BooleanField(blank=True, null=True)
+    cookies = models.TextField(blank=True, null=True)  # noqa: DJ001
+    exclude = models.TextField(blank=True, null=True)  # noqa: DJ001
+    main = models.TextField(blank=True, null=True)  # noqa: DJ001
+    tor = models.BooleanField(blank=True, null=True)
+    asy = models.BooleanField(blank=True, null=True)
+    iconblob = models.BinaryField(blank=True, null=True)
+    script = models.TextField(blank=True, null=True)  # noqa: DJ001
+    frequency = models.TextField(blank=True, null=True)  # noqa: DJ001
+    tags = ArrayField(models.TextField(), blank=True, null=True)
+    last_polled_epoch = models.FloatField(blank=True, null=True)
+    article_count = models.BigIntegerField(blank=True, null=True)
+    average_time_from_last_post = models.IntegerField(blank=True, null=True)
+
+    class Meta:
+        managed = False  # Created from a view. Don't remove.
+        db_table = "feeds_combined"
+
+    def __str__(self):
+        return f"{self.id}"
+
+
+class FeedsData(models.Model):
+    id = models.IntegerField(primary_key=True)
+    last_polled_epoch = models.FloatField(blank=True, null=True)
+    article_count = models.BigIntegerField(blank=True, null=True)
+    average_time_from_last_post = models.IntegerField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = "feeds_data"
 
     def __str__(self):
         return f"{self.id}"
@@ -113,10 +164,10 @@ class Profile(models.Model):
     list_frequency = models.TextField(default="daily")
     list_news = models.IntegerField(default=10)
     list_format = models.TextField(default="pdf")
-    whitelist = ArrayField(models.TextField(), default=list)
-    whitelist_authors = ArrayField(models.TextField(), default=list)
-    blacklist = ArrayField(models.TextField(), default=list)
-    blacklist_authors = ArrayField(models.TextField(), default=list)
+    whitelist = ArrayField(models.TextField(), default=list, blank=True)
+    whitelist_authors = ArrayField(models.TextField(), default=list, blank=True)
+    blacklist = ArrayField(models.TextField(), default=list, blank=True)
+    blacklist_authors = ArrayField(models.TextField(), default=list, blank=True)
     sociality_weight = models.IntegerField(default=0)
     gravity = models.FloatField(default=2.0)
     age_divider = models.FloatField(default=100.0)
@@ -124,8 +175,8 @@ class Profile(models.Model):
     list_weight = models.IntegerField(default=0)
     last_access = models.DateTimeField(blank=True, null=True)
     bow = models.JSONField(default=dict)
-    tags = ArrayField(models.TextField(), default=list)
-    languages = ArrayField(models.TextField(), default=list)
+    tags = ArrayField(models.TextField(), default=list, blank=True)
+    languages = ArrayField(models.TextField(), default=list, blank=True)
     list_hour = models.IntegerField(default=7)
     list_fulltext = models.BooleanField(default=False)
 

@@ -416,7 +416,7 @@
               "maximum": 2147483647,
               "minimum": -2147483648
             },
-            "description": "A unique value identifying this feeds.",
+            "description": "A unique value identifying this feeds combined.",
             "required": true
           }
         ],
@@ -453,7 +453,7 @@
               "maximum": 2147483647,
               "minimum": -2147483648
             },
-            "description": "A unique value identifying this feeds.",
+            "description": "A unique value identifying this feeds combined.",
             "required": true
           }
         ],
@@ -510,7 +510,7 @@
               "maximum": 2147483647,
               "minimum": -2147483648
             },
-            "description": "A unique value identifying this feeds.",
+            "description": "A unique value identifying this feeds combined.",
             "required": true
           }
         ],
@@ -566,7 +566,7 @@
               "maximum": 2147483647,
               "minimum": -2147483648
             },
-            "description": "A unique value identifying this feeds.",
+            "description": "A unique value identifying this feeds combined.",
             "required": true
           }
         ],
@@ -1303,6 +1303,24 @@
               "type": "string"
             },
             "nullable": true
+          },
+          "last_polled_epoch": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "article_count": {
+            "type": "integer",
+            "maximum": 9223372036854775807,
+            "minimum": -9223372036854775808,
+            "format": "int64",
+            "nullable": true
+          },
+          "average_time_from_last_post": {
+            "type": "integer",
+            "maximum": 2147483647,
+            "minimum": -2147483648,
+            "nullable": true
           }
         },
         "required": ["homepage", "icon", "id", "language", "title", "url"]
@@ -1574,6 +1592,24 @@
             "items": {
               "type": "string"
             },
+            "nullable": true
+          },
+          "last_polled_epoch": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "article_count": {
+            "type": "integer",
+            "maximum": 9223372036854775807,
+            "minimum": -9223372036854775808,
+            "format": "int64",
+            "nullable": true
+          },
+          "average_time_from_last_post": {
+            "type": "integer",
+            "maximum": 2147483647,
+            "minimum": -2147483648,
             "nullable": true
           }
         }
