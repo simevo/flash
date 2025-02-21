@@ -2,7 +2,8 @@
   <button
     v-on:click="set(item, threshold + 1, endpoint)"
     type="button"
-    class="btn btn-outline-success btn-sm"
+    class="btn btn-outline-success btn-sm p-1"
+    :disabled="readonly"
     :class="{
       'icon-success': item.my_rating > threshold,
       'icon-light': item.my_rating <= threshold,
@@ -24,27 +25,63 @@
 </template>
 
 <script setup lang="ts">
+import { fetch_wrapper } from "../utils"
 import type { components } from "../generated/schema.d.ts"
 type Feed = components["schemas"]["Feed"]
 
-defineProps<{
+const props = defineProps<{
   item: Feed
   threshold: number
   endpoint: string
+  readonly: boolean
 }>()
 
-const emit = defineEmits(["rated"])
+const emit = defineEmits<{
+  (e: "rated", id: number, rating: number): void
+  (e: "updating", status: boolean): void
+}>()
 
 function set(item: Feed, rating: number, endpoint: string) {
+  if (props.readonly) {
+    return
+  }
   if (item.my_rating == rating) {
     rating = 0
   }
-  // alert("set rating for " + item.id + " to " + rating)
-  // $("div#rate_control button").attr("disabled", "disabled")
+  // @ts-expect-error we override my_rating
   item.my_rating = rating
 
-  // update the value server-side
-  // ...  emit.rated(item.id, rating)
+  emit("updating", true)
+  // update the value server-side ...
+  const data = {
+    feed: item.id,
+    rating: rating,
+  }
+  fetch_wrapper(endpoint, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  })
+    .then((response) => {
+      if (response.status == 403) {
+        document.location = "/accounts/"
+      } else if (response.status == 200) {
+        alert("Rating aggiornato con successo")
+      } else if (response.status == 201) {
+        alert("Rating inserito con successo")
+      } else {
+        response.json().then((data) => {
+          alert("Errore: " + response.statusText + "; " + JSON.stringify(data))
+        })
+      }
+      emit("updating", false)
+    })
+    .catch((error) => {
+      alert("Errore di rete: " + error)
+      emit("updating", false)
+    })
 }
 </script>
 

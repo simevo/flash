@@ -11,6 +11,8 @@
         :endpoint="endpoint"
         :item="item"
         :threshold="threshold"
+        :readonly="updating"
+        @updating="(status) => (updating = status)"
       ></NegativeRating>
       <PositiveRating
         v-for="threshold in [0, 1, 2, 3, 4]"
@@ -18,6 +20,8 @@
         :key="threshold"
         :item="item"
         :threshold="threshold"
+        :readonly="updating"
+        @updating="(status) => (updating = status)"
       ></PositiveRating>
     </div>
   </div>
@@ -28,7 +32,10 @@ import PositiveRating from "./PositiveRating.vue"
 import NegativeRating from "./NegativeRating.vue"
 
 import type { components } from "../generated/schema.d.ts"
+import { ref } from "vue"
 type Feed = components["schemas"]["Feed"]
+
+const updating = ref(false)
 
 defineProps<{
   item: Feed

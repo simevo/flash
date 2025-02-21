@@ -29,8 +29,7 @@ class FeedSerializer(serializers.ModelSerializer):
         uf = UserFeeds.objects.filter(feed_id=obj.id, user_id=user.id).first()
         if uf:
             return uf.rating
-        else:
-            return None
+        return None
 
 
 class ArticleSerializer(serializers.ModelSerializer):
@@ -68,3 +67,9 @@ class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         exclude = ["user"]
+
+
+class UserFeedSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserFeeds
+        fields = ["feed", "user", "rating"]

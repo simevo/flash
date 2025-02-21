@@ -4,8 +4,8 @@
       <h1>Fonte: {{ feed_dict[Number(feed_id)].title }}</h1>
       <div>
         <span class="float-start">
-          <a :href="feed_dict[Number(feed_id)].url" target="_blank">{{
-            feed_dict[Number(feed_id)].url
+          <a :href="feed_dict[Number(feed_id)].homepage" target="_blank">{{
+            feed_dict[Number(feed_id)].homepage
           }}</a>
         </span>
         <span class="float-end">

@@ -5,6 +5,7 @@ from drf_spectacular.utils import extend_schema
 from rest_framework import mixins
 from rest_framework import pagination
 from rest_framework import permissions
+from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.response import Response
 
@@ -13,8 +14,10 @@ from news.api.serializers import ArticleSerializer
 from news.api.serializers import ArticleSerializerFull
 from news.api.serializers import FeedSerializer
 from news.api.serializers import ProfileSerializer
+from news.api.serializers import UserFeedSerializer
 from news.models import ArticlesCombined
 from news.models import FeedsCombined
+from news.models import UserFeeds
 
 
 class ReadOnly(permissions.BasePermission):
@@ -85,3 +88,24 @@ class ProfileView(
 
     def get_object(self):
         return self.request.user.profile
+
+
+class UserFeedsView(viewsets.ModelViewSet):
+    queryset = UserFeeds.objects.all()
+    serializer_class = UserFeedSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return self.queryset.filter(user_id=self.request.user.id)
+
+    def create(self, request, *args, **kwargs):
+        user_id = request.user.id
+        feed_id = request.data["feed"]
+        rating = request.data["rating"]
+        uf = UserFeeds.objects.filter(user_id=user_id, feed_id=feed_id).first()
+        if uf:
+            uf.rating = rating
+            uf.save()
+            return Response(uf.id, status=status.HTTP_200_OK)
+        uf = UserFeeds.objects.create(user_id=user_id, feed_id=feed_id, rating=rating)
+        return Response(uf.id, status=status.HTTP_201_CREATED)
