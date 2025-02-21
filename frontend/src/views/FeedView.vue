@@ -14,7 +14,14 @@
       </div>
     </div>
     <hr />
-    <div class="row">
+    <div class="row" v-if="articles.length == 0">
+      <div class="col-md-12">
+        <div class="alert alert-warning text-center" role="alert">
+          Non ci sono articoli da visualizzare.
+        </div>
+      </div>
+    </div>
+    <div class="row" v-else>
       <div class="col-md-12">
         <div class="wrapper">
           <ArticleCard
