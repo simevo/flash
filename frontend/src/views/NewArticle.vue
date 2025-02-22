@@ -196,7 +196,7 @@
 
 <script setup lang="ts">
 import { fetch_wrapper } from "../utils"
-import { computed, onMounted, ref } from "vue"
+import { computed, onActivated, onMounted, ref } from "vue"
 import { franc } from "franc"
 import { Readability } from "@mozilla/readability"
 import Quill from "quill"
@@ -208,6 +208,14 @@ onMounted(() => {
   quill = new Quill("#editor", {
     theme: "snow",
   })
+})
+
+onActivated(() => {
+  // set focus on the URL field
+  const input = document.getElementById("url")
+  if (input) {
+    input.focus()
+  }
 })
 
 const base_language = "it"
