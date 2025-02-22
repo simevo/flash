@@ -54,7 +54,7 @@ const feed_counts = computed(() => {
       }
     }
   }
-  return Object.values(feed_counts).sort((a, b) => b.count - a.count)
+  return feed_counts
 })
 
 const not_filtering = computed(
