@@ -16,11 +16,7 @@ router.register("articles", ArticlesView, basename="articles")
 router.register("feeds", FeedsView, basename="public-feeds")
 router.register("profile", ProfileView, basename="profile")
 router.register("user-feeds", UserFeedsView, basename="user-feeds")
-router.register(
-    "user-article-lists",
-    UserArticleListsView,
-    basename="user-article-lists",
-)
+router.register("lists", UserArticleListsView, basename="lists")
 
 app_name = "api"
 urlpatterns = router.urls

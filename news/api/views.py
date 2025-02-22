@@ -1,7 +1,12 @@
+import html
+import re
+
 from django.contrib.postgres.search import SearchVector
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters import rest_framework as filters
 from drf_spectacular.utils import extend_schema
+from feedgen.feed import FeedGenerator
 from rest_framework import mixins
 from rest_framework import pagination
 from rest_framework import permissions
@@ -164,3 +169,38 @@ class UserArticleListsView(viewsets.ModelViewSet):
         article = request.data["article"]
         instance.articles.remove(article)
         return Response(status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=["GET"], permission_classes=[permissions.AllowAny])
+    def rss(self, request, pk=None):
+        instance = self.get_object()
+        articles = instance.articles.all()
+        fg = FeedGenerator()
+        fg.id(instance.id)
+        fg.title(instance.name)
+        fg.description(
+            "Powered by flash - An open-source news platform with aggregation and ranking",  # noqa: E501
+        )
+        fg.link(href=request.build_absolute_uri())
+        for article in articles:
+            fe = fg.add_entry()
+            fe.id(str(article.id))
+            title = article.title_original or article.title
+            fe.title(title)
+            fe.link(href=article.url)
+            content = article.content_original or article.content
+            # remove html tags
+            content = re.sub(r"<[^>]*>", "", content)
+            # convert html entities to unicode
+            content = html.unescape(content)
+            # remove multiple whitespaces
+            content = re.sub(r"[\s]+", " ", content)
+            # remove newlines
+            content = content.replace("\n", "")
+            # trim
+            content = content.strip()
+            excerpt = content[:200]
+            fe.description(excerpt)
+            fe.published(article.stamp)
+
+        response = fg.rss_str(pretty=True)
+        return HttpResponse(response, content_type="application/rss+xml")
