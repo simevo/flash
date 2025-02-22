@@ -7,6 +7,7 @@ from rest_framework import pagination
 from rest_framework import permissions
 from rest_framework import status
 from rest_framework import viewsets
+from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from news.api.serializers import ArticleReadSerializer
@@ -14,9 +15,12 @@ from news.api.serializers import ArticleSerializer
 from news.api.serializers import ArticleSerializerFull
 from news.api.serializers import FeedSerializer
 from news.api.serializers import ProfileSerializer
+from news.api.serializers import UserArticleListsSerializer
+from news.api.serializers import UserArticleListsSerializerFull
 from news.api.serializers import UserFeedSerializer
 from news.models import ArticlesCombined
 from news.models import FeedsCombined
+from news.models import UserArticleLists
 from news.models import UserFeeds
 
 
@@ -109,3 +113,54 @@ class UserFeedsView(viewsets.ModelViewSet):
             return Response(uf.id, status=status.HTTP_200_OK)
         uf = UserFeeds.objects.create(user_id=user_id, feed_id=feed_id, rating=rating)
         return Response(uf.id, status=status.HTTP_201_CREATED)
+
+
+class UserArticleListsView(viewsets.ModelViewSet):
+    queryset = UserArticleLists.objects.all()
+    serializer_class = UserArticleListsSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    @extend_schema(
+        responses={200: UserArticleListsSerializerFull},
+    )
+    def retrieve(self, request, pk=None):
+        instance = self.get_object()
+        serializer = UserArticleListsSerializerFull(
+            instance,
+            context={"request": request},
+        )
+        return Response(serializer.data)
+
+    @extend_schema(
+        responses={201: UserArticleListsSerializerFull},
+    )
+    def create(self, request, *args, **kwargs):
+        data = request.data.dict()
+        data["user"] = request.user.id
+        serializer = UserArticleListsSerializerFull(data=data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(
+            serializer.data,
+            status=status.HTTP_201_CREATED,
+            headers=headers,
+        )
+
+    @action(detail=True, methods=["PUT"])
+    def add_article(self, request, pk=None):
+        instance = self.get_object()
+        if instance.user_id != request.user.id:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        article = request.data["article"]
+        instance.articles.add(article)
+        return Response(status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=["DELETE"])
+    def remove_article(self, request, pk=None):
+        instance = self.get_object()
+        if instance.user_id != request.user.id:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        article = request.data["article"]
+        instance.articles.remove(article)
+        return Response(status=status.HTTP_200_OK)

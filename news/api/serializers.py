@@ -7,6 +7,7 @@ from news.models import ArticlesCombined
 from news.models import Feeds
 from news.models import FeedsCombined
 from news.models import Profile
+from news.models import UserArticleLists
 from news.models import UserFeeds
 
 
@@ -73,3 +74,15 @@ class UserFeedSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserFeeds
         fields = ["feed", "user", "rating"]
+
+
+class UserArticleListsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserArticleLists
+        exclude = ["user", "articles"]
+
+
+class UserArticleListsSerializerFull(serializers.ModelSerializer):
+    class Meta:
+        model = UserArticleLists
+        fields = "__all__"
