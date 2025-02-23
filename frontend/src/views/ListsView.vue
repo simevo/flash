@@ -82,6 +82,7 @@ const feed_dict = computed(() => {
 
 watch(current_list_id, (new_list_id) => {
   if (new_list_id) {
+    articles.value = []
     fetchArticles()
   }
 })
@@ -106,6 +107,7 @@ onDeactivated(() => {
 
 async function removeArticleFromList() {
   count_fetch.value += 1
+  articles.value = []
   await fetchLists()
   fetchArticles()
 }
