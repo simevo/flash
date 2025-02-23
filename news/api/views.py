@@ -141,7 +141,6 @@ class UserArticleListsView(viewsets.ModelViewSet):
     def me(self, request, *args, **kwargs):
         queryset = UserArticleLists.objects.filter(
             user_id=request.user.id,
-            automatic=False,
         )
         serializer = UserArticleListsSerializerFull(queryset, many=True)
         return Response(serializer.data)

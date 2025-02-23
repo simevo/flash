@@ -30,7 +30,7 @@ const current_list_id: Ref<string | null> = ref(null)
 const host = "notizie.calomelano.it"
 
 async function fetchArticles() {
-  if (current_list.value) {
+  if (current_list.value && current_list.value.articles.length > 0) {
     const response = await fetch_wrapper(
       `../../api/articles/?ids=${current_list.value.articles.join(",")}`,
     )
@@ -147,6 +147,15 @@ async function removeArticleFromList() {
               type="button"
               role="tab"
             >
+              <img
+                v-if="list.automatic"
+                class="icon"
+                src="~bootstrap-icons/icons/robot.svg"
+                alt="rss icon"
+                width="18"
+                height="18"
+                title="Lista automatica"
+              />
               {{ list.name }}
               <button
                 v-show="list.id == current_list_id"
@@ -211,7 +220,7 @@ async function removeArticleFromList() {
                 :article="article"
                 :feed_dict="feed_dict"
                 :index="1"
-                :list_id="current_list_id"
+                :list_id="current_list.automatic ? null : current_list_id"
                 @remove-article-from-list="removeArticleFromList"
               />
             </div>
