@@ -226,6 +226,7 @@ watch(
     console.log(`ArticleView watch, newId = [${newId}] oldId = [${oldId}]`)
     if (newId && newId !== oldId) {
       article.value = null
+      count_fetch.value = 1
       await fetchArticle()
     }
   },
