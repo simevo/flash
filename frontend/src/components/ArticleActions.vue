@@ -135,6 +135,7 @@ onMounted(() => {
         <div v-for="list in lists" :key="list.id">
           <a
             v-if="list.articles.indexOf(article.id) == -1"
+            v-show="list.automatic == false"
             class="dropdown-item"
             @click="save(list.id)"
             href="#"
