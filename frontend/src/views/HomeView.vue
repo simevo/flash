@@ -54,7 +54,7 @@ const feed_counts = computed(() => {
       }
     }
   }
-  return Object.values(feed_counts).sort((a, b) => b.count - a.count)
+  return feed_counts
 })
 
 const not_filtering = computed(
@@ -200,6 +200,7 @@ onDeactivated(() => {
             :article="article"
             :feed_dict="feed_dict"
             :index="1"
+            :list_id="null"
           />
         </div>
       </div>

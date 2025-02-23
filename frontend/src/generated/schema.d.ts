@@ -120,6 +120,102 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  "/api/user-article-lists/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations["user_article_lists_list"]
+    put?: never
+    post: operations["user_article_lists_create"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/user-article-lists/{id}/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations["user_article_lists_retrieve"]
+    put: operations["user_article_lists_update"]
+    post?: never
+    delete: operations["user_article_lists_destroy"]
+    options?: never
+    head?: never
+    patch: operations["user_article_lists_partial_update"]
+    trace?: never
+  }
+  "/api/user-article-lists/{id}/add_article/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put: operations["user_article_lists_add_article_update"]
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/user-article-lists/{id}/remove_article/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    delete: operations["user_article_lists_remove_article_destroy"]
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/user-feeds/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations["user_feeds_list"]
+    put?: never
+    post: operations["user_feeds_create"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/user-feeds/{id}/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations["user_feeds_retrieve"]
+    put: operations["user_feeds_update"]
+    post?: never
+    delete: operations["user_feeds_destroy"]
+    options?: never
+    head?: never
+    patch: operations["user_feeds_partial_update"]
+    trace?: never
+  }
   "/api/users/": {
     parameters: {
       query?: never
@@ -230,6 +326,7 @@ export interface components {
     }
     Feed: {
       id: number
+      readonly my_rating: number
       homepage: string
       url: string
       language: string
@@ -313,6 +410,7 @@ export interface components {
     }
     PatchedFeed: {
       id?: number
+      readonly my_rating?: number
       homepage?: string
       url?: string
       language?: string
@@ -374,6 +472,17 @@ export interface components {
       /** Format: uri */
       readonly url?: string
     }
+    PatchedUserArticleLists: {
+      /** Format: uuid */
+      readonly id?: string
+      name?: string
+      automatic?: boolean
+    }
+    PatchedUserFeed: {
+      feed?: number
+      user?: number
+      rating?: number
+    }
     Profile: {
       readonly id: number
       newsletter?: boolean
@@ -407,6 +516,25 @@ export interface components {
       name?: string
       /** Format: uri */
       readonly url: string
+    }
+    UserArticleLists: {
+      /** Format: uuid */
+      readonly id: string
+      name: string
+      automatic?: boolean
+    }
+    UserArticleListsSerializerFull: {
+      /** Format: uuid */
+      readonly id: string
+      name: string
+      automatic?: boolean
+      user: number
+      readonly articles: number[]
+    }
+    UserFeed: {
+      feed: number
+      user: number
+      rating?: number
     }
   }
   responses: never
@@ -837,6 +965,341 @@ export interface operations {
           "application/json": {
             [key: string]: unknown
           }
+        }
+      }
+    }
+  }
+  user_article_lists_list: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["UserArticleLists"][]
+        }
+      }
+    }
+  }
+  user_article_lists_create: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UserArticleLists"]
+        "application/x-www-form-urlencoded": components["schemas"]["UserArticleLists"]
+        "multipart/form-data": components["schemas"]["UserArticleLists"]
+      }
+    }
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["UserArticleListsSerializerFull"]
+        }
+      }
+    }
+  }
+  user_article_lists_retrieve: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        /** @description A UUID string identifying this user article lists. */
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["UserArticleListsSerializerFull"]
+        }
+      }
+    }
+  }
+  user_article_lists_update: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        /** @description A UUID string identifying this user article lists. */
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UserArticleLists"]
+        "application/x-www-form-urlencoded": components["schemas"]["UserArticleLists"]
+        "multipart/form-data": components["schemas"]["UserArticleLists"]
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["UserArticleLists"]
+        }
+      }
+    }
+  }
+  user_article_lists_destroy: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        /** @description A UUID string identifying this user article lists. */
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description No response body */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  user_article_lists_partial_update: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        /** @description A UUID string identifying this user article lists. */
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        "application/json": components["schemas"]["PatchedUserArticleLists"]
+        "application/x-www-form-urlencoded": components["schemas"]["PatchedUserArticleLists"]
+        "multipart/form-data": components["schemas"]["PatchedUserArticleLists"]
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["UserArticleLists"]
+        }
+      }
+    }
+  }
+  user_article_lists_add_article_update: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        /** @description A UUID string identifying this user article lists. */
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UserArticleLists"]
+        "application/x-www-form-urlencoded": components["schemas"]["UserArticleLists"]
+        "multipart/form-data": components["schemas"]["UserArticleLists"]
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["UserArticleLists"]
+        }
+      }
+    }
+  }
+  user_article_lists_remove_article_destroy: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        /** @description A UUID string identifying this user article lists. */
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description No response body */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  user_feeds_list: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["UserFeed"][]
+        }
+      }
+    }
+  }
+  user_feeds_create: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UserFeed"]
+        "application/x-www-form-urlencoded": components["schemas"]["UserFeed"]
+        "multipart/form-data": components["schemas"]["UserFeed"]
+      }
+    }
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["UserFeed"]
+        }
+      }
+    }
+  }
+  user_feeds_retrieve: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        /** @description A unique integer value identifying this user feeds. */
+        id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["UserFeed"]
+        }
+      }
+    }
+  }
+  user_feeds_update: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        /** @description A unique integer value identifying this user feeds. */
+        id: number
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UserFeed"]
+        "application/x-www-form-urlencoded": components["schemas"]["UserFeed"]
+        "multipart/form-data": components["schemas"]["UserFeed"]
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["UserFeed"]
+        }
+      }
+    }
+  }
+  user_feeds_destroy: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        /** @description A unique integer value identifying this user feeds. */
+        id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description No response body */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  user_feeds_partial_update: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        /** @description A unique integer value identifying this user feeds. */
+        id: number
+      }
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        "application/json": components["schemas"]["PatchedUserFeed"]
+        "application/x-www-form-urlencoded": components["schemas"]["PatchedUserFeed"]
+        "multipart/form-data": components["schemas"]["PatchedUserFeed"]
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["UserFeed"]
         }
       }
     }

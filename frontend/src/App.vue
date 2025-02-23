@@ -21,11 +21,13 @@ import { RouterLink, RouterView } from "vue-router"
       </button>
       <div id="navbarSupportedContent" class="collapse navbar-collapse">
         <ul class="navbar-nav me-auto mb-2 mb-md-0">
-          <li class="nav-item" v-show="false">
-            <a
-              class="active btn btn-primary nav-link me-2"
+          <li class="nav-item">
+            <RouterLink
+              class="btn btn-primary nav-link me-2"
+              title="Articoli salvati nelle liste"
               role="button"
               type="button"
+              to="/lists"
             >
               <img
                 class="inverted-icon icon me-2"
@@ -34,23 +36,24 @@ import { RouterLink, RouterView } from "vue-router"
                 width="18"
                 height="18"
               />Salvati
-            </a>
+            </RouterLink>
           </li>
-          <li class="nav-item" v-show="false">
-            <a
+          <li class="nav-item">
+            <RouterLink
               class="btn btn-primary nav-link me-2"
-              title="Cronologia degli articoli già letti"
+              title="Cronologia degli articoli già letti da altri e/o da te"
               role="button"
               type="button"
+              to="/read"
             >
               <img
                 class="inverted-icon icon me-2"
-                src="~bootstrap-icons/icons/clock-history.svg"
+                src="~bootstrap-icons/icons/eyeglasses.svg"
                 alt="view icon"
                 width="18"
                 height="18"
-              />Già letti
-            </a>
+              />Letti
+            </RouterLink>
           </li>
           <li class="nav-item">
             <RouterLink

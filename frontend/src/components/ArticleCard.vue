@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { components } from "../generated/schema.d.ts"
 import { secondsToString, secondsToString1 } from "./sts"
+import { fetch_wrapper } from "../utils"
 
 type ArticleRead = components["schemas"]["ArticleRead"]
 type Feed = components["schemas"]["Feed"]
@@ -10,20 +11,60 @@ function stripHtml(html: string): string {
   return doc.body.textContent || ""
 }
 
-defineProps<{
+const props = defineProps<{
   article: ArticleRead
   feed_dict: { [key: number]: Feed }
   index: number
+  list_id: string | null
 }>()
+
+const emit = defineEmits<{
+  (e: "removeArticleFromList", article_id: number): void
+}>()
+
+async function removeArticleFromList(list_id: string): Promise<void> {
+  if (
+    confirm(
+      `Sei sicuro di voler rimuovere "${props.article.title_original || props.article.title}" dalla lista?`,
+    )
+  ) {
+    const options = {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ article: props.article.id }),
+    }
+    const response = await fetch_wrapper(
+      `../../api/lists/${list_id}/remove_article/`,
+      options,
+    )
+    if (response.status == 403) {
+      document.location = "/accounts/"
+    } else {
+      emit("removeArticleFromList", props.article.id)
+    }
+  }
+}
 </script>
 
 <template>
   <div class="card m-1">
     <div class="card-body">
+      <img
+        style="margin: 5px"
+        class="card-img-start"
+        width="30"
+        height="30"
+        src="https://notizie.calomelano.it/static/icons/unknown.png"
+        alt="feed logo"
+        v-if="!feed_dict[article.feed]"
+      />
       <router-link
         :to="`/feed/${article.feed}`"
         class="float-start"
         :title="`vai a tutti gli articoli della fonte ${feed_dict[article.feed].title}`"
+        v-else
       >
         <img
           style="margin: 5px"
@@ -103,6 +144,21 @@ defineProps<{
           {{ secondsToString1((60 * article.length) / 6 / 300) }}</small
         >
       </div>
+      <span class="float-end" v-if="list_id">
+        <button
+          class="btn btn-outline-danger btn-sm"
+          title="Rimuovi questo articolo dalla lista"
+          @click="removeArticleFromList(list_id)"
+        >
+          <img
+            class="icon"
+            src="~bootstrap-icons/icons/trash.svg"
+            alt="view icon"
+            width="18"
+            height="18"
+          />
+        </button>
+      </span>
     </div>
   </div>
 </template>

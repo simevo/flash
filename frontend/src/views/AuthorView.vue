@@ -2,7 +2,12 @@
   <div class="container-fluid" v-if="count_fetch == 0">
     <div class="row my-3">
       <h1>Author: {{ author }}</h1>
-      <div class="col-md-12">
+      <div class="col-md-12" v-if="articles.length == 0">
+        <div class="alert alert-warning text-center" role="alert">
+          Non ci sono articoli da visualizzare.
+        </div>
+      </div>
+      <div class="col-md-12" v-else>
         <div class="wrapper">
           <ArticleCard
             v-for="article in articles"
@@ -10,6 +15,7 @@
             :article="article"
             :feed_dict="feed_dict"
             :index="1"
+            :list_id="null"
           />
         </div>
       </div>

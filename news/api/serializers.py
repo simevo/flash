@@ -7,6 +7,8 @@ from news.models import ArticlesCombined
 from news.models import Feeds
 from news.models import FeedsCombined
 from news.models import Profile
+from news.models import UserArticleLists
+from news.models import UserFeeds
 
 
 class FeedSerializerSimple(serializers.ModelSerializer):
@@ -16,9 +18,19 @@ class FeedSerializerSimple(serializers.ModelSerializer):
 
 
 class FeedSerializer(serializers.ModelSerializer):
+    my_rating = serializers.SerializerMethodField()
+
     class Meta:
         model = FeedsCombined
         exclude = ["iconblob"]
+
+    @extend_schema_field(OpenApiTypes.NUMBER)
+    def get_my_rating(self, obj):
+        user = self.context["request"].user
+        uf = UserFeeds.objects.filter(feed_id=obj.id, user_id=user.id).first()
+        if uf:
+            return uf.rating
+        return None
 
 
 class ArticleSerializer(serializers.ModelSerializer):
@@ -56,3 +68,21 @@ class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         exclude = ["user"]
+
+
+class UserFeedSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserFeeds
+        fields = ["feed", "user", "rating"]
+
+
+class UserArticleListsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserArticleLists
+        exclude = ["user", "articles"]
+
+
+class UserArticleListsSerializerFull(serializers.ModelSerializer):
+    class Meta:
+        model = UserArticleLists
+        fields = "__all__"

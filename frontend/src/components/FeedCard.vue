@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { RouterLink } from "vue-router"
+import RatingToolbar from "./RatingToolbar.vue"
 
 import type { components } from "../generated/schema.d.ts"
 type Feed = components["schemas"]["Feed"]
@@ -10,36 +11,39 @@ defineProps<{
 </script>
 
 <template>
-  <div
-    :id="'feed_' + feed.id"
-    style="flex-direction: row; line-height: 1.1"
-    class="card mb-3"
-  >
-    <img
-      style="margin: 5px"
-      class="float-start"
-      width="50"
-      height="50"
-      :src="`https://notizie.calomelano.it/${feed.icon}`"
-      alt="feed logo"
-    />
-    <div class="card-body text-secondary" style="padding: 5px">
-      <div class="card-text">
-        <RouterLink
-          class="text-decoration-none"
-          :to="'/feed/' + feed.id"
-          :title="'vai a tutti gli articoli di ' + feed.title"
-          :style="{ cursor: 'pointer' }"
-        >
-          <h5>{{ feed.title }} ({{ feed.article_count }} articoli)</h5>
-        </RouterLink>
+  <div :id="'feed_' + feed.id" class="card mb-3 p-1">
+    <div class="d-flex flex-row justify-content-between align-items-center">
+      <img
+        style="margin: 5px"
+        width="50"
+        height="50"
+        :src="`https://notizie.calomelano.it/${feed.icon}`"
+        alt="feed logo"
+      />
+      <RouterLink
+        class="text-decoration-none card-body"
+        :to="'/feed/' + feed.id"
+        :title="'vai a tutti gli articoli di ' + feed.title"
+        :style="{ cursor: 'pointer' }"
+      >
+        <h5>{{ feed.title }} ({{ feed.article_count }} articoli)</h5>
+        <span class="text-decoration-underline">{{ feed.homepage }}</span>
+      </RouterLink>
+      <div class="text-end">
         <span
-          ><a :href="feed.url" target="_blank">{{ feed.url }}</a></span
+          v-for="tag in feed.tags"
+          :key="tag"
+          class="badge text-bg-secondary m-1 p-2"
         >
-        <span class="float-end">
-          {{ feed.tags }}
+          {{ tag }}
         </span>
       </div>
     </div>
+    <RatingToolbar
+      class="d-flex justify-content-end mb-1"
+      :id="feed.id"
+      endpoint="/api/user-feeds/"
+      v-bind:item="feed"
+    ></RatingToolbar>
   </div>
 </template>
