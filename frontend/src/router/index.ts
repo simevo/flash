@@ -1,5 +1,4 @@
 import { createRouter, createWebHistory } from "vue-router"
-import ResHomeView from "../views/HomeView.vue"
 
 const router = createRouter({
   history: createWebHistory("/res/"),
@@ -7,7 +6,7 @@ const router = createRouter({
     {
       path: "/",
       name: "home",
-      component: ResHomeView,
+      component: () => import("../views/HomeView.vue"),
       meta: {
         title: "Home",
       },
@@ -17,6 +16,24 @@ const router = createRouter({
       name: "article",
       props: true,
       component: () => import("../views/ArticleView.vue"),
+    },
+    {
+      path: "/lists/",
+      name: "lists",
+      props: true,
+      component: () => import("../views/ListsView.vue"),
+      meta: {
+        title: "Liste",
+      },
+    },
+    {
+      path: "/read/",
+      name: "read",
+      props: true,
+      component: () => import("../views/ReadView.vue"),
+      meta: {
+        title: "Letti",
+      },
     },
     {
       path: "/feeds/",

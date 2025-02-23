@@ -43,9 +43,21 @@ class ArticlesFilter(filters.FilterSet):
         method="filter_search_author",
         field_name="author",
     )
+    read = filters.BooleanFilter(
+        method="filter_read",
+        label="Articoli letti",
+    )
+    ids = filters.BaseInFilter(
+        field_name="id",
+    )
 
     def filter_search_author(self, queryset, name, value):
         return queryset.annotate(search=SearchVector("author")).filter(search=value)
+
+    def filter_read(self, queryset, name, value):
+        if value:
+            return queryset.filter(views__gt=0)
+        return queryset
 
     class Meta:
         model = ArticlesCombined
@@ -125,6 +137,15 @@ class UserArticleListsView(viewsets.ModelViewSet):
     serializer_class = UserArticleListsSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    @action(detail=False, methods=["GET"])
+    def me(self, request, *args, **kwargs):
+        queryset = UserArticleLists.objects.filter(
+            user_id=request.user.id,
+            automatic=False,
+        )
+        serializer = UserArticleListsSerializerFull(queryset, many=True)
+        return Response(serializer.data)
+
     @extend_schema(
         responses={200: UserArticleListsSerializerFull},
     )
@@ -140,7 +161,7 @@ class UserArticleListsView(viewsets.ModelViewSet):
         responses={201: UserArticleListsSerializerFull},
     )
     def create(self, request, *args, **kwargs):
-        data = request.data.dict()
+        data = request.data
         data["user"] = request.user.id
         serializer = UserArticleListsSerializerFull(data=data)
         serializer.is_valid(raise_exception=True)
@@ -186,7 +207,7 @@ class UserArticleListsView(viewsets.ModelViewSet):
             fe.id(str(article.id))
             title = article.title_original or article.title
             fe.title(title)
-            fe.link(href=article.url)
+            fe.link(href=f"https://notizie.calomelano.it/article/{article.id}")
             content = article.content_original or article.content
             # remove html tags
             content = re.sub(r"<[^>]*>", "", content)

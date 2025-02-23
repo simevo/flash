@@ -200,6 +200,7 @@ onDeactivated(() => {
             :article="article"
             :feed_dict="feed_dict"
             :index="1"
+            :list_id="null"
           />
         </div>
       </div>
