@@ -10,7 +10,6 @@ from django.views.generic import ListView
 from django.views.generic.detail import DetailView
 
 from news.models import Articles
-from news.models import ArticlesData
 
 
 class ArticleListView(ListView):
@@ -38,9 +37,6 @@ class ArticleDetailView(DetailView):
             return redirect(url)
         if request.GET.get("redirect"):
             article = context["object"]
-            ad = ArticlesData.objects.get(id=article.id)
-            ad.views += 1
-            ad.save()
             url = article.url
             return redirect(url)
         return self.render_to_response(context)
