@@ -13,6 +13,7 @@ import {
 import ArticleCard from "../components/ArticleCard.vue"
 
 import type { components } from "../generated/schema.d.ts"
+import { useRoute } from "vue-router"
 
 type ArticleRead = components["schemas"]["ArticleRead"]
 type Feed = components["schemas"]["Feed"]
@@ -21,11 +22,21 @@ type UserArticleListsSerializerFull =
 type PaginatedArticleReadList =
   components["schemas"]["PaginatedArticleReadList"]
 
+const route = useRoute()
+
+export interface Props {
+  list_id: string | null
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  list_id: null,
+})
+
 const articles: Ref<ArticleRead[]> = ref([])
 const feeds: Ref<Feed[]> = ref([])
 const lists: Ref<UserArticleListsSerializerFull[]> = ref([])
 const count_fetch = ref(2)
-const current_list_id: Ref<string | null> = ref(null)
+const current_list_id: Ref<string | null> = ref(props.list_id)
 
 const host = "notizie.calomelano.it"
 
@@ -61,8 +72,13 @@ async function fetchLists() {
   } else {
     const data: UserArticleListsSerializerFull[] = await response.json()
     lists.value = data
-    if (data.length > 0) {
-      current_list_id.value = data[0].id
+    if (data.length > 0 && !current_list_id.value) {
+      const newsfeed = data.find((list) => list.name == "newsfeed")
+      if (newsfeed) {
+        current_list_id.value = newsfeed.id
+      } else {
+        current_list_id.value = data[0].id
+      }
     }
     count_fetch.value -= 1
   }
@@ -111,6 +127,16 @@ async function removeArticleFromList() {
   await fetchLists()
   fetchArticles()
 }
+
+watch(
+  () => route.params.list_id,
+  async (newId, oldId) => {
+    console.log(`ListsView watch, newId = [${newId}] oldId = [${oldId}]`)
+    if (newId && newId !== oldId) {
+      current_list_id.value = Array.isArray(newId) ? newId[0] : newId
+    }
+  },
+)
 </script>
 
 <template>

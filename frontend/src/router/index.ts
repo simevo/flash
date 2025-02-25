@@ -27,6 +27,15 @@ const router = createRouter({
       },
     },
     {
+      path: "/lists/:list_id",
+      name: "lists-id",
+      props: true,
+      component: () => import("../views/ListsView.vue"),
+      meta: {
+        title: "Liste",
+      },
+    },
+    {
       path: "/read/",
       name: "read",
       props: true,
