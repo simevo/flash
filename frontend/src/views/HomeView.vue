@@ -138,21 +138,21 @@ const feed_dict = computed(() => {
 })
 
 onMounted(() => {
-  console.log("HomePage mounted")
+  console.log("HomeView mounted")
   fetchArticles()
   fetchFeeds()
 })
 
 onUnmounted(() => {
-  console.log("HomePage unmounted")
+  console.log("HomeView unmounted")
 })
 
 onActivated(() => {
-  console.log("HomePage activated")
+  console.log("HomeView activated")
 })
 
 onDeactivated(() => {
-  console.log("HomePage deactivated")
+  console.log("HomeView deactivated")
 })
 </script>
 

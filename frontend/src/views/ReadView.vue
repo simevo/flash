@@ -53,21 +53,21 @@ const feed_dict = computed(() => {
 })
 
 onMounted(() => {
-  console.log("ReadPage mounted")
+  console.log("ReadView mounted")
   fetchArticles()
   fetchFeeds()
 })
 
 onUnmounted(() => {
-  console.log("ReadPage unmounted")
+  console.log("ReadView unmounted")
 })
 
 onActivated(() => {
-  console.log("ReadPage activated")
+  console.log("ReadView activated")
 })
 
 onDeactivated(() => {
-  console.log("ReadPage deactivated")
+  console.log("ReadView deactivated")
 })
 </script>
 

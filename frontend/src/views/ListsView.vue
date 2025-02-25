@@ -88,21 +88,21 @@ watch(current_list_id, (new_list_id) => {
 })
 
 onMounted(() => {
-  console.log("ReadPage mounted")
+  console.log("ListsView mounted")
   fetchLists()
   fetchFeeds()
 })
 
 onUnmounted(() => {
-  console.log("ReadPage unmounted")
+  console.log("ListsView unmounted")
 })
 
 onActivated(() => {
-  console.log("ReadPage activated")
+  console.log("ListsView activated")
 })
 
 onDeactivated(() => {
-  console.log("ReadPage deactivated")
+  console.log("ListsView deactivated")
 })
 
 async function removeArticleFromList() {

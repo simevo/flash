@@ -88,7 +88,7 @@ const filtered_feeds = computed(() => {
 })
 
 onMounted(() => {
-  console.log("HomePage mounted")
+  console.log("FeedsView mounted")
   fetchFeeds()
 })
 </script>
