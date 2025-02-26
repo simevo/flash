@@ -20,6 +20,21 @@
             }
           },
           {
+            "in": "query",
+            "name": "ids",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "maximum": 2147483647,
+                "minimum": -2147483648
+              }
+            },
+            "description": "Multiple values may be separated by commas.",
+            "explode": false,
+            "style": "form"
+          },
+          {
             "name": "page",
             "required": false,
             "in": "query",
@@ -27,6 +42,14 @@
             "schema": {
               "type": "integer"
             }
+          },
+          {
+            "in": "query",
+            "name": "read",
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "Articoli letti"
           },
           {
             "in": "query",
@@ -586,6 +609,411 @@
         }
       }
     },
+    "/api/lists/": {
+      "get": {
+        "operationId": "lists_list",
+        "tags": ["lists"],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "tokenAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UserArticleLists"
+                  }
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      },
+      "post": {
+        "operationId": "lists_create",
+        "tags": ["lists"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserArticleLists"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/UserArticleLists"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/UserArticleLists"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "tokenAuth": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserArticleListsSerializerFull"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/lists/{id}/": {
+      "get": {
+        "operationId": "lists_retrieve",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "A UUID string identifying this user article lists.",
+            "required": true
+          }
+        ],
+        "tags": ["lists"],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "tokenAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserArticleListsSerializerFull"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      },
+      "put": {
+        "operationId": "lists_update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "A UUID string identifying this user article lists.",
+            "required": true
+          }
+        ],
+        "tags": ["lists"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserArticleLists"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/UserArticleLists"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/UserArticleLists"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "tokenAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserArticleLists"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      },
+      "patch": {
+        "operationId": "lists_partial_update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "A UUID string identifying this user article lists.",
+            "required": true
+          }
+        ],
+        "tags": ["lists"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchedUserArticleLists"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchedUserArticleLists"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchedUserArticleLists"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "tokenAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserArticleLists"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      },
+      "delete": {
+        "operationId": "lists_destroy",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "A UUID string identifying this user article lists.",
+            "required": true
+          }
+        ],
+        "tags": ["lists"],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "tokenAuth": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No response body"
+          }
+        }
+      }
+    },
+    "/api/lists/{id}/add_article/": {
+      "put": {
+        "operationId": "lists_add_article_update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "A UUID string identifying this user article lists.",
+            "required": true
+          }
+        ],
+        "tags": ["lists"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserArticleLists"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/UserArticleLists"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/UserArticleLists"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "tokenAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserArticleLists"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/lists/{id}/remove_article/": {
+      "delete": {
+        "operationId": "lists_remove_article_destroy",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "A UUID string identifying this user article lists.",
+            "required": true
+          }
+        ],
+        "tags": ["lists"],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "tokenAuth": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No response body"
+          }
+        }
+      }
+    },
+    "/api/lists/{id}/rss/": {
+      "get": {
+        "operationId": "lists_rss_retrieve",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "A UUID string identifying this user article lists.",
+            "required": true
+          }
+        ],
+        "tags": ["lists"],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "tokenAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserArticleLists"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/lists/me/": {
+      "get": {
+        "operationId": "lists_me_retrieve",
+        "tags": ["lists"],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "tokenAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserArticleLists"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/profile/{id}/": {
       "get": {
         "operationId": "profile_retrieve",
@@ -789,346 +1217,6 @@
               }
             },
             "description": ""
-          }
-        }
-      }
-    },
-    "/api/user-article-lists/": {
-      "get": {
-        "operationId": "user_article_lists_list",
-        "tags": ["user-article-lists"],
-        "security": [
-          {
-            "cookieAuth": []
-          },
-          {
-            "tokenAuth": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/UserArticleLists"
-                  }
-                }
-              }
-            },
-            "description": ""
-          }
-        }
-      },
-      "post": {
-        "operationId": "user_article_lists_create",
-        "tags": ["user-article-lists"],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UserArticleLists"
-              }
-            },
-            "application/x-www-form-urlencoded": {
-              "schema": {
-                "$ref": "#/components/schemas/UserArticleLists"
-              }
-            },
-            "multipart/form-data": {
-              "schema": {
-                "$ref": "#/components/schemas/UserArticleLists"
-              }
-            }
-          },
-          "required": true
-        },
-        "security": [
-          {
-            "cookieAuth": []
-          },
-          {
-            "tokenAuth": []
-          }
-        ],
-        "responses": {
-          "201": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserArticleListsSerializerFull"
-                }
-              }
-            },
-            "description": ""
-          }
-        }
-      }
-    },
-    "/api/user-article-lists/{id}/": {
-      "get": {
-        "operationId": "user_article_lists_retrieve",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "description": "A UUID string identifying this user article lists.",
-            "required": true
-          }
-        ],
-        "tags": ["user-article-lists"],
-        "security": [
-          {
-            "cookieAuth": []
-          },
-          {
-            "tokenAuth": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserArticleListsSerializerFull"
-                }
-              }
-            },
-            "description": ""
-          }
-        }
-      },
-      "put": {
-        "operationId": "user_article_lists_update",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "description": "A UUID string identifying this user article lists.",
-            "required": true
-          }
-        ],
-        "tags": ["user-article-lists"],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UserArticleLists"
-              }
-            },
-            "application/x-www-form-urlencoded": {
-              "schema": {
-                "$ref": "#/components/schemas/UserArticleLists"
-              }
-            },
-            "multipart/form-data": {
-              "schema": {
-                "$ref": "#/components/schemas/UserArticleLists"
-              }
-            }
-          },
-          "required": true
-        },
-        "security": [
-          {
-            "cookieAuth": []
-          },
-          {
-            "tokenAuth": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserArticleLists"
-                }
-              }
-            },
-            "description": ""
-          }
-        }
-      },
-      "patch": {
-        "operationId": "user_article_lists_partial_update",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "description": "A UUID string identifying this user article lists.",
-            "required": true
-          }
-        ],
-        "tags": ["user-article-lists"],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/PatchedUserArticleLists"
-              }
-            },
-            "application/x-www-form-urlencoded": {
-              "schema": {
-                "$ref": "#/components/schemas/PatchedUserArticleLists"
-              }
-            },
-            "multipart/form-data": {
-              "schema": {
-                "$ref": "#/components/schemas/PatchedUserArticleLists"
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "cookieAuth": []
-          },
-          {
-            "tokenAuth": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserArticleLists"
-                }
-              }
-            },
-            "description": ""
-          }
-        }
-      },
-      "delete": {
-        "operationId": "user_article_lists_destroy",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "description": "A UUID string identifying this user article lists.",
-            "required": true
-          }
-        ],
-        "tags": ["user-article-lists"],
-        "security": [
-          {
-            "cookieAuth": []
-          },
-          {
-            "tokenAuth": []
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "No response body"
-          }
-        }
-      }
-    },
-    "/api/user-article-lists/{id}/add_article/": {
-      "put": {
-        "operationId": "user_article_lists_add_article_update",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "description": "A UUID string identifying this user article lists.",
-            "required": true
-          }
-        ],
-        "tags": ["user-article-lists"],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UserArticleLists"
-              }
-            },
-            "application/x-www-form-urlencoded": {
-              "schema": {
-                "$ref": "#/components/schemas/UserArticleLists"
-              }
-            },
-            "multipart/form-data": {
-              "schema": {
-                "$ref": "#/components/schemas/UserArticleLists"
-              }
-            }
-          },
-          "required": true
-        },
-        "security": [
-          {
-            "cookieAuth": []
-          },
-          {
-            "tokenAuth": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserArticleLists"
-                }
-              }
-            },
-            "description": ""
-          }
-        }
-      }
-    },
-    "/api/user-article-lists/{id}/remove_article/": {
-      "delete": {
-        "operationId": "user_article_lists_remove_article_destroy",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "description": "A UUID string identifying this user article lists.",
-            "required": true
-          }
-        ],
-        "tags": ["user-article-lists"],
-        "security": [
-          {
-            "cookieAuth": []
-          },
-          {
-            "tokenAuth": []
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "No response body"
           }
         }
       }
