@@ -16,7 +16,7 @@ import type { components } from "../generated/schema.d.ts"
 import { useRoute } from "vue-router"
 
 type ArticleRead = components["schemas"]["ArticleRead"]
-type Feed = components["schemas"]["Feed"]
+type FeedSerializerSimple = components["schemas"]["FeedSerializerSimple"]
 type UserArticleListsSerializerFull =
   components["schemas"]["UserArticleListsSerializerFull"]
 type PaginatedArticleReadList =
@@ -33,7 +33,7 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const articles: Ref<ArticleRead[]> = ref([])
-const feeds: Ref<Feed[]> = ref([])
+const feeds: Ref<FeedSerializerSimple[]> = ref([])
 const lists: Ref<UserArticleListsSerializerFull[]> = ref([])
 const count_fetch = ref(2)
 const current_list_id: Ref<string | null> = ref(props.list_id)
@@ -55,11 +55,11 @@ async function fetchArticles() {
 }
 
 async function fetchFeeds() {
-  const response = await fetch_wrapper(`../../api/feeds/`)
+  const response = await fetch_wrapper(`../../api/feeds/simple/`)
   if (response.status == 403) {
     document.location = "/accounts/"
   } else {
-    const data: Feed[] = await response.json()
+    const data: FeedSerializerSimple[] = await response.json()
     feeds.value = data
     count_fetch.value -= 1
   }
@@ -89,7 +89,7 @@ const current_list = computed(() => {
 })
 
 const feed_dict = computed(() => {
-  const feed_dict: { [key: number]: Feed } = {}
+  const feed_dict: { [key: number]: FeedSerializerSimple } = {}
   feeds.value.forEach((feed) => {
     feed_dict[feed.id] = feed
   })

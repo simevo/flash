@@ -84,6 +84,22 @@ export interface paths {
     patch: operations["feeds_partial_update"]
     trace?: never
   }
+  "/api/feeds/simple/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations["feeds_simple_retrieve"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   "/api/lists/": {
     parameters: {
       query?: never
@@ -385,6 +401,12 @@ export interface components {
       /** Format: int64 */
       article_count?: number | null
       average_time_from_last_post?: number | null
+    }
+    FeedSerializerSimple: {
+      id: number
+      title: string
+      icon: string
+      license?: string | null
     }
     Nested: {
       id: number
@@ -893,6 +915,25 @@ export interface operations {
         }
         content: {
           "application/json": components["schemas"]["Feed"]
+        }
+      }
+    }
+  }
+  feeds_simple_retrieve: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["FeedSerializerSimple"]
         }
       }
     }

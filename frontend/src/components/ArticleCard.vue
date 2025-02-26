@@ -4,7 +4,7 @@ import { secondsToString, secondsToString1 } from "./sts"
 import { fetch_wrapper } from "../utils"
 
 type ArticleRead = components["schemas"]["ArticleRead"]
-type Feed = components["schemas"]["Feed"]
+type FeedSerializerSimple = components["schemas"]["FeedSerializerSimple"]
 
 function stripHtml(html: string): string {
   const doc = new DOMParser().parseFromString(html, "text/html")
@@ -13,7 +13,7 @@ function stripHtml(html: string): string {
 
 const props = defineProps<{
   article: ArticleRead
-  feed_dict: { [key: number]: Feed }
+  feed_dict: { [key: number]: FeedSerializerSimple }
   index: number
   list_id: string | null
 }>()

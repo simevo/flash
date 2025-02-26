@@ -19,11 +19,13 @@ from news.api.serializers import ArticleReadSerializer
 from news.api.serializers import ArticleSerializer
 from news.api.serializers import ArticleSerializerFull
 from news.api.serializers import FeedSerializer
+from news.api.serializers import FeedSerializerSimple
 from news.api.serializers import ProfileSerializer
 from news.api.serializers import UserArticleListsSerializer
 from news.api.serializers import UserArticleListsSerializerFull
 from news.api.serializers import UserFeedSerializer
 from news.models import ArticlesCombined
+from news.models import Feeds
 from news.models import FeedsCombined
 from news.models import UserArticleLists
 from news.models import UserFeeds
@@ -97,6 +99,15 @@ class FeedsView(viewsets.ModelViewSet):
     queryset = FeedsCombined.objects.all().order_by("id")
     serializer_class = FeedSerializer
     permission_classes = [ReadOnly, permissions.IsAuthenticated]
+
+    @extend_schema(
+        responses=FeedSerializerSimple,
+    )
+    @action(detail=False, methods=["GET"])
+    def simple(self, request, *args, **kwargs):
+        queryset = Feeds.objects.all()
+        serializer = FeedSerializerSimple(queryset, many=True)
+        return Response(serializer.data)
 
 
 class ProfileView(

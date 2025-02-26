@@ -17,11 +17,11 @@ const all_feeds: Ref<CheckBoxValue> = ref(true)
 import type { components } from "../generated/schema.d.ts"
 
 type ArticleRead = components["schemas"]["ArticleRead"]
-type Feed = components["schemas"]["Feed"]
+type FeedSerializerSimple = components["schemas"]["FeedSerializerSimple"]
 
 const props = defineProps<{
   articles: ArticleRead[]
-  feeds: Feed[]
+  feeds: FeedSerializerSimple[]
   filters: Filters
   feedCounts: FeedCounts
   notFiltering: boolean

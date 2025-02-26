@@ -609,6 +609,32 @@
         }
       }
     },
+    "/api/feeds/simple/": {
+      "get": {
+        "operationId": "feeds_simple_retrieve",
+        "tags": ["feeds"],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "tokenAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeedSerializerSimple"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/lists/": {
       "get": {
         "operationId": "lists_list",
@@ -2011,6 +2037,27 @@
           "title",
           "url"
         ]
+      },
+      "FeedSerializerSimple": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "maximum": 2147483647,
+            "minimum": -2147483648
+          },
+          "title": {
+            "type": "string"
+          },
+          "icon": {
+            "type": "string"
+          },
+          "license": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": ["icon", "id", "title"]
       },
       "Nested": {
         "type": "object",

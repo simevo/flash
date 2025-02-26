@@ -14,7 +14,7 @@ from news.models import UserFeeds
 class FeedSerializerSimple(serializers.ModelSerializer):
     class Meta:
         model = Feeds
-        fields = ["id", "title", "icon", "premium", "license"]
+        fields = ["id", "title", "icon", "license"]
 
 
 class FeedSerializer(serializers.ModelSerializer):
