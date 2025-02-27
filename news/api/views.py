@@ -1,6 +1,7 @@
 import html
 import re
 
+from django.contrib.postgres.aggregates import ArrayAgg
 from django.contrib.postgres.search import SearchVector
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
@@ -150,11 +151,17 @@ class UserArticleListsView(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["GET"])
     def me(self, request, *args, **kwargs):
-        queryset = UserArticleLists.objects.filter(
-            user_id=request.user.id,
+        data = (
+            UserArticleLists.objects.filter(
+                user_id=request.user.id,
+            )
+            .order_by("-automatic")
+            .annotate(articles_set=ArrayAgg("articles"))
+            .values("id", "name", "automatic", "articles_set", "user")
         )
-        serializer = UserArticleListsSerializerFull(queryset, many=True)
-        return Response(serializer.data)
+        for d in data:
+            d["articles"] = d.pop("articles_set")
+        return Response(data)
 
     @extend_schema(
         responses={200: UserArticleListsSerializerFull},
