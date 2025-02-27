@@ -105,7 +105,7 @@ class FeedsView(viewsets.ModelViewSet):
     )
     @action(detail=False, methods=["GET"])
     def simple(self, request, *args, **kwargs):
-        queryset = Feeds.objects.all()
+        queryset = Feeds.objects.all().values("id", "title", "icon", "license")
         serializer = FeedSerializerSimple(queryset, many=True)
         return Response(serializer.data)
 
