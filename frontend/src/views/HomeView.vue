@@ -23,6 +23,7 @@ type PaginatedArticleReadList =
 const articles: Ref<ArticleRead[]> = ref([])
 const feeds: Ref<FeedSerializerSimple[]> = ref([])
 const count_fetch = ref(2)
+const next = ref<string>("")
 
 const no_filters: Filters = {
   what: "",
@@ -114,7 +115,21 @@ async function fetchArticles() {
   } else {
     const data: PaginatedArticleReadList = await response.json()
     articles.value = data.results
+    next.value = data.next ? data.next : ""
     count_fetch.value -= 1
+  }
+}
+
+async function fetchMoreArticles() {
+  if (next.value) {
+    const response = await fetch_wrapper(next.value)
+    if (response.status == 403) {
+      document.location = "/accounts/"
+    } else {
+      const data: PaginatedArticleReadList = await response.json()
+      articles.value = articles.value.concat(data.results)
+      next.value = data.next ? data.next : ""
+    }
   }
 }
 
@@ -202,6 +217,16 @@ onDeactivated(() => {
             :index="1"
             :list_id="null"
           />
+        </div>
+        <div class="text-center mt-3">
+          <button
+            class="btn btn-primary"
+            @click="fetchMoreArticles"
+            v-if="next != ''"
+          >
+            Carica altri articoli
+          </button>
+          <p v-else>Non ci sono altri articoli da visualizzare.</p>
         </div>
       </div>
     </div>
