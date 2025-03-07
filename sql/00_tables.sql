@@ -23,7 +23,7 @@ CREATE TABLE feeds (
     frequency text
 );
 
-CREATE TABLE public.articles (
+CREATE TABLE articles (
     id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     stamp timestamp with time zone DEFAULT now() NOT NULL,
     author text,
@@ -33,7 +33,19 @@ CREATE TABLE public.articles (
     content text,
     language text,
     url text,
-    comments integer DEFAULT 0,
     feed_id integer REFERENCES feeds(id),
-    topic_id integer
+    tsv TSVECTOR,
+    tsv_simple TSVECTOR
 );
+
+DROP TRIGGER IF EXISTS tsvectorupdate ON articles;
+
+CREATE TRIGGER tsvectorupdate BEFORE INSERT OR UPDATE
+ON articles FOR EACH ROW EXECUTE PROCEDURE
+tsvector_update_trigger(tsv, 'pg_catalog.italian', title, content);
+
+DROP TRIGGER IF EXISTS tsvectorsimpleupdate ON articles;
+
+CREATE TRIGGER tsvectorsimpleupdate BEFORE INSERT OR UPDATE
+ON articles FOR EACH ROW EXECUTE PROCEDURE
+tsvector_update_trigger(tsv_simple, 'pg_catalog.simple', title_original, content_original);
