@@ -436,6 +436,42 @@ function clean() {
   }
 }
 
+function sanitize(doc: Document) {
+  const blacklist = [
+    "img",
+    "figcaption",
+    "figure",
+    "hr",
+    "source",
+    "object",
+    "video",
+    "audio",
+    "track",
+    "embed",
+    "param",
+    "map",
+    "area",
+    "form",
+    "input",
+    "button",
+    "canvas",
+    "style",
+    "script",
+    "svg",
+    "picture",
+  ]
+  let i
+  for (i = 0; i < blacklist.length; i++) {
+    const tag = blacklist[i]
+    const elements = doc.getElementsByTagName(tag)
+    let j
+    for (j = 0; j < elements.length; j++) {
+      const e = elements[j]
+      e.remove()
+    }
+  }
+}
+
 function prefill() {
   const escaped = encodeURIComponent(article.value.url)
   fetch_wrapper("/proxy/" + escaped, { method: "GET" })
@@ -450,6 +486,7 @@ function prefill() {
       parser.href = article.value.url
       const doc = document.implementation.createHTMLDocument("")
       doc.documentElement.innerHTML = html
+      sanitize(doc)
       article.value.author = guess_author(doc)
       const r = new Readability(doc)
       try {
