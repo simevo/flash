@@ -44,6 +44,7 @@ newsfeed_query = """
         SELECT
             articles.id,
             articles.tsv,
+            articles.tsv_simple,
             articles.stamp,
             f.*
         FROM
@@ -121,8 +122,17 @@ newsfeed_query = """
         INNER JOIN feeds_data ON feeds.id = feeds_data.id
     WHERE
         NOT read
-        AND tsv @@ to_tsquery('pg_catalog.italian', array_to_string(whitelist, '|'))
-        AND NOT tsv @@ to_tsquery('pg_catalog.italian', array_to_string(blacklist, '|'))
+        AND (
+                tsv @@
+                to_tsquery('pg_catalog.italian', array_to_string(whitelist, '|'))
+            OR
+                tsv_simple @@
+                to_tsquery('pg_catalog.simple', array_to_string(whitelist, '|'))
+        )
+        AND NOT tsv @@
+            to_tsquery('pg_catalog.italian', array_to_string(blacklist, '|'))
+        AND NOT tsv_simple @@
+            to_tsquery('pg_catalog.simple', array_to_string(blacklist, '|'))
     ORDER BY score DESC, stamp DESC
     LIMIT 100;
 """
