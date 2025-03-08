@@ -7,6 +7,7 @@ import {
   onMounted,
   onUnmounted,
   ref,
+  watch,
   type Ref,
 } from "vue"
 import type { Filters, FeedCounts } from "../types/Filters"
@@ -76,14 +77,6 @@ const filtered_articles = computed(() => {
   } else {
     return articles.value.filter((article) => {
       let found = true
-      if (filters.what) {
-        const text =
-          article.excerpt +
-          (article.title ? article.title : " ") +
-          (article.title_original ? article.title_original : " ") +
-          article.author
-        found = found && text.toLowerCase().includes(filters.what.toLowerCase())
-      }
       if (filters.when !== "all") {
         const [max, min] = filters.when.split("-")
         const age = (new Date().getTime() / 1000 - article.stamp) / 3600
@@ -109,7 +102,22 @@ const filtered_articles = computed(() => {
 })
 
 async function fetchArticles() {
-  const response = await fetch_wrapper(`../../api/articles/`)
+  let url = `../../api/articles/`
+  if (filters.what.trim()) {
+    // sanitize the what parameter, allowing only alphanumeric characters, using Unicode character class escapes
+    const regex =
+      /[^\p{Alphabetic}\p{Mark}\p{Decimal_Number}\p{Connector_Punctuation}\p{Join_Control} ]/gu
+    const sanitizedWhat = filters.what.replace(regex, "")
+    // remove multiple consecutive spaces and any leading / trailing spaces
+    const trimmed = sanitizedWhat.replace(/\s+/g, " ").trim()
+    const words = trimmed.split(" ")
+    if (words.length > 0) {
+      const query = words.join("&")
+      const encodedQuery = encodeURIComponent(query)
+      url += `?query=${encodedQuery}`
+    }
+  }
+  const response = await fetch_wrapper(url)
   if (response.status == 403) {
     document.location = "/accounts/"
   } else {
@@ -169,6 +177,20 @@ onActivated(() => {
 onDeactivated(() => {
   console.log("HomeView deactivated")
 })
+
+watch(
+  () => filters.what,
+  async (newWhat, oldWhat) => {
+    console.log(
+      `HomeView what watch, newWhat = [${newWhat}] oldWhat = [${oldWhat}]`,
+    )
+    if (newWhat !== oldWhat) {
+      articles.value = []
+      count_fetch.value = 1
+      await fetchArticles()
+    }
+  },
+)
 </script>
 
 <template>

@@ -84,8 +84,9 @@ onMounted(() => {
         class="form-control mb-1"
         type="search"
         placeholder="Parola chiave"
-        aria-label="Filtra per parole chiave"
+        aria-label="Filtra per parole chiave; inserisci una o più parole separate da spazi"
         @change="emit('update_what', ($event.target as HTMLInputElement).value)"
+        @keydown.enter.prevent
       />
     </div>
     <select

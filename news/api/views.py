@@ -53,6 +53,10 @@ class ArticlesFilter(filters.FilterSet):
     ids = filters.BaseInFilter(
         field_name="id",
     )
+    query = filters.CharFilter(
+        method="filter_query",
+        label="Cerca",
+    )
 
     def filter_search_author(self, queryset, name, value):
         return queryset.annotate(search=SearchVector("author")).filter(search=value)
@@ -61,6 +65,16 @@ class ArticlesFilter(filters.FilterSet):
         if value:
             return queryset.filter(views__gt=0)
         return queryset
+
+    def filter_query(self, queryset, name, value):
+        return queryset.extra(
+            where=[
+                """
+            articles_combined.tsv @@ plainto_tsquery('pg_catalog.italian', %s) OR
+            articles_combined.tsv_simple @@ plainto_tsquery('pg_catalog.simple', %s)""",
+            ],
+            params=[value, value],
+        )
 
     class Meta:
         model = ArticlesCombined
