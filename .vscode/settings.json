@@ -4,5 +4,6 @@
     ".mypy_cache": true,
     ".venv": true,
     "**/__pycache__": true
-  }
+  },
+  "makefile.configureOnOpen": false
 }
