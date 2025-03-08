@@ -71,6 +71,30 @@ const not_filtering = computed(
     ),
 )
 
+const filters_summary = computed(() => {
+  if (not_filtering.value) {
+    return "Filtra gli articoli"
+  } else {
+    let summary = "Articoli filtrati"
+    if (filters.what.trim()) {
+      summary += ` - per parole chiave [${filters.what.trim()}]`
+    }
+    if (filters.when !== "all") {
+      summary += ` - per data: [${filters.when}]`
+    }
+    if (filters.language !== "all") {
+      summary += ` - per lingua: [${filters.language}]`
+    }
+    if (filters.length !== "all") {
+      summary += ` - per lunghezza: [${filters.length}]`
+    }
+    if (filters.feed_ids.length > 0 && filters.feed_ids.indexOf(-1) === -1) {
+      summary += ` - per fonti: [${filters.feed_ids}]`
+    }
+    return summary
+  }
+})
+
 const filtered_articles = computed(() => {
   if (not_filtering.value) {
     return articles.value
@@ -195,9 +219,9 @@ watch(
 
 <template>
   <button
-    class="btn btn-primary ms-2"
+    class="btn btn-primary ms-2 btn-lg"
     :class="{ active: !not_filtering }"
-    title="Filtra gli articoli"
+    :title="filters_summary"
     data-bs-toggle="offcanvas"
     data-bs-target="#offcanvasFilters"
     type="button"
@@ -256,6 +280,10 @@ watch(
   <div class="container my-3" v-else>
     <div class="row">
       <div class="text-center col-md-8 offset-md-2">
+        <h1 class="mb-3" v-if="!not_filtering">{{ filters_summary }}...</h1>
+        <h1 class="mb-3" v-else>
+          Tutti gli articoli in ordine cronologico ...
+        </h1>
         <div class="spinner-border text-primary" role="status">
           <span class="visually-hidden">Loading...</span>
         </div>

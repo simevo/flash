@@ -54,7 +54,8 @@ const mergedFeedCounts = computed(() => {
       }
     }
   })
-  return mfc
+  // sort by decreasing count
+  return Object.values(mfc).sort((a, b) => b.count - a.count)
 })
 
 onMounted(() => {
