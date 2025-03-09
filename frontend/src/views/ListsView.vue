@@ -103,10 +103,11 @@ watch(current_list_id, (new_list_id) => {
   }
 })
 
-onMounted(() => {
+onMounted(async () => {
   console.log("ListsView mounted")
-  fetchLists()
-  fetchFeeds()
+  await fetchLists()
+  await fetchFeeds()
+  await fetchArticles()
 })
 
 onUnmounted(() => {
