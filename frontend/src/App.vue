@@ -16,6 +16,7 @@ import { RouterLink, RouterView } from "vue-router"
         aria-controls="navbarSupportedContent"
         aria-expanded="false"
         aria-label="Toggle navigation"
+        title="Toggle navigation"
       >
         <span class="navbar-toggler-icon" />
       </button>

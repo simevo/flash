@@ -7,6 +7,7 @@
           v-model="language"
           class="form-select mb-3"
           aria-label="Filtra per lingua"
+          title="Filtra per lingua"
         >
           <option value="all" selected>Tutte le lingue</option>
           <option

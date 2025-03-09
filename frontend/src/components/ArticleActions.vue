@@ -91,14 +91,15 @@ onMounted(() => {
   <div
     class="btn-toolbar float-start"
     role="toolbar"
-    aria-label="Toolbar with button groups"
+    aria-label="Azioni per questo articolo"
   >
     <button
       v-if="lists.length == 0"
       :id="`selected_${article.id}`"
       type="button"
       class="btn btn-outline-primary btn-sm"
-      title="Salva in lista"
+      aria-label="Salva l'articolo in una nuova lista"
+      title="Salva l'articolo in una nuova lista"
       @click="create_list_and_save()"
     >
       <img

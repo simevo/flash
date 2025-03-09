@@ -6,7 +6,7 @@
         <div
           class="btn-group"
           role="group"
-          aria-label="Actions"
+          aria-label="Azioni"
           style="display: none"
           v-show="received"
         >
@@ -14,6 +14,7 @@
             @click="send()"
             type="button"
             class="btn btn-primary"
+            aria-label="Invia l'articolo all'aggregatore"
             title="Invia l'articolo all'aggregatore"
             v-bind:disabled="errors_any"
           >
@@ -23,6 +24,7 @@
             @click="clean()"
             type="button"
             class="btn btn-secondary"
+            aria-label="Pulisci tutti i campi"
             title="Pulisci tutti i campi"
           >
             Azzera
@@ -32,6 +34,7 @@
             :href="article.url"
             role="button"
             class="btn btn-danger"
+            aria-label="Apri il link in un nuovo tab"
             title="Apri il link in un nuovo tab"
           >
             Apri URL
@@ -98,7 +101,7 @@
                   class="btn-close position-absolute"
                   style="right: 0.5em"
                   data-bs-dismiss="alert"
-                  aria-label="clear"
+                  aria-label="Cancella"
                   @click="resetTitle()"
                 ></button>
               </div>
@@ -133,7 +136,8 @@
                   class="btn-close position-absolute"
                   style="right: 0.5em"
                   data-bs-dismiss="alert"
-                  aria-label="clear"
+                  aria-label="Cancella"
+                  title="Cancella"
                   @click="resetAuthor()"
                 ></button>
               </div>
@@ -176,7 +180,8 @@
                 type="button"
                 class="btn-close"
                 style="float: right; margin-right: 8px"
-                aria-label="clear"
+                aria-label="Cancella"
+                title="Cancella"
                 @click="resetContent()"
               ></button>
               <div style="margin-top: 5px">

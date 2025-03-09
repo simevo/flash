@@ -84,8 +84,9 @@ onMounted(() => {
         :value="filters.what"
         class="form-control mb-1"
         type="search"
-        placeholder="Parola chiave"
-        aria-label="Filtra per parole chiave; inserisci una o più parole separate da spazi"
+        placeholder="parola1 parola2 parola3"
+        aria-label="Filtra gli articoli che contengono tutte le parole chiave; inserisci una o più parole separate da spazi"
+        title="Filtra gli articoli che contengono tutte le parole chiave; inserisci una o più parole separate da spazi"
         @change="emit('update_what', ($event.target as HTMLInputElement).value)"
         @keydown.enter.prevent
       />
@@ -94,6 +95,7 @@ onMounted(() => {
       :value="filters.language"
       class="form-select mb-3"
       aria-label="Filtra per lingua"
+      title="Filtra per lingua"
       @change="
         emit(
           'update_language',
@@ -117,6 +119,7 @@ onMounted(() => {
       :value="filters.when"
       class="form-select mb-3"
       aria-label="Filtra per data"
+      title="Filtra per data"
       @change="
         emit(
           'update_when',
@@ -138,6 +141,7 @@ onMounted(() => {
       :value="filters.length"
       class="form-select mb-3"
       aria-label="Filtra per lunghezza"
+      title="Filtra per lunghezza"
       @change="
         emit(
           'update_length',

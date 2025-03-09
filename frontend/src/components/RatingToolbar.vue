@@ -2,7 +2,7 @@
   <div
     class="btn-toolbar float-right"
     role="toolbar"
-    aria-label="Toolbar with button groups"
+    aria-label="Dai una valutazione"
   >
     <div class="btn-group mr-2" role="group" aria-label="ratings">
       <NegativeRating

@@ -3,10 +3,30 @@
     <h1>Impostazioni</h1>
     <p>
       Personalizza il tuo newsfeed! Queste impostazioni controllano quali
-      articoli verranno mostrati, in che ordine e per quanto tempo rimarranno
-      visibili.
+      articoli verranno mostrati nel
+      <img
+        class="icon"
+        src="~bootstrap-icons/icons/robot.svg"
+        alt="rss icon"
+        width="18"
+        height="18"
+        title="Lista automatica"
+      />
+      <b> newsfeed</b> alla pagina
+      <RouterLink to="/lists"
+        ><img
+          class="icon me-2"
+          src="~bootstrap-icons/icons/heart-fill.svg"
+          alt="view icon"
+          width="18"
+          height="18"
+        /><b>Salvati</b></RouterLink
+      >, in che ordine e per quanto tempo rimarranno visibili.
     </p>
-    <p class="text-muted">Nota: il newsfeed viene aggiornato ogni ora circa.</p>
+    <p class="text-muted">
+      Nota: il newsfeed viene aggiornato ogni ora circa quindi c'è un ritardo
+      nell'aggiornamento!
+    </p>
     <ul class="nav nav-tabs" id="myTab" role="tablist">
       <li class="nav-item" role="presentation">
         <button
@@ -75,6 +95,7 @@
                 type="button"
                 class="btn-close btn-close-white"
                 aria-label="Elimina parola"
+                title="Elimina parola"
                 data-bs-theme="dark"
                 @click="removeItem('whitelist', word)"
               ></button>
@@ -123,6 +144,7 @@
                 type="button"
                 class="btn-close btn-close-white"
                 aria-label="Elimina parola"
+                title="Elimina parola"
                 data-bs-theme="dark"
                 @click="removeItem('blacklist', word)"
               ></button>
@@ -168,6 +190,7 @@
                 type="button"
                 class="btn-close"
                 aria-label="Elimina parola"
+                title="Elimina parola"
                 @click="removeItem('languages', code)"
               ></button>
             </span>

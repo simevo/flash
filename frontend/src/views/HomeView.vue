@@ -304,7 +304,8 @@ watch(
         type="button"
         class="btn-close"
         data-bs-dismiss="offcanvas"
-        aria-label="Close"
+        aria-label="Chiudi"
+        title="Chiudi"
       ></button>
     </div>
     <div class="offcanvas-body">
