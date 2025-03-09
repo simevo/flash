@@ -57,7 +57,7 @@ async function fetchLists() {
     document.location = "/accounts/"
   } else {
     const data: UserArticleListsSerializerFull[] = await response.json()
-    lists.value = data
+    lists.value = data.filter((list) => list.automatic == false)
   }
 }
 
