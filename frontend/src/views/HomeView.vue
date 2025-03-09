@@ -25,6 +25,7 @@ const articles: Ref<ArticleRead[]> = ref([])
 const feeds: Ref<FeedSerializerSimple[]> = ref([])
 const count_fetch = ref(2)
 const next = ref<string>("")
+const fetching = ref<boolean>(false)
 
 const no_filters: Filters = {
   what: "",
@@ -154,6 +155,7 @@ async function fetchArticles() {
 
 async function fetchMoreArticles() {
   if (next.value) {
+    fetching.value = true
     const response = await fetch_wrapper(next.value)
     if (response.status == 403) {
       document.location = "/accounts/"
@@ -161,6 +163,7 @@ async function fetchMoreArticles() {
       const data: PaginatedArticleReadList = await response.json()
       articles.value = articles.value.concat(data.results)
       next.value = data.next ? data.next : ""
+      fetching.value = false
     }
   }
 }
@@ -264,16 +267,24 @@ watch(
             :list_id="null"
           />
         </div>
-        <div class="text-center mt-3">
-          <button
-            class="btn btn-primary"
-            @click="fetchMoreArticles"
-            v-if="next != ''"
-          >
-            Carica altri articoli
-          </button>
-          <p v-else>Non ci sono altri articoli da visualizzare.</p>
+      </div>
+    </div>
+    <div class="row my-3">
+      <div class="col-md-12 text-center mt-3">
+        <div class="spinner-border text-primary" role="status" v-if="fetching">
+          <span class="visually-hidden">Loading...</span>
         </div>
+      </div>
+      <div class="col-md-12 text-center">
+        <button
+          class="btn btn-primary"
+          @click="fetchMoreArticles"
+          :disabled="fetching"
+          v-if="next != ''"
+        >
+          Carica altri articoli
+        </button>
+        <p v-else>Non ci sono altri articoli da visualizzare.</p>
       </div>
     </div>
   </div>
