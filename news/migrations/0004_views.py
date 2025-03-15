@@ -189,6 +189,25 @@ def create_views(apps, schema_editor):
                             $$ LANGUAGE plpgsql STRICT""")
         cursor.execute("CREATE TRIGGER update_feeds_data AFTER INSERT OR UPDATE ON feeds FOR EACH ROW EXECUTE FUNCTION ufd2()")
 
+        cursor.execute("""
+                        CREATE FUNCTION acu() RETURNS trigger AS $$
+                            BEGIN
+                                UPDATE articles
+                                    SET
+                                        title = NEW.title,
+                                        title_original = NEW.title_original,
+                                        author = NEW.author,
+                                        language = NEW.language,
+                                        url = NEW.url,
+                                        content = NEW.content,
+                                        content_original = NEW.content_original
+                                    WHERE id = NEW.id;
+                                RETURN NEW;
+                            END;
+                            $$ LANGUAGE plpgsql STRICT""")
+        cursor.execute("CREATE TRIGGER articles_combined_update INSTEAD OF UPDATE ON articles_combined FOR EACH ROW EXECUTE FUNCTION acu()")
+
+
 def delete_views(apps, schema_editor):
 
     with schema_editor.connection.cursor() as cursor:
@@ -200,6 +219,8 @@ def delete_views(apps, schema_editor):
         cursor.execute("DROP FUNCTION IF EXISTS ufd")
         cursor.execute("DROP TRIGGER IF EXISTS update_feeds_data ON feeds")
         cursor.execute("DROP FUNCTION IF EXISTS ufd2")
+        cursor.execute("DROP TRIGGER IF EXISTS articles_combined_update ON articles_combined")
+        cursor.execute("DROP FUNCTION IF EXISTS acu")
         cursor.execute("DROP VIEW IF EXISTS articles_combined")
         cursor.execute("DROP VIEW IF EXISTS feeds_combined")
         cursor.execute("DROP TABLE IF EXISTS articles_data")

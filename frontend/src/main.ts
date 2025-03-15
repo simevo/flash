@@ -20,3 +20,4 @@ app.use(Vue3Toastify, {
 app.mount("#app")
 
 app.config.globalProperties.base_language = "it"
+app.provide("base_language", app.config.globalProperties["base_language"])
