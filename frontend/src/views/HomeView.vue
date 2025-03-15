@@ -275,7 +275,7 @@ watch(
           <span class="visually-hidden">Loading...</span>
         </div>
       </div>
-      <div class="col-md-12 text-center">
+      <div class="col-md-12 text-center" v-if="filtered_articles.length > 0">
         <button
           class="btn btn-primary"
           @click="fetchMoreArticles"
