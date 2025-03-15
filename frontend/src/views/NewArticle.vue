@@ -48,7 +48,7 @@
         <form class="needs-validation" novalidate>
           <div class="form-group" :class="{ 'is-invalid': errors['url'] }">
             <label for="url" v-show="!received && !trying">
-              Copia e incolla il link all'articlo (URL)
+              Copia e incolla il link all'articolo (URL)
             </label>
             <label style="display: none" v-show="trying">
               Attendi qualche istante ...</label
