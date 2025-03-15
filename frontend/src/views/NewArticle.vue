@@ -201,7 +201,7 @@
 
 <script setup lang="ts">
 import { fetch_wrapper } from "../utils"
-import { computed, onActivated, onMounted, ref } from "vue"
+import { computed, inject, onActivated, onMounted, ref } from "vue"
 import { franc } from "franc"
 import { Readability } from "@mozilla/readability"
 import Quill from "quill"
@@ -216,6 +216,7 @@ onMounted(() => {
 })
 
 onActivated(() => {
+  console.log("NewArticle activated")
   // set focus on the URL field
   const input = document.getElementById("url")
   if (input) {
@@ -223,7 +224,7 @@ onActivated(() => {
   }
 })
 
-const base_language = "it"
+const base_language: string = inject("base_language", "it")
 
 const article = ref({
   author: "",
