@@ -86,6 +86,99 @@
       </div>
       <div class="row">
         <div class="col-md-6 offset-md-2 text-muted">
+          <button
+            type="button"
+            id="button-speak"
+            class="btn btn-success btn-sm"
+            title="Leggi ad alta voce"
+            v-if="tts && !tts_open && paragraphs.length > 0"
+            v-on:click="tts_speak()"
+          >
+            <img src="~bootstrap-icons/icons/megaphone.svg" alt="tts icon" />
+          </button>
+          <div
+            style="position: fixed; z-index: 1000; bottom: 1em; left: 1em"
+            class="btn-group btn-group-sm"
+            id="button-tts"
+            role="group"
+            aria-label="Leggi ad alta voce"
+            v-if="tts && tts_open"
+          >
+            <button
+              type="button"
+              id="button-restart"
+              class="btn btn-success"
+              title="Dall'inizio"
+              v-on:click="tts_restart()"
+            >
+              <img
+                src="~bootstrap-icons/icons/skip-start-fill.svg"
+                alt="fast backward icon"
+              />
+            </button>
+            <button
+              type="button"
+              id="button-back"
+              class="btn btn-success"
+              title="Indietro"
+              v-on:click="tts_back()"
+              :disabled="current_paragraph == 0"
+            >
+              <img
+                src="~bootstrap-icons/icons/rewind-fill.svg"
+                alt="rewind icon"
+              />
+            </button>
+            <button
+              type="button"
+              id="button-stop"
+              class="btn btn-success"
+              title="Stop"
+              v-on:click="tts_stop()"
+              :disabled="!speaking"
+            >
+              <img
+                src="~bootstrap-icons/icons/pause-fill.svg"
+                alt="pause icon"
+              />
+            </button>
+            <button
+              type="button"
+              id="button-continue"
+              class="btn btn-success"
+              title="Continua"
+              v-on:click="tts_continue()"
+              :disabled="speaking"
+            >
+              <img src="~bootstrap-icons/icons/play-fill.svg" alt="play icon" />
+            </button>
+            <button
+              type="button"
+              id="button-forward"
+              class="btn btn-success"
+              title="Avanti"
+              v-on:click="tts_forward()"
+              :disabled="current_paragraph >= paragraphs.length - 1"
+            >
+              <img
+                src="~bootstrap-icons/icons/fast-forward-fill.svg"
+                alt="forward icon"
+              />
+            </button>
+            <button
+              type="button"
+              id="button-close"
+              class="btn btn-success"
+              title="Chiudi"
+              v-on:click="tts_close()"
+            >
+              <img
+                src="~bootstrap-icons/icons/stop-fill.svg"
+                alt="close icon"
+              />
+            </button>
+          </div>
+
           <ArticleActions
             :article="article"
             :clean="false"
@@ -122,16 +215,32 @@
         </div>
       </div>
       <div class="row mt-3" v-if="article.language == base_language">
-        <!-- eslint-disable -->
         <div
           id="content_tts"
           :lang="base_language"
           class="content col-md-8 offset-md-2"
           v-html="article.content || ''"
         />
-        <!-- eslint-enable -->
       </div>
-      <div class="row mt-3" v-else-if="article.content">
+      <div
+        class="row mt-3"
+        v-else-if="
+          article.content == null ||
+          article.content.trim() === '' ||
+          article.content.trim() === '<p><br></p>'
+        "
+      >
+        <div
+          id="content_tts"
+          :lang="article.language || base_language"
+          class="content col-md-8 offset-md-2"
+          v-html="article.content_original || ''"
+        />
+      </div>
+      <div class="row mt-3" v-else>
+        <h2>
+          article.content: <code>{{ JSON.stringify(article.content) }}</code>
+        </h2>
         <div
           id="content_tts"
           :lang="article.language || base_language"
@@ -142,14 +251,6 @@
           :lang="base_language"
           class="content col-md-4"
           v-html="article.content || ''"
-        />
-      </div>
-      <div class="row mt-3" v-else>
-        <div
-          id="content_tts"
-          :lang="article.language || base_language"
-          class="content col-md-8 offset-md-2"
-          v-html="article.content_original || ''"
         />
       </div>
     </div>
@@ -167,7 +268,15 @@
 
 <script setup lang="ts">
 import { fetch_wrapper } from "../utils"
-import { computed, onActivated, onMounted, ref, watch, type Ref } from "vue"
+import {
+  computed,
+  nextTick,
+  onActivated,
+  onMounted,
+  ref,
+  watch,
+  type Ref,
+} from "vue"
 import { RouterLink, useRoute } from "vue-router"
 import type { components } from "../generated/schema.d.ts"
 import { secondsToString, secondsToString1 } from "@/components/sts"
@@ -180,6 +289,24 @@ type Article = components["schemas"]["ArticleSerializerFull"]
 
 const article: Ref<Article | null> = ref(null)
 const count_fetch = ref(1)
+const tts = ref(false)
+const tts_open = ref(false)
+const stopped = ref(true)
+const paragraphs: Ref<Element[]> = ref([])
+const current_paragraph = ref(0)
+const speaking = ref(false)
+
+let voices: SpeechSynthesisVoice[] = []
+let voice: SpeechSynthesisVoice | null = null
+
+if ("speechSynthesis" in window) {
+  voices = window.speechSynthesis.getVoices()
+  // Chrome loads voices asynchronously.
+  window.speechSynthesis.onvoiceschanged = function () {
+    voices = window.speechSynthesis.getVoices()
+    // alert(voices.map((v) => v.name).join(", "))
+  }
+}
 
 export interface Props {
   article_id: string
@@ -211,9 +338,10 @@ const article_length = computed(() => {
   return 0
 })
 
-onMounted(() => {
+onMounted(async () => {
   console.log("ArticleView mounted")
-  fetchArticle()
+  await fetchArticle()
+  nextTick(tts_init)
 })
 
 onActivated(() => {
@@ -228,7 +356,223 @@ watch(
       article.value = null
       count_fetch.value = 1
       await fetchArticle()
+      nextTick(tts_init)
     }
   },
 )
+
+function getSentences(elements: Element[]): Element[] {
+  let sentences: Element[] = []
+  for (const element of elements) {
+    if (
+      ["P", "H1", "H2", "H3", "H4", "H5", "H6", "LI", "SPAN"].includes(
+        element.tagName,
+      )
+    ) {
+      sentences.push(element)
+    } else if (element.children) {
+      sentences = sentences.concat(getSentences(Array.from(element.children)))
+    }
+  }
+  return sentences
+}
+
+function tts_init() {
+  if ("speechSynthesis" in window) {
+    console.log("TTS API available")
+    window.speechSynthesis.cancel()
+    const content_tts = document.getElementById("content_tts")
+    if (content_tts) {
+      const lang = content_tts.getAttribute("lang")
+      console.log("looking for voices with lang = " + lang)
+      find_voice(voices, lang || "it")
+      if (voice) {
+        console.log("voice = ", voice)
+        const title_tts = document.getElementById("title_tts")
+        if (title_tts) {
+          paragraphs.value = [title_tts]
+        } else {
+          paragraphs.value = []
+        }
+        const children = Array.from(content_tts.children)
+        paragraphs.value = paragraphs.value.concat(getSentences(children))
+        current_paragraph.value = 0
+        tts.value = true
+        console.log("ready")
+      } else {
+        console.log("no voice found !")
+        tts.value = false
+      } // voice found
+    } else {
+      console.log("no content")
+      tts.value = false
+    } // voice found
+  } else {
+    console.log("no TTS API !")
+    tts.value = false
+  }
+}
+
+function tts_speak() {
+  console.log("Speak TTS")
+  tts_open.value = true
+  current_paragraph.value = 0
+  tts_continue()
+}
+
+function read_paragraph() {
+  console.log("Reading " + current_paragraph.value)
+  if (voice === null) {
+    return
+  }
+  if (paragraphs.value.length <= current_paragraph.value) {
+    tts_close()
+    return
+  }
+  if (current_paragraph.value < 0) {
+    current_paragraph.value = 0
+  }
+  const paragraph = paragraphs.value[current_paragraph.value]
+  if (paragraph === null) {
+    console.log("Null paragraph " + current_paragraph.value)
+    current_paragraph.value += 1
+    read_paragraph()
+    return
+  } else {
+    if (paragraph.textContent) {
+      const utterance = new window.SpeechSynthesisUtterance()
+      utterance.voice = voice
+      utterance.lang = voice.lang
+      utterance.text = paragraph.textContent
+      utterance.addEventListener("start", function () {
+        console.log("Speaker started " + current_paragraph.value)
+        speaking.value = true
+        ;(paragraph as HTMLElement).style.backgroundColor = "lightgray"
+        paragraph.scrollIntoView()
+      })
+      utterance.addEventListener("error", function (e) {
+        console.log("Speaker error " + e.error)
+        speaking.value = false
+        ;(paragraph as HTMLElement).style.backgroundColor = "white"
+        if (!stopped.value) {
+          current_paragraph.value += 1
+          read_paragraph()
+        }
+      })
+      utterance.addEventListener("end", function (e) {
+        console.log(
+          "Speaker finished " +
+            current_paragraph.value +
+            " in " +
+            e.elapsedTime +
+            " seconds.",
+        )
+        speaking.value = false
+        ;(paragraph as HTMLElement).style.backgroundColor = "white"
+        if (!stopped.value) {
+          current_paragraph.value += 1
+          read_paragraph()
+        }
+      })
+      window.speechSynthesis.speak(utterance)
+    } else {
+      console.log("Paragraph without innerText" + current_paragraph.value)
+      current_paragraph.value += 1
+      read_paragraph()
+    }
+  }
+}
+
+function tts_restart() {
+  console.log("Restart TTS")
+  stopped.value = true
+  window.speechSynthesis.cancel()
+  tts_speak()
+}
+
+function tts_back() {
+  console.log("Back TTS")
+  stopped.value = true
+  window.speechSynthesis.cancel()
+  tts_cleanup()
+  current_paragraph.value -= 1
+  tts_continue()
+}
+
+function tts_stop() {
+  console.log("Stop TTS")
+  stopped.value = true
+  window.speechSynthesis.cancel()
+  tts_cleanup()
+}
+
+function tts_continue() {
+  console.log("Continue TTS")
+  stopped.value = false
+  read_paragraph()
+}
+
+function tts_forward() {
+  console.log("Forward TTS")
+  stopped.value = true
+  window.speechSynthesis.cancel()
+  tts_cleanup()
+  current_paragraph.value += 1
+  tts_continue()
+}
+
+function tts_close() {
+  console.log("Close TTS")
+  stopped.value = true
+  window.speechSynthesis.cancel()
+  tts_open.value = false
+  tts_cleanup()
+}
+
+function tts_cleanup() {
+  console.log("Cleanup TTS")
+  for (let i = 0; i < paragraphs.value.length; i++) {
+    const paragraph = paragraphs.value[i]
+    if (paragraph && "style" in paragraph) {
+      ;(paragraph as HTMLElement).style.backgroundColor = "white"
+    }
+  }
+}
+
+// returns the voice
+function find_voice(voices: SpeechSynthesisVoice[], lang: string) {
+  console.log("found " + voices.length + " voices")
+  let voices_filtered = voices.filter(function (v) {
+    console.log("name = " + v.name + " lang = " + v.lang)
+    return v.lang == lang
+  })
+  if (voices_filtered.length == 0) {
+    // try matching only 2-character ISO code
+    voices_filtered = voices.filter(function (v) {
+      return v.lang.substr(0, 2) == lang
+    })
+  }
+  console.log("found " + voices_filtered.length + " " + lang + " voices")
+  if (voices_filtered.length == 0) {
+    voice = null
+  } else if (voices_filtered.length == 1) {
+    voice = voices_filtered[0]
+  } else {
+    const voices_filtered_default = voices_filtered.filter(function (v) {
+      return v.default
+    })
+    console.log(
+      "found " +
+        voices_filtered_default.length +
+        " " +
+        lang +
+        " default voices",
+    )
+    if (voices_filtered_default.length > 0) {
+      voice = voices_filtered_default[0]
+    } else {
+      voice = voices_filtered[0]
+    }
+  }
+} // find_voice
 </script>
