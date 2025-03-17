@@ -238,9 +238,6 @@
         />
       </div>
       <div class="row mt-3" v-else>
-        <h2>
-          article.content: <code>{{ JSON.stringify(article.content) }}</code>
-        </h2>
         <div
           id="content_tts"
           :lang="article.language || base_language"
