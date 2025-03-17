@@ -555,6 +555,23 @@ function find_voice(voices: SpeechSynthesisVoice[], lang: string) {
   } else if (voices_filtered.length == 1) {
     voice = voices_filtered[0]
   } else {
+    if (detectApple()) {
+      if (lang == "it") {
+        const voices_filtered_alice = voices_filtered.filter(function (v) {
+          return v.name == "Alice"
+        })
+        if (voices_filtered_alice.length > 0) {
+          voice = voices_filtered_alice[0]
+        }
+      } else {
+        const voices_filtered_samantha = voices_filtered.filter(function (v) {
+          return v.name == "Samantha"
+        })
+        if (voices_filtered_samantha.length > 0) {
+          voice = voices_filtered_samantha[0]
+        }
+      }
+    } // Apple-specific
     const voices_filtered_default = voices_filtered.filter(function (v) {
       return v.default
     })
@@ -572,4 +589,15 @@ function find_voice(voices: SpeechSynthesisVoice[], lang: string) {
     }
   }
 } // find_voice
+
+function detectApple() {
+  const userAgent = navigator.userAgent
+  if (/Macintosh|MacIntel|MacPPC|Mac68K/.test(userAgent)) {
+    return true
+  } else if (/iPhone|iPad|iPod/.test(userAgent)) {
+    return true
+  } else {
+    return false
+  }
+}
 </script>
