@@ -131,6 +131,20 @@ onDeactivated(() => {
   console.log("ListsView deactivated")
 })
 
+async function removeList(list: UserArticleListsSerializerFull) {
+  if (confirm(`Sei sicuro di voler rimuovere la lista "${list.name}"?`)) {
+    const response = await fetch_wrapper(`../../api/lists/${list.id}/`, {
+      method: "DELETE",
+    })
+    if (response.status == 403) {
+      document.location = "/accounts/"
+    } else {
+      count_fetch.value += 1
+      await fetchLists()
+    }
+  }
+}
+
 async function removeArticleFromList() {
   count_fetch.value += 1
   articles.value = []
@@ -450,6 +464,21 @@ function tts_cleanup() {
                 <img
                   src="~bootstrap-icons/icons/megaphone.svg"
                   alt="tts icon"
+                />
+              </button>
+              <button
+                v-if="!list.automatic"
+                v-show="list.id == current_list_id"
+                class="btn btn-outline-danger btn-sm"
+                title="Rimuovi questa lista"
+                @click="removeList(list)"
+              >
+                <img
+                  class="icon"
+                  src="~bootstrap-icons/icons/trash.svg"
+                  alt="view icon"
+                  width="18"
+                  height="18"
                 />
               </button>
             </button>
