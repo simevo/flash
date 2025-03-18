@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { copy_link, fetch_wrapper } from "../utils"
+import { copy_link, fetch_wrapper, find_voice } from "../utils"
 import {
   computed,
   inject,
@@ -268,74 +268,6 @@ async function read_article() {
     speaking.value = true
     const content_stripped = stripHtml(content || "")
     read(voice, title || "", content_stripped, lang || "it")
-  }
-}
-
-// returns the voice
-function find_voice(
-  voices: SpeechSynthesisVoice[],
-  lang: string,
-): SpeechSynthesisVoice | null {
-  console.log("found " + voices.length + " voices")
-  let voices_filtered = voices.filter(function (v) {
-    console.log("name = " + v.name + " lang = " + v.lang)
-    return v.lang == lang
-  })
-  if (voices_filtered.length == 0) {
-    // try matching only 2-character ISO code
-    voices_filtered = voices.filter(function (v) {
-      return v.lang.substr(0, 2) == lang
-    })
-  }
-  console.log("found " + voices_filtered.length + " " + lang + " voices")
-  if (voices_filtered.length == 0) {
-    return null
-  } else if (voices_filtered.length == 1) {
-    return voices_filtered[0]
-  } else {
-    if (detectApple()) {
-      if (lang == "it") {
-        const voices_filtered_alice = voices_filtered.filter(function (v) {
-          return v.name == "Alice"
-        })
-        if (voices_filtered_alice.length > 0) {
-          return voices_filtered_alice[0]
-        }
-      } else {
-        const voices_filtered_samantha = voices_filtered.filter(function (v) {
-          return v.name == "Samantha"
-        })
-        if (voices_filtered_samantha.length > 0) {
-          return voices_filtered_samantha[0]
-        }
-      }
-    } // Apple-specific
-    const voices_filtered_default = voices_filtered.filter(function (v) {
-      return v.default
-    })
-    console.log(
-      "found " +
-        voices_filtered_default.length +
-        " " +
-        lang +
-        " default voices",
-    )
-    if (voices_filtered_default.length > 0) {
-      return voices_filtered_default[0]
-    } else {
-      return voices_filtered[0]
-    }
-  }
-} // find_voice
-
-function detectApple() {
-  const userAgent = navigator.userAgent
-  if (/Macintosh|MacIntel|MacPPC|Mac68K/.test(userAgent)) {
-    return true
-  } else if (/iPhone|iPad|iPod/.test(userAgent)) {
-    return true
-  } else {
-    return false
   }
 }
 

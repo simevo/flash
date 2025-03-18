@@ -96,3 +96,75 @@ export function copy_link(link: string): void {
 
   document.body.removeChild(textArea)
 }
+
+const apple_voices = {
+  ar: "Maged",
+  ca: "Montse",
+  fr: "Audrey",
+  en: "Samantha",
+  it: "Alice",
+  nl: "Xander",
+  pt: "Joana",
+  ru: "Milena",
+  es: "Marisol",
+  de: "Anna",
+} as { [key: string]: string }
+
+export function find_voice(
+  voices: SpeechSynthesisVoice[],
+  lang: string,
+): SpeechSynthesisVoice | null {
+  console.log("found " + voices.length + " voices")
+  let voices_filtered = voices.filter(function (v) {
+    console.log("name = " + v.name + " lang = " + v.lang)
+    return v.lang == lang
+  })
+  if (voices_filtered.length == 0) {
+    // try matching only 2-character ISO code
+    voices_filtered = voices.filter(function (v) {
+      return v.lang.substr(0, 2) == lang
+    })
+  }
+  console.log("found " + voices_filtered.length + " " + lang + " voices")
+  if (voices_filtered.length == 0) {
+    return null
+  } else if (voices_filtered.length == 1) {
+    return voices_filtered[0]
+  } else {
+    if (detectApple()) {
+      const voice_name = apple_voices[lang]
+      const voices_filtered_apple = voices_filtered.filter(function (v) {
+        return v.name == voice_name
+      })
+      if (voices_filtered_apple.length > 0) {
+        return voices_filtered_apple[0]
+      }
+    } // Apple-specific
+    const voices_filtered_default = voices_filtered.filter(function (v) {
+      return v.default
+    })
+    console.log(
+      "found " +
+        voices_filtered_default.length +
+        " " +
+        lang +
+        " default voices",
+    )
+    if (voices_filtered_default.length > 0) {
+      return voices_filtered_default[0]
+    } else {
+      return voices_filtered[0]
+    }
+  }
+} // find_voice
+
+function detectApple() {
+  const userAgent = navigator.userAgent
+  if (/Macintosh|MacIntel|MacPPC|Mac68K/.test(userAgent)) {
+    return true
+  } else if (/iPhone|iPad|iPod/.test(userAgent)) {
+    return true
+  } else {
+    return false
+  }
+}

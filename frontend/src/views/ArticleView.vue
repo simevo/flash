@@ -265,7 +265,7 @@
 </template>
 
 <script setup lang="ts">
-import { fetch_wrapper } from "../utils"
+import { fetch_wrapper, find_voice } from "../utils"
 import {
   computed,
   nextTick,
@@ -383,7 +383,7 @@ function tts_init() {
     if (content_tts) {
       const lang = content_tts.getAttribute("lang")
       console.log("looking for voices with lang = " + lang)
-      find_voice(voices, lang || "it")
+      voice = find_voice(voices, lang || "it")
       if (voice) {
         console.log("voice = ", voice)
         const title_tts = document.getElementById("title_tts")
@@ -534,71 +534,6 @@ function tts_cleanup() {
     if (paragraph && "style" in paragraph) {
       ;(paragraph as HTMLElement).style.backgroundColor = "white"
     }
-  }
-}
-
-// returns the voice
-function find_voice(voices: SpeechSynthesisVoice[], lang: string) {
-  console.log("found " + voices.length + " voices")
-  let voices_filtered = voices.filter(function (v) {
-    console.log("name = " + v.name + " lang = " + v.lang)
-    return v.lang == lang
-  })
-  if (voices_filtered.length == 0) {
-    // try matching only 2-character ISO code
-    voices_filtered = voices.filter(function (v) {
-      return v.lang.substr(0, 2) == lang
-    })
-  }
-  console.log("found " + voices_filtered.length + " " + lang + " voices")
-  if (voices_filtered.length == 0) {
-    voice = null
-  } else if (voices_filtered.length == 1) {
-    voice = voices_filtered[0]
-  } else {
-    if (detectApple()) {
-      if (lang == "it") {
-        const voices_filtered_alice = voices_filtered.filter(function (v) {
-          return v.name == "Alice"
-        })
-        if (voices_filtered_alice.length > 0) {
-          voice = voices_filtered_alice[0]
-        }
-      } else {
-        const voices_filtered_samantha = voices_filtered.filter(function (v) {
-          return v.name == "Samantha"
-        })
-        if (voices_filtered_samantha.length > 0) {
-          voice = voices_filtered_samantha[0]
-        }
-      }
-    } // Apple-specific
-    const voices_filtered_default = voices_filtered.filter(function (v) {
-      return v.default
-    })
-    console.log(
-      "found " +
-        voices_filtered_default.length +
-        " " +
-        lang +
-        " default voices",
-    )
-    if (voices_filtered_default.length > 0) {
-      voice = voices_filtered_default[0]
-    } else {
-      voice = voices_filtered[0]
-    }
-  }
-} // find_voice
-
-function detectApple() {
-  const userAgent = navigator.userAgent
-  if (/Macintosh|MacIntel|MacPPC|Mac68K/.test(userAgent)) {
-    return true
-  } else if (/iPhone|iPad|iPod/.test(userAgent)) {
-    return true
-  } else {
-    return false
   }
 }
 </script>
