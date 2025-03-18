@@ -292,7 +292,20 @@ function read(
   utterance.voice = voice
   utterance.text = title + ". " + content
   utterance.lang = lang
+  utterance.addEventListener("start", function () {
+    console.log("Speaker started " + current_article.value)
+  })
+  utterance.addEventListener("error", function (e) {
+    console.log("Speaker error " + e.error)
+    speaking.value = false
+    tts_cleanup()
+    if (!stopped.value) {
+      current_article.value += 1
+      read_article()
+    }
+  })
   utterance.addEventListener("end", function () {
+    console.log("Speaker ended " + current_article.value)
     speaking.value = false
     tts_cleanup()
     if (!stopped.value) {
