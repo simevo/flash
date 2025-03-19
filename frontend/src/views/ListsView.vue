@@ -235,7 +235,7 @@ if ("speechSynthesis" in window) {
 const base_language: string = inject("base_language", "it")
 
 async function read_article() {
-  console.log("Reading " + current_article.value)
+  console.log("Reading article: " + current_article.value)
   if (current_article.value >= articles.value.length) {
     tts_close()
     return
@@ -267,7 +267,21 @@ async function read_article() {
     }
     speaking.value = true
     const content_stripped = stripHtml(content || "")
-    read(voice, title || "", content_stripped, lang || "it")
+    const text = title + ". " + content_stripped
+    // . matches any character (except for line terminators)
+    // {1,1000} matches the previous token between 1 and 1000 times, as many times as possible, giving back as needed (greedy)
+    console.log("Reading text:", text)
+    const chunks = text.match(/.{1,1000}/g)
+    if (chunks) {
+      const trimmed_chunks = chunks.map((chunk) => chunk.trim())
+      const filtered_chunks = trimmed_chunks.filter((chunk) => chunk !== "")
+      console.log("Reading chunks:", filtered_chunks)
+      read(voice, filtered_chunks, lang || "it")
+    }
+  } else {
+    alert("Nessuna voce disponibile per:" + lang)
+    current_article.value += 1
+    read_article()
   }
 }
 
@@ -282,37 +296,48 @@ function stripHtml(html: string): string {
   return doc.body.textContent || ""
 }
 
-function read(
-  voice: SpeechSynthesisVoice,
-  title: string,
-  content: string,
-  lang: string,
-) {
+function speaker_start() {
+  console.log("Speaker started " + current_article.value)
+}
+
+function read(voice: SpeechSynthesisVoice, chunks: string[], lang: string) {
+  console.log(
+    `${chunks.length} chunks left to read for article ${current_article.value}`,
+  )
+
+  const chunk = chunks.shift()
   const utterance = new window.SpeechSynthesisUtterance()
-  utterance.voice = voice
-  utterance.text = title + ". " + content
-  utterance.lang = lang
-  utterance.addEventListener("start", function () {
-    console.log("Speaker started " + current_article.value)
-  })
-  utterance.addEventListener("error", function (e) {
+
+  function speaker_error(e: SpeechSynthesisErrorEvent) {
     console.log("Speaker error " + e.error)
-    speaking.value = false
-    tts_cleanup()
     if (!stopped.value) {
-      current_article.value += 1
-      read_article()
+      read(voice, chunks, lang)
     }
-  })
-  utterance.addEventListener("end", function () {
+  }
+
+  function speaker_end() {
     console.log("Speaker ended " + current_article.value)
-    speaking.value = false
-    tts_cleanup()
     if (!stopped.value) {
-      current_article.value += 1
-      read_article()
+      read(voice, chunks, lang)
     }
-  })
+  }
+
+  if (chunk === undefined) {
+    speaking.value = false
+    utterance.removeEventListener("start", speaker_start)
+    utterance.removeEventListener("error", speaker_error)
+    utterance.removeEventListener("end", speaker_end)
+    tts_cleanup()
+    current_article.value += 1
+    read_article()
+    return
+  }
+  utterance.voice = voice
+  utterance.text = chunk || ""
+  utterance.lang = lang
+  utterance.addEventListener("start", speaker_start)
+  utterance.addEventListener("error", speaker_error)
+  utterance.addEventListener("end", speaker_end)
   window.speechSynthesis.speak(utterance)
 }
 
@@ -326,6 +351,7 @@ function tts_close() {
 
 function tts_cleanup() {
   console.log("Cleanup TTS")
+  window.speechSynthesis.cancel()
   const article_cards = document.getElementsByClassName("article-card")
   for (let i = 0; i < article_cards.length; i++) {
     ;(article_cards[i] as HTMLElement).style.removeProperty("background-color")

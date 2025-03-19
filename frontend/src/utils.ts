@@ -116,7 +116,7 @@ export function find_voice(
 ): SpeechSynthesisVoice | null {
   console.log("found " + voices.length + " voices")
   let voices_filtered = voices.filter(function (v) {
-    console.log("name = " + v.name + " lang = " + v.lang)
+    // console.log("name = " + v.name + " lang = " + v.lang)
     return v.lang == lang
   })
   if (voices_filtered.length == 0) {
