@@ -335,7 +335,9 @@ function read(
     utterance.removeEventListener("end", speaker_end)
     tts_cleanup()
     current_article.value += 1
-    read_article()
+    setTimeout(() => {
+      read_article()
+    }, 1500)
     return
   }
   utterance.voice = voice
