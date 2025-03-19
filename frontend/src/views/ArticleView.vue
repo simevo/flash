@@ -90,7 +90,7 @@
             type="button"
             id="button-speak"
             class="btn btn-success btn-sm me-1"
-            title="Leggi ad alta voce"
+            title="Leggi ad alta voce questo articolo"
             v-if="tts"
             :disabled="tts_open || paragraphs.length === 0"
             v-on:click="tts_speak()"
@@ -102,7 +102,7 @@
             class="btn-group btn-group-sm"
             id="button-tts"
             role="group"
-            aria-label="Leggi ad alta voce"
+            aria-label="Controlla la lettura"
             v-if="tts && tts_open"
           >
             <button

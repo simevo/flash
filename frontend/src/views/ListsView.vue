@@ -426,7 +426,7 @@ function tts_cleanup() {
                 type="button"
                 id="button-speak"
                 class="btn btn-success btn-sm"
-                title="Leggi ad alta voce"
+                title="Leggi ad alta voce tutti gli articoli in questa lista"
                 v-show="list.id == current_list_id"
                 v-if="tts"
                 :disabled="tts_open || articles.length === 0"
@@ -523,7 +523,7 @@ function tts_cleanup() {
     class="btn-group btn-group-sm"
     id="button-tts"
     role="group"
-    aria-label="Leggi ad alta voce"
+    aria-label="Controlla la lettura"
     v-if="tts && tts_open"
   >
     <button
