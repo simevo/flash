@@ -331,14 +331,18 @@ const base_language: string = inject("base_language", "it")
 async function save() {
   if (!article.value) return
   const id = article.value.id
+  let content = quill?.root.innerHTML
+  if (content === "<p><br></p>") content = ""
+  let content_original = quill_original?.root.innerHTML
+  if (content_original === "<p><br></p>") content_original = ""
   const data = {
     title: article.value.title,
     title_original: article.value.title_original,
     author: article.value.author,
     language: article.value.language,
     url: article.value.url,
-    content: quill?.root.innerHTML,
-    content_original: quill_original?.root.innerHTML,
+    content: content,
+    content_original: content_original,
   }
 
   // send the data to the server

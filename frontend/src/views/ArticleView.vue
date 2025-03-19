@@ -225,11 +225,7 @@
       </div>
       <div
         class="row mt-3"
-        v-else-if="
-          article.content == null ||
-          article.content.trim() === '' ||
-          article.content.trim() === '<p><br></p>'
-        "
+        v-else-if="article.content == null || article.content.trim() === ''"
       >
         <div
           id="content_tts"
