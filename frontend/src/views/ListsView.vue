@@ -45,6 +45,7 @@ const tts_open = ref(false)
 const stopped = ref(true)
 const current_article = ref(0)
 const speaking = ref(false)
+const current_chunk = ref(0)
 
 const host = "notizie.calomelano.it"
 
@@ -262,7 +263,7 @@ async function read_article() {
       `article-${article.id}`,
     ) as HTMLElement
     if (article_card) {
-      article_card.style.backgroundColor = "lightgray"
+      article_card.style.background = "white"
       article_card.scrollIntoView()
     }
     speaking.value = true
@@ -276,7 +277,8 @@ async function read_article() {
       const trimmed_chunks = chunks.map((chunk) => chunk.trim())
       const filtered_chunks = trimmed_chunks.filter((chunk) => chunk !== "")
       console.log("Reading chunks:", filtered_chunks)
-      read(voice, filtered_chunks, lang || "it")
+      current_chunk.value = 0
+      read(article_card, voice, filtered_chunks, lang || "it")
     }
   } else {
     alert("Nessuna voce disponibile per:" + lang)
@@ -300,29 +302,33 @@ function speaker_start() {
   console.log("Speaker started " + current_article.value)
 }
 
-function read(voice: SpeechSynthesisVoice, chunks: string[], lang: string) {
+function read(
+  article_card: HTMLElement,
+  voice: SpeechSynthesisVoice,
+  chunks: string[],
+  lang: string,
+) {
   console.log(
     `${chunks.length} chunks left to read for article ${current_article.value}`,
   )
 
-  const chunk = chunks.shift()
   const utterance = new window.SpeechSynthesisUtterance()
 
   function speaker_error(e: SpeechSynthesisErrorEvent) {
     console.log("Speaker error " + e.error)
     if (!stopped.value) {
-      read(voice, chunks, lang)
+      read(article_card, voice, chunks, lang)
     }
   }
 
   function speaker_end() {
     console.log("Speaker ended " + current_article.value)
     if (!stopped.value) {
-      read(voice, chunks, lang)
+      read(article_card, voice, chunks, lang)
     }
   }
 
-  if (chunk === undefined) {
+  if (current_chunk.value == chunks.length) {
     speaking.value = false
     utterance.removeEventListener("start", speaker_start)
     utterance.removeEventListener("error", speaker_error)
@@ -333,6 +339,12 @@ function read(voice: SpeechSynthesisVoice, chunks: string[], lang: string) {
     return
   }
   utterance.voice = voice
+  const chunk = chunks[current_chunk.value]
+  current_chunk.value += 1
+  if (article_card) {
+    const progress = Math.round((100 * current_chunk.value) / chunks.length)
+    article_card.style.background = `linear-gradient(90deg, lightgray ${progress}%, white ${progress}%)`
+  }
   utterance.text = chunk || ""
   utterance.lang = lang
   utterance.addEventListener("start", speaker_start)
@@ -354,7 +366,7 @@ function tts_cleanup() {
   window.speechSynthesis.cancel()
   const article_cards = document.getElementsByClassName("article-card")
   for (let i = 0; i < article_cards.length; i++) {
-    ;(article_cards[i] as HTMLElement).style.removeProperty("background-color")
+    ;(article_cards[i] as HTMLElement).style.removeProperty("background")
   }
 }
 </script>
