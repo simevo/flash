@@ -27,7 +27,7 @@ type PaginatedArticleReadList =
 const route = useRoute()
 
 export interface Props {
-  list_id: string | null
+  list_id?: string | null
 }
 
 const props = withDefaults(defineProps<Props>(), {
