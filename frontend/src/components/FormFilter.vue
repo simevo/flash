@@ -156,11 +156,11 @@ onMounted(() => {
     </select>
     <div class="form-check mb-3">
       <ThreeStateCheckBox
-        id="flexCheckDefault"
+        id="allFeeds"
         :value="all_feeds"
         @change="changeAllFeeds"
       />
-      <label class="form-check-label" for="flexCheckDefault">
+      <label class="form-check-label" for="allFeeds">
         <img
           class="me-2"
           width="30"
@@ -175,14 +175,14 @@ onMounted(() => {
     <div v-for="feed in mergedFeedCounts" :key="feed.feed_id" class="mb-3">
       <div class="form-check">
         <input
-          id="flexCheckDefault"
+          :id="`feed${feed.feed_id}`"
           class="form-check-input"
           type="checkbox"
           :disabled="filters.feed_ids.indexOf(-1) !== -1"
           :checked="filters.feed_ids.indexOf(feed.feed_id) !== -1"
           @change="emit('toggle_feed', feed.feed_id)"
         />
-        <label class="form-check-label" for="flexCheckDefault">
+        <label class="form-check-label" :for="`feed${feed.feed_id}`">
           <img
             class="me-2"
             width="30"
