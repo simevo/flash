@@ -61,7 +61,7 @@ newsfeed_query = """
             OR articles.language = ANY(u.my_languages)
             OR ('it' = ANY(u.my_languages) AND articles.title IS NOT NULL)
         ORDER BY id DESC
-        LIMIT 8000),
+        LIMIT 4000),
     ua AS (
         SELECT
             article_id,
