@@ -37,9 +37,14 @@ newsfeed_query = """
             u,
             feeds LEFT JOIN uf ON feeds.id = uf.feed_id
         WHERE
-            u.my_tags IS NULL
-            OR u.my_tags = array[]::text[]
-            OR feeds.tags && u.my_tags),
+            (
+                uf.rating IS NULL OR
+                uf.rating >= -4
+            ) AND (
+                u.my_tags IS NULL
+                OR u.my_tags = array[]::text[]
+                OR feeds.tags && u.my_tags
+            )),
     aaa AS (
         SELECT
             articles.id,
