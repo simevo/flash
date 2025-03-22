@@ -10,9 +10,7 @@ import type {
 
 import type { CheckBoxValue } from "../types/CheckBoxValue"
 import ThreeStateCheckBox from "./ThreeStateCheckBox.vue"
-import type { Ref } from "vue"
-import { computed, onMounted, ref } from "vue"
-const all_feeds: Ref<CheckBoxValue> = ref(true)
+import { computed, onMounted } from "vue"
 
 import type { components } from "../generated/schema.d.ts"
 
@@ -38,9 +36,18 @@ const emit = defineEmits<{
 }>()
 
 function changeAllFeeds(value: CheckBoxValue) {
-  all_feeds.value = value
   emit("toggle_all_feeds", value, [])
 }
+
+const all_feeds = computed(() => {
+  if (props.filters.feed_ids.length === 0) {
+    return null
+  }
+  if (props.filters.feed_ids.length === 1 && props.filters.feed_ids[0] === -1) {
+    return true
+  }
+  return false
+})
 
 const mergedFeedCounts = computed(() => {
   const mfc = props.feedCounts
@@ -154,7 +161,16 @@ onMounted(() => {
       <option value="1000-5000">medio</option>
       <option value="5000-10000000">lungo (&gt; 5000 caratteri)</option>
     </select>
-    <div class="form-check mb-3">
+    <div
+      class="form-check mb-3"
+      :title="
+        all_feeds === true
+          ? 'Clicca per scegliere le fonti'
+          : all_feeds === false
+            ? 'Clicca per resettare la tua selezione'
+            : 'Clicca per scegliere tutte le fonti'
+      "
+    >
       <ThreeStateCheckBox
         id="allFeeds"
         :value="all_feeds"
@@ -169,7 +185,8 @@ onMounted(() => {
           alt="question mark icon"
         />
         <span v-if="all_feeds === true">Qualsiasi fonte</span>
-        <span v-else>Solo le fonti selezionate</span>
+        <span v-else-if="all_feeds === false">Solo le fonti selezionate</span>
+        <span v-else>Nessuna fonte</span>
       </label>
     </div>
     <div v-for="feed in mergedFeedCounts" :key="feed.feed_id" class="mb-3">
