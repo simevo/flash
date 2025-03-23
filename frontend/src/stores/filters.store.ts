@@ -24,7 +24,13 @@ export const useFiltersStore = defineStore("filters", {
     },
     toggle_all_feeds(value: CheckBoxValue, feed_counts: FeedCount[]) {
       if (value === null) {
+        const feed_ids = this.filters.feed_ids.slice()
         this.filters.feed_ids = []
+        feed_counts.forEach((feed) => {
+          if (!feed_ids.includes(feed.feed_id)) {
+            this.filters.feed_ids.push(feed.feed_id)
+          }
+        })
         return
       }
       if (value === true) {

@@ -36,7 +36,8 @@ const emit = defineEmits<{
 }>()
 
 function changeAllFeeds(value: CheckBoxValue) {
-  emit("toggle_all_feeds", value, [])
+  const feedCounts = Object.values(props.feedCounts).map((fc) => fc)
+  emit("toggle_all_feeds", value, feedCounts)
 }
 
 const all_feeds = computed(() => {
@@ -167,7 +168,7 @@ onMounted(() => {
         all_feeds === true
           ? 'Clicca per scegliere le fonti'
           : all_feeds === false
-            ? 'Clicca per resettare la tua selezione'
+            ? 'Clicca per invertire la tua selezione'
             : 'Clicca per scegliere tutte le fonti'
       "
     >
