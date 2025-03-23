@@ -18,6 +18,27 @@
             {{ languages[code] }}
           </option>
         </select>
+        <div
+          class="input-group position-relative d-inline-flex align-items-center"
+        >
+          <input
+            type="text"
+            class="form-control mb-3"
+            v-model="search"
+            placeholder="Cerca..."
+            aria-label="Cerca"
+            title="Cerca"
+          />
+          <button
+            type="button"
+            class="btn-close position-absolute"
+            style="right: 0.5em; top: 0.5em"
+            data-bs-dismiss="alert"
+            aria-label="Cancella"
+            :disabled="search == ''"
+            @click="resetSearch()"
+          ></button>
+        </div>
         <div v-if="filtered_feeds.length == 0">
           <div class="alert alert-warning text-center" role="alert">
             Non ci sono fonti da visualizzare.
@@ -54,6 +75,7 @@ type Feed = components["schemas"]["Feed"]
 
 const feeds: Ref<Feed[]> = ref([])
 const language = ref("all")
+const search = ref("")
 
 const languages: { [key: string]: string } = {
   ar: "Arabo",
@@ -79,14 +101,30 @@ async function fetchFeeds() {
 }
 
 const filtered_feeds = computed(() => {
-  if (language.value === "all") {
-    return feeds.value
-  } else {
-    return feeds.value.filter((feed) => {
-      return feed.language === language.value
+  const ff =
+    language.value === "all"
+      ? feeds.value
+      : feeds.value.filter((feed) => {
+          return feed.language === language.value
+        })
+  const search_value = search.value.toLowerCase()
+  if (search_value) {
+    const regex =
+      /[^\p{Alphabetic}\p{Mark}\p{Decimal_Number}\p{Connector_Punctuation}\p{Join_Control} ]/gu
+    const sanitized = search_value.replace(regex, "")
+    const trimmed = sanitized.replace(/\s/g, "")
+    return ff.filter((feed) => {
+      const text = feed.title + " " + feed.url
+      return text.toLowerCase().includes(trimmed)
     })
+  } else {
+    return ff
   }
 })
+
+function resetSearch() {
+  search.value = ""
+}
 
 onMounted(() => {
   console.log("FeedsView mounted")
