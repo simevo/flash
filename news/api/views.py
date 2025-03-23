@@ -111,7 +111,25 @@ class ArticlesView(viewsets.ModelViewSet, mixins.CreateModelMixin):
 
 
 class FeedsView(viewsets.ModelViewSet):
-    queryset = FeedsCombined.objects.all().order_by("id")
+    queryset = (
+        FeedsCombined.objects.all()
+        .order_by("id")
+        .values(
+            "id",
+            "homepage",
+            "url",
+            "language",
+            "title",
+            "license",
+            "icon",
+            "active",
+            "last_polled",
+            "tags",
+            "last_polled_epoch",
+            "article_count",
+            "average_time_from_last_post",
+        )
+    )
     serializer_class = FeedSerializer
     permission_classes = [ReadOnly, permissions.IsAuthenticated]
 

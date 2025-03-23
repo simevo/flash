@@ -22,12 +22,25 @@ class FeedSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = FeedsCombined
-        exclude = ["iconblob"]
+        exclude = [
+            "iconblob",
+            "incomplete",
+            "salt_url",
+            "rating",
+            "premium",
+            "cookies",
+            "exclude",
+            "main",
+            "tor",
+            "asy",
+            "script",
+            "frequency",
+        ]
 
     @extend_schema_field(OpenApiTypes.NUMBER)
     def get_my_rating(self, obj):
         user = self.context["request"].user
-        uf = UserFeeds.objects.filter(feed_id=obj.id, user_id=user.id).first()
+        uf = UserFeeds.objects.filter(feed_id=obj["id"], user_id=user.id).first()
         if uf:
             return uf.rating
         return None
