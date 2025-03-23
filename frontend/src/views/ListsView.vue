@@ -219,8 +219,8 @@ function tts_stop() {
   console.log("Stop TTS")
   stopped.value = true
   window.speechSynthesis.cancel()
-  speaking.value = false
   tts_cleanup()
+  speaking.value = false
 }
 
 let voices: SpeechSynthesisVoice[] = []
@@ -314,16 +314,20 @@ function read(
 
   const utterance = new window.SpeechSynthesisUtterance()
 
+  const my_current_article = current_article.value
+
   function speaker_error(e: SpeechSynthesisErrorEvent) {
     console.log("Speaker error " + e.error)
-    if (!stopped.value) {
+    if (!stopped.value && current_article.value == my_current_article) {
       read(article_card, voice, chunks, lang)
     }
   }
 
   function speaker_end() {
-    console.log("Speaker ended " + current_article.value)
-    if (!stopped.value) {
+    console.log(
+      `Speaker ended, current_article = ${current_article.value}, my_current_article = ${my_current_article}`,
+    )
+    if (!stopped.value && current_article.value == my_current_article) {
       read(article_card, voice, chunks, lang)
     }
   }
@@ -343,7 +347,7 @@ function read(
   utterance.voice = voice
   const chunk = chunks[current_chunk.value]
   current_chunk.value += 1
-  if (article_card) {
+  if (article_card && !stopped.value) {
     const progress = Math.round((100 * current_chunk.value) / chunks.length)
     article_card.style.background = `linear-gradient(90deg, lightgray ${progress}%, white ${progress}%)`
   }
