@@ -42,8 +42,7 @@ import ArticleCard from "../components/ArticleCard.vue"
 
 type ArticleRead = components["schemas"]["ArticleRead"]
 type FeedSerializerSimple = components["schemas"]["FeedSerializerSimple"]
-type PaginatedArticleReadList =
-  components["schemas"]["PaginatedArticleReadList"]
+type PaginatedArticleReadList = components["schemas"]["PaginatedArticleReadList"]
 
 const articles: Ref<ArticleRead[]> = ref([])
 const feeds: Ref<FeedSerializerSimple[]> = ref([])
@@ -60,9 +59,7 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 async function fetchArticles() {
-  const response = await fetch_wrapper(
-    `../../api/articles/?search_author=${props.author}`,
-  )
+  const response = await fetch_wrapper(`../../api/articles/?search_author=${props.author}`)
   if (response.status == 403) {
     document.location = "/accounts/"
   } else {
@@ -104,9 +101,7 @@ onActivated(() => {
 watch(
   () => route.params.author,
   async (newAuthor, oldAuthor) => {
-    console.log(
-      `AuthorView watch author, newAuthor = [${newAuthor}] oldAuthor = [${oldAuthor}]`,
-    )
+    console.log(`AuthorView watch author, newAuthor = [${newAuthor}] oldAuthor = [${oldAuthor}]`)
     if (newAuthor && newAuthor != oldAuthor) {
       count_fetch.value += 1
       await fetchArticles()

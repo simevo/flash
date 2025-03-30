@@ -1,16 +1,9 @@
-export function fetch_wrapper(
-  uri: string,
-  options: RequestInit | undefined = undefined,
-) {
+export function fetch_wrapper(uri: string, options: RequestInit | undefined = undefined) {
   const headers = new Headers()
   headers.append("Content-Type", "application/json")
   headers.append("accept", "application/json")
   // requests other than GET, HEAD, OPTIONS or TRACE require the CSRF token
-  if (
-    options &&
-    options.method &&
-    !(options.method in ["GET", "HEAD", "OPTIONS", "TRACE"])
-  ) {
+  if (options && options.method && !(options.method in ["GET", "HEAD", "OPTIONS", "TRACE"])) {
     const csrftoken = getCookie("csrftoken")
     headers.append("X-CSRFToken", csrftoken)
   }
@@ -143,13 +136,7 @@ export function find_voice(
     const voices_filtered_default = voices_filtered.filter(function (v) {
       return v.default
     })
-    console.log(
-      "found " +
-        voices_filtered_default.length +
-        " " +
-        lang +
-        " default voices",
-    )
+    console.log("found " + voices_filtered_default.length + " " + lang + " default voices")
     if (voices_filtered_default.length > 0) {
       return voices_filtered_default[0]
     } else {

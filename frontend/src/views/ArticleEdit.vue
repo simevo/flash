@@ -12,9 +12,7 @@
           <div class="row">
             <div class="form-group my-3 col">
               <label for="title">Titolo dell'articolo</label>
-              <div
-                class="input-group position-relative d-inline-flex align-items-center"
-              >
+              <div class="input-group position-relative d-inline-flex align-items-center">
                 <input
                   autocomplete="off"
                   autocorrect="off"
@@ -38,16 +36,9 @@
                 ></button>
               </div>
             </div>
-            <div
-              class="form-group my-3 col"
-              v-show="article.language != base_language"
-            >
-              <label for="title"
-                >Titolo dell'articolo in lingua originale</label
-              >
-              <div
-                class="input-group position-relative d-inline-flex align-items-center"
-              >
+            <div class="form-group my-3 col" v-show="article.language != base_language">
+              <label for="title">Titolo dell'articolo in lingua originale</label>
+              <div class="input-group position-relative d-inline-flex align-items-center">
                 <input
                   autocomplete="off"
                   autocorrect="off"
@@ -74,9 +65,7 @@
           </div>
           <div class="form-group my-3">
             <label for="author">Autore</label>
-            <div
-              class="input-group position-relative d-inline-flex align-items-center"
-            >
+            <div class="input-group position-relative d-inline-flex align-items-center">
               <input
                 autocomplete="off"
                 autocorrect="off"
@@ -103,9 +92,7 @@
           </div>
           <div class="form-group my-3">
             <label for="url">Url</label>
-            <div
-              class="input-group position-relative d-inline-flex align-items-center"
-            >
+            <div class="input-group position-relative d-inline-flex align-items-center">
               <input
                 autocomplete="off"
                 autocorrect="off"
@@ -153,11 +140,7 @@
           </div>
           <div class="form-group my-3">
             <label for="language">Lingua</label>
-            <select
-              class="form-control"
-              id="language"
-              v-model="article.language"
-            >
+            <select class="form-control" id="language" v-model="article.language">
               <option value="ar">Arabo</option>
               <option value="ca">Catalano</option>
               <option value="de">Tedesco</option>
@@ -186,13 +169,8 @@
               </div>
               <!-- collapsible -->
             </div>
-            <div
-              class="form-group my-3 col"
-              v-show="article.language != base_language"
-            >
-              <label for="content"
-                >Testo completo dell'articolo in lingua originale</label
-              >
+            <div class="form-group my-3 col" v-show="article.language != base_language">
+              <label for="content">Testo completo dell'articolo in lingua originale</label>
               <button
                 type="button"
                 class="btn-close"
@@ -248,15 +226,7 @@
 
 <script setup lang="ts">
 import { fetch_wrapper } from "../utils"
-import {
-  inject,
-  nextTick,
-  onActivated,
-  onMounted,
-  ref,
-  watch,
-  type Ref,
-} from "vue"
+import { inject, nextTick, onActivated, onMounted, ref, watch, type Ref } from "vue"
 import { useRoute } from "vue-router"
 import type { components } from "../generated/schema.d.ts"
 import Quill from "quill"

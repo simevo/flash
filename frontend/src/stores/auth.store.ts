@@ -1,9 +1,5 @@
 import { defineStore } from "pinia"
-import {
-  useLocalStorage,
-  type RemovableRef,
-  StorageSerializers,
-} from "@vueuse/core"
+import { useLocalStorage, type RemovableRef, StorageSerializers } from "@vueuse/core"
 import router from "@/router"
 
 const STORE_NAME = "auth"

@@ -1,9 +1,5 @@
 <template>
-  <div
-    class="btn-toolbar float-right"
-    role="toolbar"
-    aria-label="Dai una valutazione"
-  >
+  <div class="btn-toolbar float-right" role="toolbar" aria-label="Dai una valutazione">
     <div class="btn-group mr-2" role="group" aria-label="ratings">
       <NegativeRating
         v-for="threshold in [-4, -3, -2, -1, 0]"

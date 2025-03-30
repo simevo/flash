@@ -2,9 +2,7 @@
   <div class="container my-3" v-if="count_fetch == 0">
     <div class="row my-3" v-if="article == null">
       <div class="col-md-12">
-        <div class="alert alert-danger text-center" role="alert">
-          Articolo non trovato.
-        </div>
+        <div class="alert alert-danger text-center" role="alert">Articolo non trovato.</div>
       </div>
     </div>
     <div v-else>
@@ -38,17 +36,14 @@
               />
               <small
                 >Tempo di lettura stimato:
-                {{
-                  secondsToString1((60 * article_length) / 6 / 300)
-                }}&nbsp;</small
+                {{ secondsToString1((60 * article_length) / 6 / 300) }}&nbsp;</small
               >
             </div>
             <div class="float-end">
               <small
-                >{{
-                  secondsToString(new Date().getTime() / 1000 - article.stamp)
-                }}
-                ({{ new Date(article.stamp * 1000).toLocaleString() }})</small
+                >{{ secondsToString(new Date().getTime() / 1000 - article.stamp) }} ({{
+                  new Date(article.stamp * 1000).toLocaleString()
+                }})</small
               >
             </div>
           </div>
@@ -64,23 +59,17 @@
                 >{{ article.title }}</span
               >
               <span
-                v-if="
-                  article.language != base_language && article.title_original
-                "
+                v-if="article.language != base_language && article.title_original"
                 :lang="article.language || base_language"
                 >[{{ article.title_original }}]
               </span>
-              <span
-                v-if="!article.title_original && !article.title"
-                :lang="base_language"
+              <span v-if="!article.title_original && !article.title" :lang="base_language"
                 >[Senza titolo]</span
               >
             </span>
-            <span
-              v-if="article.language != base_language && article.title"
-              :lang="base_language"
-              >{{ article.title }}</span
-            >
+            <span v-if="article.language != base_language && article.title" :lang="base_language">{{
+              article.title
+            }}</span>
           </h1>
         </div>
       </div>
@@ -112,10 +101,7 @@
               title="Dall'inizio"
               v-on:click="tts_restart()"
             >
-              <img
-                src="~bootstrap-icons/icons/skip-start-fill.svg"
-                alt="fast backward icon"
-              />
+              <img src="~bootstrap-icons/icons/skip-start-fill.svg" alt="fast backward icon" />
             </button>
             <button
               type="button"
@@ -125,10 +111,7 @@
               v-on:click="tts_back()"
               :disabled="current_paragraph == 0"
             >
-              <img
-                src="~bootstrap-icons/icons/rewind-fill.svg"
-                alt="rewind icon"
-              />
+              <img src="~bootstrap-icons/icons/rewind-fill.svg" alt="rewind icon" />
             </button>
             <button
               type="button"
@@ -138,10 +121,7 @@
               v-on:click="tts_stop()"
               :disabled="!speaking"
             >
-              <img
-                src="~bootstrap-icons/icons/pause-fill.svg"
-                alt="pause icon"
-              />
+              <img src="~bootstrap-icons/icons/pause-fill.svg" alt="pause icon" />
             </button>
             <button
               type="button"
@@ -161,10 +141,7 @@
               v-on:click="tts_forward()"
               :disabled="current_paragraph >= paragraphs.length - 1"
             >
-              <img
-                src="~bootstrap-icons/icons/fast-forward-fill.svg"
-                alt="forward icon"
-              />
+              <img src="~bootstrap-icons/icons/fast-forward-fill.svg" alt="forward icon" />
             </button>
             <button
               type="button"
@@ -173,10 +150,7 @@
               title="Chiudi"
               v-on:click="tts_close()"
             >
-              <img
-                src="~bootstrap-icons/icons/stop-fill.svg"
-                alt="close icon"
-              />
+              <img src="~bootstrap-icons/icons/stop-fill.svg" alt="close icon" />
             </button>
           </div>
 
@@ -185,9 +159,7 @@
             :clean="false"
             :share="true"
             class="float-start me-2"
-            :translatable="
-              article.language != base_language && !article.content
-            "
+            :translatable="article.language != base_language && !article.content"
           />
           <small>Articolo originale: </small>
           <a target="_blank" :href="article.url || ''">
@@ -200,11 +172,7 @@
             >di
             <router-link
               :to="'/author/' + encodeURIComponent(article.author)"
-              :title="
-                'vai a tutti gli articoli con ' +
-                article.author +
-                ' come autore'
-              "
+              :title="'vai a tutti gli articoli con ' + article.author + ' come autore'"
               ><span>{{ article.author }}</span>
             </router-link>
           </small>
@@ -223,10 +191,7 @@
           v-html="article.content || ''"
         />
       </div>
-      <div
-        class="row mt-3"
-        v-else-if="article.content == null || article.content.trim() === ''"
-      >
+      <div class="row mt-3" v-else-if="article.content == null || article.content.trim() === ''">
         <div
           id="content_tts"
           :lang="article.language || base_language"
@@ -241,11 +206,7 @@
           class="content col-md-4 offset-md-2"
           v-html="article.content_original || ''"
         />
-        <div
-          :lang="base_language"
-          class="content col-md-4"
-          v-html="article.content || ''"
-        />
+        <div :lang="base_language" class="content col-md-4" v-html="article.content || ''" />
       </div>
     </div>
   </div>
@@ -262,15 +223,7 @@
 
 <script setup lang="ts">
 import { fetch_wrapper, find_voice } from "../utils"
-import {
-  computed,
-  nextTick,
-  onActivated,
-  onMounted,
-  ref,
-  watch,
-  type Ref,
-} from "vue"
+import { computed, nextTick, onActivated, onMounted, ref, watch, type Ref } from "vue"
 import { RouterLink, useRoute } from "vue-router"
 import type { components } from "../generated/schema.d.ts"
 import { secondsToString, secondsToString1 } from "@/components/sts"
@@ -358,11 +311,7 @@ watch(
 function getSentences(elements: Element[]): Element[] {
   let sentences: Element[] = []
   for (const element of elements) {
-    if (
-      ["P", "H1", "H2", "H3", "H4", "H5", "H6", "LI", "SPAN"].includes(
-        element.tagName,
-      )
-    ) {
+    if (["P", "H1", "H2", "H3", "H4", "H5", "H6", "LI", "SPAN"].includes(element.tagName)) {
       sentences.push(element)
     } else if (element.children) {
       sentences = sentences.concat(getSentences(Array.from(element.children)))
@@ -455,11 +404,7 @@ function read_paragraph() {
       })
       utterance.addEventListener("end", function (e) {
         console.log(
-          "Speaker finished " +
-            current_paragraph.value +
-            " in " +
-            e.elapsedTime +
-            " seconds.",
+          "Speaker finished " + current_paragraph.value + " in " + e.elapsedTime + " seconds.",
         )
         speaking.value = false
         ;(paragraph as HTMLElement).style.backgroundColor = "white"

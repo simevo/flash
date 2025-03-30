@@ -1806,15 +1806,7 @@
             "minimum": -2147483648
           }
         },
-        "required": [
-          "feed",
-          "id",
-          "length",
-          "rating",
-          "stamp",
-          "to_reads",
-          "views"
-        ]
+        "required": ["feed", "id", "length", "rating", "stamp", "to_reads", "views"]
       },
       "ArticleSerializerFull": {
         "type": "object",
@@ -1888,15 +1880,7 @@
             "readOnly": true
           }
         },
-        "required": [
-          "feed",
-          "id",
-          "length",
-          "rating",
-          "stamp",
-          "to_reads",
-          "views"
-        ]
+        "required": ["feed", "id", "length", "rating", "stamp", "to_reads", "views"]
       },
       "AuthToken": {
         "type": "object",
@@ -2028,15 +2012,7 @@
             "nullable": true
           }
         },
-        "required": [
-          "homepage",
-          "icon",
-          "id",
-          "language",
-          "my_rating",
-          "title",
-          "url"
-        ]
+        "required": ["homepage", "icon", "id", "language", "my_rating", "title", "url"]
       },
       "FeedSerializerSimple": {
         "type": "object",
@@ -2155,15 +2131,7 @@
             "nullable": true
           }
         },
-        "required": [
-          "homepage",
-          "icon",
-          "iconblob",
-          "id",
-          "language",
-          "title",
-          "url"
-        ]
+        "required": ["homepage", "icon", "iconblob", "id", "language", "title", "url"]
       },
       "PaginatedArticleReadList": {
         "type": "object",

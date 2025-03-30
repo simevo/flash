@@ -1,22 +1,13 @@
 <script setup lang="ts">
 import { fetch_wrapper } from "../utils"
-import {
-  computed,
-  onActivated,
-  onDeactivated,
-  onMounted,
-  onUnmounted,
-  ref,
-  type Ref,
-} from "vue"
+import { computed, onActivated, onDeactivated, onMounted, onUnmounted, ref, type Ref } from "vue"
 import ArticleCard from "../components/ArticleCard.vue"
 
 import type { components } from "../generated/schema.d.ts"
 
 type ArticleRead = components["schemas"]["ArticleRead"]
 type FeedSerializerSimple = components["schemas"]["FeedSerializerSimple"]
-type PaginatedArticleReadList =
-  components["schemas"]["PaginatedArticleReadList"]
+type PaginatedArticleReadList = components["schemas"]["PaginatedArticleReadList"]
 
 const articles: Ref<ArticleRead[]> = ref([])
 const feeds: Ref<FeedSerializerSimple[]> = ref([])
@@ -82,9 +73,7 @@ onDeactivated(() => {
     </div>
     <div class="row my-3" v-else>
       <div class="col-md-12">
-        <h1 class="text-center">
-          Cronologia degli articoli già letti da altri e/o da te
-        </h1>
+        <h1 class="text-center">Cronologia degli articoli già letti da altri e/o da te</h1>
         <div class="wrapper">
           <ArticleCard
             v-for="article in articles"

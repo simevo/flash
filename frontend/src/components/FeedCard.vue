@@ -30,11 +30,7 @@ defineProps<{
         <span class="text-decoration-underline">{{ feed.homepage }}</span>
       </RouterLink>
       <div class="text-end">
-        <span
-          v-for="tag in feed.tags"
-          :key="tag"
-          class="badge text-bg-secondary m-1 p-2"
-        >
+        <span v-for="tag in feed.tags" :key="tag" class="badge text-bg-secondary m-1 p-2">
           {{ tag }}
         </span>
       </div>

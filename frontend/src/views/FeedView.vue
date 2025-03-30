@@ -57,8 +57,7 @@ import ArticleCard from "../components/ArticleCard.vue"
 
 type ArticleRead = components["schemas"]["ArticleRead"]
 type Feed = components["schemas"]["Feed"]
-type PaginatedArticleReadList =
-  components["schemas"]["PaginatedArticleReadList"]
+type PaginatedArticleReadList = components["schemas"]["PaginatedArticleReadList"]
 
 const articles: Ref<ArticleRead[]> = ref([])
 const feeds: Ref<Feed[]> = ref([])
@@ -75,9 +74,7 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 async function fetchArticles() {
-  const response = await fetch_wrapper(
-    `../../api/articles/?feed_id=${props.feed_id}`,
-  )
+  const response = await fetch_wrapper(`../../api/articles/?feed_id=${props.feed_id}`)
   if (response.status == 403) {
     document.location = "/accounts/"
   } else {

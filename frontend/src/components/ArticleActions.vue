@@ -3,8 +3,7 @@ import { computed, onMounted, type Ref, ref } from "vue"
 import { copy_link, fetch_wrapper } from "../utils"
 import type { components } from "../generated/schema.js"
 type Article = components["schemas"]["ArticleSerializerFull"]
-type UserArticleListsSerializerFull =
-  components["schemas"]["UserArticleListsSerializerFull"]
+type UserArticleListsSerializerFull = components["schemas"]["UserArticleListsSerializerFull"]
 
 const lists: Ref<UserArticleListsSerializerFull[]> = ref([])
 
@@ -15,9 +14,7 @@ const props = defineProps<{
 }>()
 
 const is_already_saved = computed(() => {
-  return lists.value.some(
-    (list) => list.articles.indexOf(props.article.id) != -1,
-  )
+  return lists.value.some((list) => list.articles.indexOf(props.article.id) != -1)
 })
 
 async function create_list_and_save(): Promise<void> {
@@ -40,10 +37,7 @@ async function addArticleToList(list_id: string): Promise<void> {
     },
     body: JSON.stringify({ article: props.article.id }),
   }
-  const response = await fetch_wrapper(
-    `../../api/lists/${list_id}/add_article/`,
-    options,
-  )
+  const response = await fetch_wrapper(`../../api/lists/${list_id}/add_article/`, options)
   if (response.status == 403) {
     document.location = "/accounts/"
   } else {
@@ -61,9 +55,7 @@ async function fetchLists() {
   }
 }
 
-async function postNewList(
-  name: string,
-): Promise<UserArticleListsSerializerFull | null> {
+async function postNewList(name: string): Promise<UserArticleListsSerializerFull | null> {
   const response = await fetch_wrapper(`../../api/lists/`, {
     method: "POST",
     headers: {
@@ -88,11 +80,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div
-    class="btn-toolbar float-start"
-    role="toolbar"
-    aria-label="Azioni per questo articolo"
-  >
+  <div class="btn-toolbar float-start" role="toolbar" aria-label="Azioni per questo articolo">
     <button
       v-if="lists.length == 0"
       :id="`selected_${article.id}`"

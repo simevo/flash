@@ -50,12 +50,10 @@
             <label for="url" v-show="!received && !trying">
               Copia e incolla il link all'articolo (URL)
             </label>
-            <label style="display: none" v-show="trying">
-              Attendi qualche istante ...</label
-            >
+            <label style="display: none" v-show="trying"> Attendi qualche istante ...</label>
             <label style="display: none" v-show="received">
-              Quando ti sembra a posto, premi sul bottone "Invia" per inviare
-              l'articolo all'aggregatore
+              Quando ti sembra a posto, premi sul bottone "Invia" per inviare l'articolo
+              all'aggregatore
             </label>
             <input
               type="url"
@@ -75,14 +73,9 @@
           </div>
           <div style="display: none" v-show="received">
             <hr />
-            <div
-              class="form-group my-3"
-              :class="{ 'is-invalid': errors['title'] }"
-            >
+            <div class="form-group my-3" :class="{ 'is-invalid': errors['title'] }">
               <label for="title">Titolo dell'articolo</label>
-              <div
-                class="input-group position-relative d-inline-flex align-items-center"
-              >
+              <div class="input-group position-relative d-inline-flex align-items-center">
                 <input
                   autocomplete="off"
                   autocorrect="off"
@@ -110,14 +103,9 @@
               </p>
             </div>
             <!-- form-group -->
-            <div
-              class="form-group my-3"
-              :class="{ 'is-invalid': errors['author'] }"
-            >
+            <div class="form-group my-3" :class="{ 'is-invalid': errors['author'] }">
               <label for="author">Autore</label>
-              <div
-                class="input-group position-relative d-inline-flex align-items-center"
-              >
+              <div class="input-group position-relative d-inline-flex align-items-center">
                 <input
                   autocomplete="off"
                   autocorrect="off"
@@ -156,11 +144,7 @@
               >
                 ?
               </button>
-              <select
-                class="form-control"
-                id="language"
-                v-model="article.language"
-              >
+              <select class="form-control" id="language" v-model="article.language">
                 <option value="ar">Arabo</option>
                 <option value="ca">Catalano</option>
                 <option value="de">Tedesco</option>

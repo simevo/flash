@@ -105,10 +105,7 @@ onMounted(() => {
       aria-label="Filtra per lingua"
       title="Filtra per lingua"
       @change="
-        emit(
-          'update_language',
-          ($event.target as HTMLSelectElement).value as LanguageFilter,
-        )
+        emit('update_language', ($event.target as HTMLSelectElement).value as LanguageFilter)
       "
     >
       <option value="all" selected>Qualsiasi lingua</option>
@@ -128,12 +125,7 @@ onMounted(() => {
       class="form-select mb-3"
       aria-label="Filtra per data"
       title="Filtra per data"
-      @change="
-        emit(
-          'update_when',
-          ($event.target as HTMLSelectElement).value as WhenFilter,
-        )
-      "
+      @change="emit('update_when', ($event.target as HTMLSelectElement).value as WhenFilter)"
     >
       <option value="all" selected>Qualsiasi data</option>
       <option value="24-0">Ultime 24 ore</option>
@@ -150,12 +142,7 @@ onMounted(() => {
       class="form-select mb-3"
       aria-label="Filtra per lunghezza"
       title="Filtra per lunghezza"
-      @change="
-        emit(
-          'update_length',
-          ($event.target as HTMLSelectElement).value as LengthFilter,
-        )
-      "
+      @change="emit('update_length', ($event.target as HTMLSelectElement).value as LengthFilter)"
     >
       <option value="all" selected>Qualsiasi lunghezza</option>
       <option value="0-1000">corto (&lt; 1000 caratteri)</option>
@@ -172,11 +159,7 @@ onMounted(() => {
             : 'Clicca per scegliere tutte le fonti'
       "
     >
-      <ThreeStateCheckBox
-        id="allFeeds"
-        :value="all_feeds"
-        @change="changeAllFeeds"
-      />
+      <ThreeStateCheckBox id="allFeeds" :value="all_feeds" @change="changeAllFeeds" />
       <label class="form-check-label" for="allFeeds">
         <img
           class="me-2"

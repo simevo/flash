@@ -2,8 +2,8 @@
   <div class="container">
     <h1>Impostazioni</h1>
     <p>
-      Personalizza il tuo newsfeed! Queste impostazioni controllano quali
-      articoli verranno mostrati nel
+      Personalizza il tuo newsfeed! Queste impostazioni controllano quali articoli verranno mostrati
+      nel
       <img
         class="icon"
         src="~bootstrap-icons/icons/robot.svg"
@@ -24,8 +24,7 @@
       >, in che ordine e per quanto tempo rimarranno visibili.
     </p>
     <p class="text-muted">
-      Nota: il newsfeed viene aggiornato ogni ora circa quindi c'è un ritardo
-      nell'aggiornamento!
+      Nota: il newsfeed viene aggiornato ogni ora circa quindi c'è un ritardo nell'aggiornamento!
     </p>
     <ul class="nav nav-tabs" id="myTab" role="tablist">
       <li class="nav-item" role="presentation">
@@ -81,8 +80,7 @@
       >
         <div class="container">
           <p>
-            Scegli le parole che vuoi che vengano messe in risalto nel tuo
-            newsfeed personalizzato.
+            Scegli le parole che vuoi che vengano messe in risalto nel tuo newsfeed personalizzato.
           </p>
           <div v-if="profile?.whitelist?.length ?? 0 > 0">
             <span
@@ -112,11 +110,7 @@
           >
             Rimuovi tutte le parole prioritarie
           </button>
-          <button
-            type="button"
-            class="btn btn-success mt-3 ms-3"
-            @click="promptItem('whitelist')"
-          >
+          <button type="button" class="btn btn-success mt-3 ms-3" @click="promptItem('whitelist')">
             Aggiungi una parola prioritaria
           </button>
         </div>
@@ -129,10 +123,7 @@
         tabindex="0"
       >
         <div class="container">
-          <p>
-            Scegli le parole che non vuoi che compaiano nel tuo newsfeed
-            personalizzato.
-          </p>
+          <p>Scegli le parole che non vuoi che compaiano nel tuo newsfeed personalizzato.</p>
           <div v-if="profile?.blacklist?.length ?? 0 > 0">
             <span
               v-for="word in profile?.blacklist"
@@ -161,11 +152,7 @@
           >
             Rimuovi tutte le parole vietate
           </button>
-          <button
-            type="button"
-            class="btn btn-danger mt-3 ms-3"
-            @click="promptItem('blacklist')"
-          >
+          <button type="button" class="btn btn-danger mt-3 ms-3" @click="promptItem('blacklist')">
             Aggiungi una parola vietata
           </button>
         </div>
@@ -197,8 +184,7 @@
           </div>
           <div v-else>
             <p class="text-muted">
-              Nessuna lingua selezionata (nel tuo newsfeed appariranno articoli
-              in qualsiasi lingua)
+              Nessuna lingua selezionata (nel tuo newsfeed appariranno articoli in qualsiasi lingua)
             </p>
           </div>
           <button
@@ -221,12 +207,9 @@
             </button>
             <ul class="dropdown-menu text-bg-secondary">
               <li v-for="code in availableLanguages" :key="code">
-                <a
-                  class="dropdown-item"
-                  href="#"
-                  @click="addItem('languages', code)"
-                  >{{ languages[code] }}</a
-                >
+                <a class="dropdown-item" href="#" @click="addItem('languages', code)">{{
+                  languages[code]
+                }}</a>
               </li>
             </ul>
           </span>
@@ -234,20 +217,10 @@
       </div>
     </div>
     <div class="text-center mt-3">
-      <button
-        type="button"
-        class="btn btn-primary"
-        :disabled="!dirty"
-        @click="save"
-      >
+      <button type="button" class="btn btn-primary" :disabled="!dirty" @click="save">
         Salva le modifiche
       </button>
-      <button
-        type="button"
-        class="btn btn-danger ms-3"
-        @click="clearAll"
-        :disabled="!dirty"
-      >
+      <button type="button" class="btn btn-danger ms-3" @click="clearAll" :disabled="!dirty">
         Annulla le modifiche
       </button>
     </div>
@@ -279,9 +252,7 @@ const languages: { [key: string]: string } = {
 
 // define a computed that returns an array of languages not in profile.languages
 const availableLanguages = computed(() => {
-  return Object.keys(languages).filter(
-    (code) => !profile.value?.languages?.includes(code),
-  )
+  return Object.keys(languages).filter((code) => !profile.value?.languages?.includes(code))
 })
 
 // Fetch the profile data
@@ -297,9 +268,7 @@ async function fetchProfile() {
 }
 
 const dirty = computed(() => {
-  return (
-    JSON.stringify(profile.value) !== JSON.stringify(original_profile.value)
-  )
+  return JSON.stringify(profile.value) !== JSON.stringify(original_profile.value)
 })
 
 type ProfileKeys = "whitelist" | "blacklist" | "languages"
@@ -307,11 +276,7 @@ type ProfileKeys = "whitelist" | "blacklist" | "languages"
 function promptItem(list: ProfileKeys) {
   const item = window.prompt("Inserisci la parola da aggiungere:")
   if (item) {
-    if (
-      profile.value &&
-      profile.value[list] &&
-      !profile.value[list].includes(item)
-    ) {
+    if (profile.value && profile.value[list] && !profile.value[list].includes(item)) {
       profile.value[list].push(item)
     }
   }
@@ -326,11 +291,7 @@ function clearList(list: ProfileKeys) {
 }
 
 function addItem(list: ProfileKeys, item: string) {
-  if (
-    profile.value &&
-    profile.value[list] &&
-    !profile.value[list].includes(item)
-  ) {
+  if (profile.value && profile.value[list] && !profile.value[list].includes(item)) {
     profile.value[list].push(item)
   }
 }

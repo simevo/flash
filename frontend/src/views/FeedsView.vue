@@ -10,17 +10,11 @@
           title="Filtra per lingua"
         >
           <option value="all" selected>Tutte le lingue</option>
-          <option
-            v-for="code in Object.keys(languages)"
-            :key="code"
-            :value="code"
-          >
+          <option v-for="code in Object.keys(languages)" :key="code" :value="code">
             {{ languages[code] }}
           </option>
         </select>
-        <div
-          class="input-group position-relative d-inline-flex align-items-center"
-        >
+        <div class="input-group position-relative d-inline-flex align-items-center">
           <input
             type="text"
             class="form-control mb-3"
@@ -44,12 +38,7 @@
             Non ci sono fonti da visualizzare.
           </div>
         </div>
-        <FeedCard
-          v-else
-          v-for="feed in filtered_feeds"
-          :key="feed.id"
-          :feed="feed"
-        />
+        <FeedCard v-else v-for="feed in filtered_feeds" :key="feed.id" :feed="feed" />
       </div>
     </div>
   </div>

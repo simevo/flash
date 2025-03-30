@@ -40,9 +40,7 @@ export const useFiltersStore = defineStore("filters", {
         const index = this.filters.feed_ids.indexOf(-1)
         if (this.filters.feed_ids.length === 1) {
           this.filters.feed_ids = []
-          feed_counts.forEach((feed) =>
-            this.filters.feed_ids.push(feed.feed_id),
-          )
+          feed_counts.forEach((feed) => this.filters.feed_ids.push(feed.feed_id))
         } else {
           this.filters.feed_ids.splice(index, 1)
         }

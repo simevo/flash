@@ -35,10 +35,7 @@ async function removeArticleFromList(list_id: string): Promise<void> {
       },
       body: JSON.stringify({ article: props.article.id }),
     }
-    const response = await fetch_wrapper(
-      `../../api/lists/${list_id}/remove_article/`,
-      options,
-    )
+    const response = await fetch_wrapper(`../../api/lists/${list_id}/remove_article/`, options)
     if (response.status == 403) {
       document.location = "/accounts/"
     } else {
@@ -75,11 +72,7 @@ async function removeArticleFromList(list_id: string): Promise<void> {
           alt="feed logo"
         />
       </router-link>
-      <router-link
-        :to="`/article/${article.id}`"
-        exact
-        class="text-decoration-none"
-      >
+      <router-link :to="`/article/${article.id}`" exact class="text-decoration-none">
         <div>
           <h5 class="fw-bold">
             <span
@@ -87,16 +80,10 @@ async function removeArticleFromList(list_id: string): Promise<void> {
               style="margin-bottom: 0px"
               :lang="article.language || base_language"
               >{{ article.title_original }} &mdash; </span
-            ><span
-              :lang="
-                article.title
-                  ? base_language
-                  : article.language || base_language
-              "
-              >{{ article.title || article.title_original }}</span
-            ><span
-              v-if="!article.title_original && !article.title"
-              :lang="base_language"
+            ><span :lang="article.title ? base_language : article.language || base_language">{{
+              article.title || article.title_original
+            }}</span
+            ><span v-if="!article.title_original && !article.title" :lang="base_language"
               >[Senza titolo]</span
             >
           </h5>
@@ -113,9 +100,7 @@ async function removeArticleFromList(list_id: string): Promise<void> {
             data-toggle="tooltip"
             class="text-muted"
             :title="new Date(article.stamp * 1000).toLocaleString()"
-            >{{
-              secondsToString(new Date().getTime() / 1000 - article.stamp)
-            }}</small
+            >{{ secondsToString(new Date().getTime() / 1000 - article.stamp) }}</small
           >
           <small v-if="article.author">
             <span class="text-muted"> di </span>
@@ -129,11 +114,7 @@ async function removeArticleFromList(list_id: string): Promise<void> {
         </div>
       </div>
       <div class="d-flex align-items-center">
-        <small
-          class="text-muted"
-          data-toggle="tooltip"
-          title="tempo di lettura stimato"
-        >
+        <small class="text-muted" data-toggle="tooltip" title="tempo di lettura stimato">
           <img
             class="icon"
             src="~bootstrap-icons/icons/clock.svg"

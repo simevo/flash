@@ -18,8 +18,7 @@ import type { components } from "../generated/schema.d.ts"
 
 type ArticleRead = components["schemas"]["ArticleRead"]
 type FeedSerializerSimple = components["schemas"]["FeedSerializerSimple"]
-type PaginatedArticleReadList =
-  components["schemas"]["PaginatedArticleReadList"]
+type PaginatedArticleReadList = components["schemas"]["PaginatedArticleReadList"]
 
 const articles: Ref<ArticleRead[]> = ref([])
 const feeds: Ref<FeedSerializerSimple[]> = ref([])
@@ -67,9 +66,7 @@ const not_filtering = computed(
     filters.language === no_filters.language &&
     filters.length === no_filters.length &&
     filters.feed_ids.length === no_filters.feed_ids.length &&
-    filters.feed_ids.every(
-      (value, index) => value === no_filters.feed_ids[index],
-    ),
+    filters.feed_ids.every((value, index) => value === no_filters.feed_ids[index]),
 )
 
 const filters_summary = computed(() => {
@@ -112,14 +109,10 @@ const filtered_articles = computed(() => {
       }
       if (filters.length !== "all") {
         const [min, max] = filters.length.split("-")
-        found =
-          found &&
-          article.length > parseInt(min) &&
-          article.length <= parseInt(max)
+        found = found && article.length > parseInt(min) && article.length <= parseInt(max)
       }
       if (filters.feed_ids.indexOf(-1) === -1) {
-        found =
-          found && filters.feed_ids.some((value) => article.feed === value)
+        found = found && filters.feed_ids.some((value) => article.feed === value)
       }
       return found
     })
@@ -208,9 +201,7 @@ onDeactivated(() => {
 watch(
   () => filters.what,
   async (newWhat, oldWhat) => {
-    console.log(
-      `HomeView what watch, newWhat = [${newWhat}] oldWhat = [${oldWhat}]`,
-    )
+    console.log(`HomeView what watch, newWhat = [${newWhat}] oldWhat = [${oldWhat}]`)
     if (newWhat !== oldWhat) {
       articles.value = []
       count_fetch.value = 1
@@ -292,9 +283,7 @@ watch(
     <div class="row">
       <div class="text-center col-md-8 offset-md-2">
         <h1 class="mb-3" v-if="!not_filtering">{{ filters_summary }}...</h1>
-        <h1 class="mb-3" v-else>
-          Tutti gli articoli in ordine cronologico ...
-        </h1>
+        <h1 class="mb-3" v-else>Tutti gli articoli in ordine cronologico ...</h1>
         <div class="spinner-border text-primary" role="status">
           <span class="visually-hidden">Loading...</span>
         </div>
@@ -308,9 +297,7 @@ watch(
     aria-labelledby="offcanvasFiltersLabel"
   >
     <div class="offcanvas-header">
-      <h5 id="offcanvasFiltersLabel" class="offcanvas-title">
-        Filtra gli articoli
-      </h5>
+      <h5 id="offcanvasFiltersLabel" class="offcanvas-title">Filtra gli articoli</h5>
       <button
         type="button"
         class="btn-close"

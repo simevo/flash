@@ -19,10 +19,8 @@ import { useRoute } from "vue-router"
 type ArticleRead = components["schemas"]["ArticleRead"]
 type Article = components["schemas"]["ArticleSerializerFull"]
 type FeedSerializerSimple = components["schemas"]["FeedSerializerSimple"]
-type UserArticleListsSerializerFull =
-  components["schemas"]["UserArticleListsSerializerFull"]
-type PaginatedArticleReadList =
-  components["schemas"]["PaginatedArticleReadList"]
+type UserArticleListsSerializerFull = components["schemas"]["UserArticleListsSerializerFull"]
+type PaginatedArticleReadList = components["schemas"]["PaginatedArticleReadList"]
 
 const route = useRoute()
 
@@ -252,16 +250,10 @@ async function read_article() {
     console.log("voice = ", voice)
     const article_full = await fetchArticle(article.id)
     const content =
-      article.language === base_language
-        ? article_full.content
-        : article_full.content_original
+      article.language === base_language ? article_full.content : article_full.content_original
     const title =
-      article.language === base_language
-        ? article_full.title
-        : article_full.title_original
-    const article_card = document.getElementById(
-      `article-${article.id}`,
-    ) as HTMLElement
+      article.language === base_language ? article_full.title : article_full.title_original
+    const article_card = document.getElementById(`article-${article.id}`) as HTMLElement
     if (article_card) {
       article_card.style.background = "white"
       article_card.scrollIntoView()
@@ -308,9 +300,7 @@ function read(
   chunks: string[],
   lang: string,
 ) {
-  console.log(
-    `${chunks.length} chunks left to read for article ${current_article.value}`,
-  )
+  console.log(`${chunks.length} chunks left to read for article ${current_article.value}`)
 
   const utterance = new window.SpeechSynthesisUtterance()
 
@@ -382,9 +372,8 @@ function tts_cleanup() {
     <div class="row my-3" v-if="lists.length == 0">
       <div class="col-md-12">
         <div class="alert alert-warning text-center" role="alert">
-          Non hai ancora delle liste da visualizzare. Per creare la tua prima
-          lista salva un articolo, dalla pagina di dettaglio articolo clicca sul
-          pulsante "<i>Salva in lista</i>"
+          Non hai ancora delle liste da visualizzare. Per creare la tua prima lista salva un
+          articolo, dalla pagina di dettaglio articolo clicca sul pulsante "<i>Salva in lista</i>"
           <img
             class="icon me-2"
             src="~bootstrap-icons/icons/heart-fill.svg"
@@ -399,12 +388,7 @@ function tts_cleanup() {
       <div class="col-md-12">
         <h1 class="text-center">Articoli salvati nelle liste</h1>
         <ul class="nav nav-tabs" id="myTab" role="tablist">
-          <li
-            class="nav-item"
-            role="presentation"
-            v-for="list in lists"
-            :key="list.id"
-          >
+          <li class="nav-item" role="presentation" v-for="list in lists" :key="list.id">
             <button
               class="nav-link"
               :class="{ active: list.id == current_list_id }"
@@ -428,9 +412,7 @@ function tts_cleanup() {
                 type="button"
                 class="btn btn-outline-primary btn-sm ms-3"
                 title="Copia il link al feed RSS di questa lista"
-                @click="
-                  copy_link(`https://${host}/api/lists/${current_list_id}/rss/`)
-                "
+                @click="copy_link(`https://${host}/api/lists/${current_list_id}/rss/`)"
               >
                 <img
                   class="icon"
@@ -450,10 +432,7 @@ function tts_cleanup() {
                 :disabled="tts_open || articles.length === 0"
                 v-on:click="tts_speak()"
               >
-                <img
-                  src="~bootstrap-icons/icons/megaphone.svg"
-                  alt="tts icon"
-                />
+                <img src="~bootstrap-icons/icons/megaphone.svg" alt="tts icon" />
               </button>
               <button
                 v-if="!list.automatic"
@@ -483,9 +462,8 @@ function tts_cleanup() {
           >
             <div v-if="current_list?.articles.length == 0">
               <div class="alert alert-warning" role="alert">
-                Non ci sono ancora articoli in questa lista. Per salvare un
-                articolo, dalla pagina di dettaglio articolo clicca sul pulsante
-                "<i>Salva in lista</i>"
+                Non ci sono ancora articoli in questa lista. Per salvare un articolo, dalla pagina
+                di dettaglio articolo clicca sul pulsante "<i>Salva in lista</i>"
                 <img
                   class="icon me-2"
                   src="~bootstrap-icons/icons/heart-fill.svg"
@@ -497,10 +475,7 @@ function tts_cleanup() {
             </div>
           </div>
         </div>
-        <div
-          class="row"
-          v-if="current_list && current_list?.articles.length > 0"
-        >
+        <div class="row" v-if="current_list && current_list?.articles.length > 0">
           <div v-if="articles.length == 0">
             <div class="text-center col-md-8 offset-md-2">
               <div class="spinner-border text-primary" role="status">
@@ -551,10 +526,7 @@ function tts_cleanup() {
       title="Dall'inizio"
       v-on:click="tts_restart()"
     >
-      <img
-        src="~bootstrap-icons/icons/skip-start-fill.svg"
-        alt="fast backward icon"
-      />
+      <img src="~bootstrap-icons/icons/skip-start-fill.svg" alt="fast backward icon" />
     </button>
     <button
       type="button"
@@ -594,10 +566,7 @@ function tts_cleanup() {
       v-on:click="tts_forward()"
       :disabled="current_article >= articles.length - 1"
     >
-      <img
-        src="~bootstrap-icons/icons/fast-forward-fill.svg"
-        alt="forward icon"
-      />
+      <img src="~bootstrap-icons/icons/fast-forward-fill.svg" alt="forward icon" />
     </button>
     <button
       type="button"

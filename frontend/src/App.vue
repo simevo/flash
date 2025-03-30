@@ -108,11 +108,7 @@ import { RouterLink, RouterView } from "vue-router"
             </RouterLink>
           </li>
           <li class="nav-item">
-            <a
-              href="/about"
-              class="btn btn-primary nav-link me-2"
-              title="About"
-            >
+            <a href="/about" class="btn btn-primary nav-link me-2" title="About">
               <img
                 class="inverted-icon icon me-2"
                 src="~bootstrap-icons/icons/question.svg"
