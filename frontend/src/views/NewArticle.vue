@@ -185,7 +185,7 @@
 
 <script setup lang="ts">
 import { fetch_wrapper } from "../utils"
-import { computed, inject, onActivated, onMounted, ref } from "vue"
+import { computed, inject, nextTick, onActivated, onMounted, ref } from "vue"
 import { franc } from "franc"
 import { Readability } from "@mozilla/readability"
 import Quill from "quill"
@@ -217,11 +217,20 @@ const article = ref({
   url: "",
 })
 
+function isValidUrl(url: string): boolean {
+  try {
+    new URL(url)
+    return true
+  } catch {
+    return false
+  }
+}
+
 const errors = computed(() => {
   return {
     author: article.value.author ? "" : "Campo obbligatorio",
     title: article.value.title ? "" : "Campo obbligatorio",
-    url: article.value.url ? "" : "Campo obbligatorio",
+    url: isValidUrl(article.value.url) ? "" : "Inserisci un URL valido",
   }
 })
 
@@ -355,10 +364,12 @@ function guess_language() {
 }
 
 function try_it() {
-  if (article.value.url && !errors.value["url"]) {
-    trying.value = true
-    prefill()
-  }
+  nextTick(() => {
+    if (article.value.url && !errors.value["url"]) {
+      trying.value = true
+      prefill()
+    }
+  })
 }
 
 function send() {
