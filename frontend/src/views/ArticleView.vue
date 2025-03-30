@@ -160,6 +160,7 @@
             :share="true"
             class="float-start me-2"
             :translatable="article.language != base_language && !article.content"
+            @translate="translate"
           />
           <small>Articolo originale: </small>
           <a target="_blank" :href="article.url || ''">
@@ -475,6 +476,22 @@ function tts_cleanup() {
     if (paragraph && "style" in paragraph) {
       ;(paragraph as HTMLElement).style.backgroundColor = "white"
     }
+  }
+}
+
+async function translate() {
+  if (!article.value) {
+    return
+  }
+  console.log("translate")
+  count_fetch.value += 1
+  const response = await fetch_wrapper(`../../api/articles/${props.article_id}/translate/`, {
+    method: "POST",
+  })
+  if (response.status == 403) {
+    document.location = "/accounts/"
+  } else {
+    fetchArticle()
   }
 }
 </script>

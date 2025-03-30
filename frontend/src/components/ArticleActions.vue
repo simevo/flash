@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, type Ref, ref } from "vue"
+import { computed, inject, onMounted, type Ref, ref } from "vue"
 import { copy_link, fetch_wrapper } from "../utils"
 import type { components } from "../generated/schema.js"
 type Article = components["schemas"]["ArticleSerializerFull"]
@@ -11,6 +11,10 @@ const host = "notizie.calomelano.it"
 
 const props = defineProps<{
   article: Article
+}>()
+
+const emit = defineEmits<{
+  (e: "translate"): void
 }>()
 
 const is_already_saved = computed(() => {
@@ -27,6 +31,16 @@ async function create_list_and_save(): Promise<void> {
 
 function save(list_id: string): void {
   addArticleToList(list_id)
+}
+
+const base_language: string = inject("base_language", "it")
+
+async function translate() {
+  if (props.article.language != base_language && !props.article.content) {
+    emit("translate")
+  } else {
+    alert("Articolo già tradotto")
+  }
 }
 
 async function addArticleToList(list_id: string): Promise<void> {
@@ -324,6 +338,23 @@ onMounted(() => {
           <span> whatsapp</span>
         </a>
       </div>
+
+      <button
+        id="translate"
+        class="btn btn-outline-secondary btn-sm"
+        type="button"
+        title="Traduci"
+        v-on:click="translate()"
+        v-if="article.language != base_language && !article.content"
+      >
+        <img
+          class="icon"
+          src="~bootstrap-icons/icons/globe.svg"
+          alt="linkedin icon"
+          width="18"
+          height="18"
+        />
+      </button>
     </div>
   </div>
 </template>

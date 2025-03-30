@@ -16,6 +16,7 @@ from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+import news.translate
 from news.api.serializers import ArticleReadSerializer
 from news.api.serializers import ArticleSerializer
 from news.api.serializers import ArticleSerializerFull
@@ -108,6 +109,37 @@ class ArticlesView(viewsets.ModelViewSet, mixins.CreateModelMixin):
         else:
             user.userarticles_set.create(article_id=article.id, read=True)
         return Response(serializer.data)
+
+    # implement a translate method to translate the article
+    @action(detail=True, methods=["POST"])
+    def translate(self, request, pk=None):
+        queryset = ArticlesCombined.objects
+        article = get_object_or_404(queryset, pk=pk)
+        token = news.translate.get_token()
+        if token != "":
+            language_original = article.language
+            content_original = article.content_original
+            title_original = article.title_original
+            (title, content) = news.translate.translate(
+                token,
+                language_original,
+                title_original,
+                content_original,
+            )
+            if title and content:
+                article.title = title
+                article.content = content
+                article.save()
+                return Response(
+                    {
+                        "language": article.language,
+                    },
+                    status=status.HTTP_200_OK,
+                )
+        return Response(
+            {"error": "Translation failed"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
 
 class FeedsView(viewsets.ModelViewSet):
