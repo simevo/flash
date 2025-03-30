@@ -14,7 +14,7 @@ const no_filters: Filters = {
   feed_ids: [-1],
 }
 
-export const useFiltersStore = defineStore("filters", {
+export const useFiltersStore = defineStore(STORE_NAME, {
   state: () => {
     return { filters: useLocalStorage(STORE_NAME, { ...no_filters }) }
   },

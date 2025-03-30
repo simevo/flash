@@ -2,12 +2,16 @@
 import { computed, inject, onMounted, type Ref, ref } from "vue"
 import { copy_link, fetch_wrapper } from "../utils"
 import type { components } from "../generated/schema.js"
+import { useProfileStore } from "../stores/profile.store"
+
 type Article = components["schemas"]["ArticleSerializerFull"]
 type UserArticleListsSerializerFull = components["schemas"]["UserArticleListsSerializerFull"]
 
 const lists: Ref<UserArticleListsSerializerFull[]> = ref([])
 
 const host = "notizie.calomelano.it"
+
+const profile = useProfileStore().profile
 
 const props = defineProps<{
   article: Article
@@ -91,6 +95,28 @@ onMounted(() => {
   console.log("ArticleActions mounted")
   fetchLists()
 })
+
+function change_instance(): boolean {
+  const instance = window.prompt("Modifica l'istanza Mastodon", profile.mastodon_server)
+  if (instance) {
+    useProfileStore().set_mastodon_server(instance)
+  }
+  return false
+}
+
+function share_mastodon(): boolean {
+  if (!profile.mastodon_server) {
+    const instance = window.prompt("Inserisci l'istanza Mastodon")
+    if (instance) {
+      useProfileStore().set_mastodon_server(instance)
+      return true
+    } else {
+      return false
+    }
+  } else {
+    return true
+  }
+}
 </script>
 
 <template>
@@ -259,9 +285,10 @@ onMounted(() => {
         </a>
         <a
           class="dropdown-item"
-          :href="`https://hachyderm.io/share?text=https%3A%2F%2F${host}%2Farticle%2F${article.id}`"
+          :href="`https://${profile.mastodon_server}/share?text=https%3A%2F%2F${host}%2Farticle%2F${props.article.id}`"
           title="Condividi con Mastodon"
           role="button"
+          @click="share_mastodon"
           target="_blank"
         >
           <img
@@ -271,7 +298,18 @@ onMounted(() => {
             width="18"
             height="18"
           />
-          <span> mastodon</span>
+          <span> {{ profile.mastodon_server || "mastodon (istanza?)" }}</span>
+          <span v-if="profile.mastodon_server">
+            <img
+              class="icon float-end"
+              src="~bootstrap-icons/icons/gear.svg"
+              alt="settings icon"
+              width="18"
+              height="18"
+              title="Modifica l'istanza Mastodon"
+              @click.capture="change_instance()"
+            />
+          </span>
         </a>
         <a
           class="dropdown-item"
