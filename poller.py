@@ -26,6 +26,7 @@ from news.models import Articles
 logger = logging.getLogger(__name__)
 time_format = "%Y-%m-%dT%H:%M:%SZ"
 HTTP_SUCCESS_CODE = 200
+USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64; rv:52.0) Gecko/20100101 Firefox/52.0"
 
 
 # https://stackoverflow.com/a/13565185
@@ -145,7 +146,7 @@ async def main(loop, entries, feed, verbose):
         except Exception:
             logger.exception(f"=== could not load cookies from {cookies_file}")
     headers = {
-        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:52.0) Gecko/20100101 Firefox/52.0",  # noqa: E501
+        "User-Agent": USER_AGENT,
     }
     async with aiohttp.ClientSession(
         loop=loop,
@@ -422,7 +423,11 @@ def prune_already_retrieved(entries):
 def poll_feed(feed):
     verbose = True
     try:
-        response = requests.get(feed.url, timeout=30)
+        response = requests.get(
+            feed.url,
+            timeout=60,
+            headers={"User-Agent": USER_AGENT},
+        )
     except requests.ReadTimeout:
         logger.exception(f"== timeout when reading RSS {feed.url}")
         return (0, 0, 0)
