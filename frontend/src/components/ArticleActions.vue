@@ -117,6 +117,10 @@ function share_mastodon(): boolean {
     return true
   }
 }
+
+function window_open(url: string): void {
+  window.open(url)
+}
 </script>
 
 <template>
@@ -209,7 +213,6 @@ function share_mastodon(): boolean {
           height="18"
         />
       </button>
-
       <div class="dropdown-menu" aria-labelledby="share_menu">
         <a class="dropdown-item" href="#" tabindex="-1" aria-disabled="true"
           >Condividi questo articolo:</a
@@ -376,24 +379,96 @@ function share_mastodon(): boolean {
           <span> whatsapp</span>
         </a>
       </div>
-
+    </div>
+    <div class="dropdown" role="group">
       <button
-        id="translate"
-        class="btn btn-outline-secondary btn-sm"
+        id="download_menu"
+        class="btn btn-outline-warning btn-sm"
         type="button"
-        title="Traduci"
-        v-on:click="translate()"
-        v-if="article.language != base_language && !article.content"
+        data-bs-toggle="dropdown"
+        aria-haspopup="true"
+        aria-expanded="false"
+        title="Scarica"
       >
         <img
           class="icon"
-          src="~bootstrap-icons/icons/globe.svg"
-          alt="linkedin icon"
+          src="~bootstrap-icons/icons/download.svg"
+          alt="share icon"
           width="18"
           height="18"
         />
       </button>
+
+      <div class="dropdown-menu" aria-labelledby="download_menu">
+        <a class="dropdown-item" href="#" tabindex="-1" aria-disabled="true"
+          >Scarica questo articolo:</a
+        >
+        <a
+          class="dropdown-item"
+          href="#"
+          title="Scarica in formato html"
+          role="button"
+          @click="window_open(`/api/articles/${article.id}/html/`)"
+        >
+          <img
+            class="icon"
+            src="~bootstrap-icons/icons/code.svg"
+            alt="link icon"
+            width="18"
+            height="18"
+          />
+          <span> html</span>
+        </a>
+        <a
+          class="dropdown-item"
+          href="#"
+          title="Scarica in formato epub"
+          role="button"
+          @click="window_open(`/api/articles/${article.id}/epub/`)"
+        >
+          <img
+            class="icon"
+            src="~bootstrap-icons/icons/book.svg"
+            alt="link icon"
+            width="18"
+            height="18"
+          />
+          <span> epub</span>
+        </a>
+        <a
+          class="dropdown-item"
+          href="#"
+          title="Scarica in formato pdf"
+          role="button"
+          @click="window_open(`/api/articles/${article.id}/pdf/`)"
+        >
+          <img
+            class="icon"
+            src="~bootstrap-icons/icons/file-earmark-pdf.svg"
+            alt="link icon"
+            width="18"
+            height="18"
+          />
+          <span> pdf</span>
+        </a>
+      </div>
     </div>
+    <button
+      id="translate"
+      class="btn btn-outline-secondary btn-sm"
+      type="button"
+      title="Traduci"
+      v-on:click="translate()"
+      v-if="article.language != base_language && !article.content"
+    >
+      <img
+        class="icon"
+        src="~bootstrap-icons/icons/globe.svg"
+        alt="linkedin icon"
+        width="18"
+        height="18"
+      />
+    </button>
   </div>
 </template>
 <style>

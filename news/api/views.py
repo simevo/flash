@@ -1,12 +1,19 @@
+# ruff: noqa: E501
+
 import html
 import re
+import time
+import uuid
+from io import BytesIO
 
 from django.contrib.postgres.aggregates import ArrayAgg
 from django.contrib.postgres.search import SearchVector
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
+from django.shortcuts import render
 from django_filters import rest_framework as filters
 from drf_spectacular.utils import extend_schema
+from ebooklib import epub
 from feedgen.feed import FeedGenerator
 from rest_framework import mixins
 from rest_framework import pagination
@@ -15,6 +22,7 @@ from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from xhtml2pdf import pisa
 
 import news.translate
 from news.api.serializers import ArticleReadSerializer
@@ -40,6 +48,103 @@ class ReadOnly(permissions.BasePermission):
 
 class StandardResultsSetPagination(pagination.PageNumberPagination):
     page_size = 200
+
+
+def get_epub(articles):
+    book = epub.EpubBook()
+
+    # set metadata
+    book.set_identifier(str(uuid.uuid4()))
+    book.set_title(f"Flash {time.strftime('%Y-%m-%dT%H:%M:%S', time.gmtime())}")
+    base_language = "it"
+    book.set_language(base_language)
+
+    book.add_author("flash")
+
+    # create chapters
+    cs = []  # chapters
+    fs = {}  # chapters grouped by feed_id
+    fn = {}  # feed name for each feed_id
+    spine = ["nav"]
+    i = 1
+    for data in articles:
+        data["minutes"] = int(data["length"] / 6 / 300)
+
+        if not data["title"] and not data["title_original"]:
+            title_combined = "[Senza titolo]"
+        elif data["language"] == base_language:
+            title_combined = f"{data['title']}"
+        elif data["title"]:
+            title_combined = f"[{data['title_original']}] {data['title']}"
+        else:
+            title_combined = f"{data['title_original']}"
+        data["title_combined"] = title_combined
+
+        if data["language"] == base_language:
+            content_combined = f"<div>{data['content']}</div>"
+        elif data["content"]:
+            content_combined = f"""<h3>Testo tradotto</h3>
+<a href="#native_{data['id']}">Vai al testo in lingua originale</a>
+<div>{data['content']}</div>
+<br/>
+<h3 id="native_{data['id']}">Testo in lingua originale</h3>
+<div>{data['content_original']}</div>"""
+        else:
+            content_combined = f"<div>{data['content_original']}</div>"
+        data["content_combined"] = content_combined
+        data["aggregator_hostname"] = "notizie.calomelano.it"
+
+        c = epub.EpubHtml(
+            title=title_combined,
+            file_name=f"chap_{i}.xhtml",
+            lang=base_language,
+        )
+        i += 1
+        c.content = f"""<h1>{data['title_combined']}</h1>
+<p><strong>Pubblicato</strong>: {data['stamp']}</p>
+<p><strong>Di</strong>: {data['author']}</p>
+<p><strong>Da</strong>: {data['feed_id']}</p>
+<p><strong>Tempo di lettura stimato</strong>: {data['minutes']} minuti</p>
+{data['content_combined']}
+<p><strong>Commenta</strong>: <a href="https://{data['aggregator_hostname']}/article/{data['id']}">https://{data['aggregator_hostname']}/article/{data['id']}</a></p>
+<p><strong>Vai all'articolo originale</strong>: <a href="{data['url']}">{data['url']}</a></p>"""
+        cs.append(c)
+        feed_id = data["feed_id"]
+        if feed_id in fs:
+            fs[feed_id] = fs[feed_id] + (c,)
+        else:
+            fs[feed_id] = (c,)
+            fn[feed_id] = str(data["feed_id"])
+        # add chapter
+        book.add_item(c)
+        # add chapter to spine
+        spine.append(c)
+
+    # define Table Of Contents
+    toc = ()
+    for f in list(fs.keys()):
+        toc = (*toc, (epub.Section(fn[f]), fs[f]))
+    book.toc = toc
+
+    # add default NCX and Nav file
+    book.add_item(epub.EpubNcx())
+    book.add_item(epub.EpubNav())
+
+    # define CSS style
+    style = "BODY {color: white;}"
+    nav_css = epub.EpubItem(
+        uid="style_nav",
+        file_name="style/nav.css",
+        media_type="text/css",
+        content=style,
+    )
+
+    # add CSS file
+    book.add_item(nav_css)
+
+    # basic spine
+    book.spine = spine
+    return book
 
 
 class ArticlesFilter(filters.FilterSet):
@@ -110,7 +215,6 @@ class ArticlesView(viewsets.ModelViewSet, mixins.CreateModelMixin):
             user.userarticles_set.create(article_id=article.id, read=True)
         return Response(serializer.data)
 
-    # implement a translate method to translate the article
     @action(detail=True, methods=["POST"])
     def translate(self, request, pk=None):
         queryset = ArticlesCombined.objects
@@ -140,6 +244,50 @@ class ArticlesView(viewsets.ModelViewSet, mixins.CreateModelMixin):
             {"error": "Translation failed"},
             status=status.HTTP_400_BAD_REQUEST,
         )
+
+    @action(detail=True)
+    def html(self, request, pk=None):
+        queryset = ArticlesCombined.objects
+        article = get_object_or_404(queryset, pk=pk)
+        return render(request, "article.html", {"article": article})
+
+    @action(detail=True)
+    def pdf(self, request, pk=None):
+        queryset = ArticlesCombined.objects
+        article = get_object_or_404(queryset, pk=pk)
+        html = render(request, "article.html", {"article": article})
+        response = HttpResponse(content_type="application/pdf")
+        response["Content-Disposition"] = (
+            f'attachment; filename="article_{article.id}.pdf"'
+        )
+
+        html_content = html.content.decode("utf-8")
+        result = BytesIO()
+        pdf = pisa.pisaDocument(BytesIO(html_content.encode("utf-8")), result)
+
+        if not pdf.err:
+            response.write(result.getvalue())
+            return response
+        return Response(
+            {"error": "PDF generation failed"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+    @action(detail=True)
+    def epub(self, request, pk=None):
+        queryset = ArticlesCombined.objects
+        article = get_object_or_404(queryset, pk=pk)
+
+        articles = [article.__dict__]
+
+        book = get_epub(articles)
+
+        response = HttpResponse(content_type="application/epub+zip")
+        response["Content-Disposition"] = (
+            f'attachment; filename="article_{article.id}.epub"'
+        )
+        epub.write_epub(response, book, {})
+        return response
 
 
 class FeedsView(viewsets.ModelViewSet):
@@ -280,7 +428,7 @@ class UserArticleListsView(viewsets.ModelViewSet):
         fg.id(instance.id)
         fg.title(instance.name)
         fg.description(
-            "Powered by flash - An open-source news platform with aggregation and ranking",  # noqa: E501
+            "Powered by flash - An open-source news platform with aggregation and ranking",
         )
         fg.link(href=request.build_absolute_uri())
         for article in articles:
