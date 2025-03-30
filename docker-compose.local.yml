@@ -111,3 +111,15 @@ services:
       - postgres
     depends_on:
       - postgres
+
+  mkfd:
+    container_name: flash_local_mkfd
+    image: tbosk/mkfd:23
+    ports:
+      - 5000:5000
+    environment:
+      - PASSKEY=your_passkey
+      - COOKIE_SECRET=your_cookie_secret
+      - ENCRYPTION_KEY=your_encryption_key
+    volumes:
+      - ./mkfd:/configs:z
