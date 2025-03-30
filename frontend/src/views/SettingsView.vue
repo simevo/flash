@@ -1,6 +1,31 @@
 <template>
   <div class="container">
-    <h1>Impostazioni</h1>
+    <h1>
+      Impostazioni
+      <span class="btn-group" role="group" aria-label="Font size">
+        <button
+          class="btn btn-outline-primary"
+          @click="useProfileStore().reduce_font_size()"
+          title="Riduci dimensione carattere"
+        >
+          A-
+        </button>
+        <button
+          class="btn btn-outline-primary"
+          @click="useProfileStore().reset_font_size()"
+          title="Ripristina dimensione carattere"
+        >
+          A=
+        </button>
+        <button
+          class="btn btn-outline-primary"
+          @click="useProfileStore().enlarge_font_size()"
+          title="Aumenta dimensione carattere"
+        >
+          A+
+        </button>
+      </span>
+    </h1>
     <p>
       Personalizza il tuo newsfeed! Queste impostazioni controllano quali articoli verranno mostrati
       nel
@@ -231,6 +256,8 @@
 import { computed, onMounted, ref, type Ref } from "vue"
 import type { components } from "../generated/schema.d.ts"
 import { fetch_wrapper } from "@/utils.js"
+import { useProfileStore } from "../stores/profile.store"
+
 type Profile = components["schemas"]["Profile"]
 
 const profile: Ref<Profile | null> = ref(null)
