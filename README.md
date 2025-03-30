@@ -127,6 +127,19 @@ cd flash
 celery -A config.celery_app worker -B -l info
 ```
 
+### Troubleshooting
+
+```
+docker-compose -f docker-compose.local.yml exec django bash
+export DATABASE_URL="postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}"
+python3 manage.py shell
+import poller
+from news.models import Feeds
+feed = Feeds.objects.get(pk=2)
+p = poller.Poller(feed)
+p.poll()
+```
+
 ## Deployment
 
 The following details how to deploy this application.
