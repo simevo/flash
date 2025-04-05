@@ -266,7 +266,7 @@ watch(
           <span class="visually-hidden">Loading...</span>
         </div>
       </div>
-      <div class="col-md-12 text-center" v-if="filtered_articles.length > 0">
+      <div class="col-md-12 text-center" v-if="articles.length > 0">
         <button
           class="btn btn-primary"
           @click="fetchMoreArticles"
@@ -275,7 +275,7 @@ watch(
         >
           Carica altri articoli
         </button>
-        <p v-else>Non ci sono altri articoli da visualizzare.</p>
+        <p v-else>Fine.</p>
       </div>
     </div>
   </div>
