@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="it">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Estratto notizie flash</title>
+    <style>
+      .justified {
+        text-align: justify;
+      }
+    </style>
+  </head>
+  <body>
+    {% for article in list %}
+      <h2 id="ref{{ article.id }}">
+        {% if article.language != 'it' %}[{{ article.title_original }}]{% endif %}
+        {% if article.title %}{{ article.title }}{% endif %}
+      </h2>
+      <p>
+        <strong>Pubblicato</strong>: {{ article.stamp }}
+      </p>
+      <p>
+        <strong>Di</strong>: {{ article.author }} {{ article.license }}
+      </p>
+      <p>
+        <strong>Da</strong>: {{ article.feed }}
+      </p>
+      {% if article.content %}
+        {% if article.language != 'it' %}
+          <h3>Testo tradotto</h3>
+          <a href="#native_{{ article.id }}">Vai al testo in lingua originale</a>
+        {% endif %}
+        <div class="justified">{{ article.content | safe }}</div>
+      {% endif %}
+      {% if article.language != 'it' %}
+        <br />
+        <h3 id="native_{{ article.id }}">Testo in lingua originale</h3>
+        <div class="justified">{{ article.content_original | safe }}</div>
+      {% endif %}
+      <p>
+        <strong>Leggi nell'aggregatore</strong>:
+        <a target="_blank"
+           href="https://notizie.calomelano.it/article/{{ article.id }}">
+          https://notizie.calomelano.it/article/{{ article.id }}
+        </a>
+      </p>
+    {% endfor %}
+  </body>
+</html>

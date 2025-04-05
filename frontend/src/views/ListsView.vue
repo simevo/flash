@@ -365,6 +365,10 @@ function tts_cleanup() {
     ;(article_cards[i] as HTMLElement).style.removeProperty("background")
   }
 }
+
+function window_open(url: string): void {
+  window.open(url)
+}
 </script>
 
 <template>
@@ -434,6 +438,79 @@ function tts_cleanup() {
               >
                 <img src="~bootstrap-icons/icons/megaphone.svg" alt="tts icon" />
               </button>
+              <span class="dropdown" role="group" v-show="list.id == current_list_id">
+                <button
+                  id="download_menu"
+                  class="btn btn-outline-warning btn-sm"
+                  type="button"
+                  data-bs-toggle="dropdown"
+                  aria-haspopup="true"
+                  aria-expanded="false"
+                  title="Scarica"
+                >
+                  <img
+                    class="icon"
+                    src="~bootstrap-icons/icons/download.svg"
+                    alt="share icon"
+                    width="18"
+                    height="18"
+                  />
+                </button>
+
+                <span class="dropdown-menu" aria-labelledby="download_menu">
+                  <a class="dropdown-item" href="#" tabindex="-1" aria-disabled="true"
+                    >Scarica questa lista:</a
+                  >
+                  <a
+                    class="dropdown-item"
+                    href="#"
+                    title="Scarica in formato html"
+                    role="button"
+                    @click="window_open(`/api/lists/${list.id}/html/`)"
+                  >
+                    <img
+                      class="icon"
+                      src="~bootstrap-icons/icons/code.svg"
+                      alt="link icon"
+                      width="18"
+                      height="18"
+                    />
+                    <span> html</span>
+                  </a>
+                  <a
+                    class="dropdown-item"
+                    href="#"
+                    title="Scarica in formato epub"
+                    role="button"
+                    @click="window_open(`/api/lists/${list.id}/epub/`)"
+                  >
+                    <img
+                      class="icon"
+                      src="~bootstrap-icons/icons/book.svg"
+                      alt="link icon"
+                      width="18"
+                      height="18"
+                    />
+                    <span> epub</span>
+                  </a>
+                  <a
+                    class="dropdown-item"
+                    href="#"
+                    title="Scarica in formato pdf"
+                    role="button"
+                    @click="window_open(`/api/lists/${list.id}/pdf/`)"
+                  >
+                    <img
+                      class="icon"
+                      src="~bootstrap-icons/icons/file-earmark-pdf.svg"
+                      alt="link icon"
+                      width="18"
+                      height="18"
+                    />
+                    <span> pdf</span>
+                  </a>
+                </span>
+              </span>
               <button
                 v-if="!list.automatic"
                 v-show="list.id == current_list_id"

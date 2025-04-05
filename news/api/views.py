@@ -103,18 +103,18 @@ def get_epub(articles):
         c.content = f"""<h1>{data['title_combined']}</h1>
 <p><strong>Pubblicato</strong>: {data['stamp']}</p>
 <p><strong>Di</strong>: {data['author']}</p>
-<p><strong>Da</strong>: {data['feed_id']}</p>
+<p><strong>Da</strong>: {data['feed']['title']}</p>
 <p><strong>Tempo di lettura stimato</strong>: {data['minutes']} minuti</p>
 {data['content_combined']}
 <p><strong>Commenta</strong>: <a href="https://{data['aggregator_hostname']}/article/{data['id']}">https://{data['aggregator_hostname']}/article/{data['id']}</a></p>
 <p><strong>Vai all'articolo originale</strong>: <a href="{data['url']}">{data['url']}</a></p>"""
         cs.append(c)
-        feed_id = data["feed_id"]
+        feed_id = data["feed"]["id"]
         if feed_id in fs:
             fs[feed_id] = fs[feed_id] + (c,)
         else:
             fs[feed_id] = (c,)
-            fn[feed_id] = str(data["feed_id"])
+            fn[feed_id] = data["feed"]["title"]
         # add chapter
         book.add_item(c)
         # add chapter to spine
@@ -277,11 +277,9 @@ class ArticlesView(viewsets.ModelViewSet, mixins.CreateModelMixin):
     def epub(self, request, pk=None):
         queryset = ArticlesCombined.objects
         article = get_object_or_404(queryset, pk=pk)
-
-        articles = [article.__dict__]
-
+        serializer = ArticleSerializerFull(article)
+        articles = [serializer.data]
         book = get_epub(articles)
-
         response = HttpResponse(content_type="application/epub+zip")
         response["Content-Disposition"] = (
             f'attachment; filename="article_{article.id}.epub"'
@@ -454,3 +452,60 @@ class UserArticleListsView(viewsets.ModelViewSet):
 
         response = fg.rss_str(pretty=True)
         return HttpResponse(response, content_type="application/rss+xml")
+
+    @action(detail=True)
+    def html(self, request, pk=None):
+        queryset = UserArticleLists.objects.filter(
+            user_id=request.user.id,
+        )
+        article_list = get_object_or_404(queryset, pk=pk)
+        full_article_list = article_list.articles.all()
+        return render(request, "list.html", {"list": full_article_list})
+
+    @action(detail=True)
+    def pdf(self, request, pk=None):
+        queryset = UserArticleLists.objects.filter(
+            user_id=request.user.id,
+        )
+        article_list = get_object_or_404(queryset, pk=pk)
+        full_article_list = article_list.articles.all()
+        html = render(request, "list.html", {"list": full_article_list})
+        response = HttpResponse(content_type="application/pdf")
+        response["Content-Disposition"] = (
+            f'attachment; filename="list_{article_list.name}.pdf"'
+        )
+        html_content = html.content.decode("utf-8")
+        result = BytesIO()
+        pdf = pisa.pisaDocument(BytesIO(html_content.encode("utf-8")), result)
+
+        if not pdf.err:
+            response.write(result.getvalue())
+            return response
+        return Response(
+            {"error": "PDF generation failed"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+    @action(detail=True)
+    def epub(self, request, pk=None):
+        queryset = UserArticleLists.objects.filter(
+            user_id=request.user.id,
+        )
+        user_list = get_object_or_404(queryset, pk=pk)
+        serializer = UserArticleListsSerializerFull(user_list)
+        article_list = serializer.data["articles"]
+        full_article_list = []
+        for article_id in article_list:
+            queryset = ArticlesCombined.objects
+            article = get_object_or_404(queryset, pk=article_id)
+            full_article_list.append(article)
+
+        serializer = ArticleSerializerFull(full_article_list, many=True)
+        book = get_epub(serializer.data)
+
+        response = HttpResponse(content_type="application/epub+zip")
+        response["Content-Disposition"] = (
+            f'attachment; filename="list_{user_list.name}.epub"'
+        )
+        epub.write_epub(response, book, {})
+        return response
