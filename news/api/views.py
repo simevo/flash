@@ -467,12 +467,12 @@ class UserArticleListsView(viewsets.ModelViewSet):
         queryset = UserArticleLists.objects.filter(
             user_id=request.user.id,
         )
-        article_list = get_object_or_404(queryset, pk=pk)
-        full_article_list = article_list.articles.all()
-        html = render(request, "list.html", {"list": full_article_list})
+        user_list = get_object_or_404(queryset, pk=pk)
+        article_list = user_list.articles.all()
+        html = render(request, "list.html", {"list": article_list})
         response = HttpResponse(content_type="application/pdf")
         response["Content-Disposition"] = (
-            f'attachment; filename="list_{article_list.name}.pdf"'
+            f'attachment; filename="list_{user_list.name}.pdf"'
         )
         html_content = html.content.decode("utf-8")
         result = BytesIO()
@@ -494,15 +494,9 @@ class UserArticleListsView(viewsets.ModelViewSet):
         user_list = get_object_or_404(queryset, pk=pk)
         serializer = UserArticleListsSerializerFull(user_list)
         article_list = serializer.data["articles"]
-        full_article_list = []
-        for article_id in article_list:
-            queryset = ArticlesCombined.objects
-            article = get_object_or_404(queryset, pk=article_id)
-            full_article_list.append(article)
-
+        full_article_list = ArticlesCombined.objects.filter(id__in=article_list)
         serializer = ArticleSerializerFull(full_article_list, many=True)
         book = get_epub(serializer.data)
-
         response = HttpResponse(content_type="application/epub+zip")
         response["Content-Disposition"] = (
             f'attachment; filename="list_{user_list.name}.epub"'
