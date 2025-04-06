@@ -412,9 +412,27 @@ function window_open(url: string): void {
               />
               {{ list.name }}
               <button
+                v-if="!list.automatic"
                 v-show="list.id == current_list_id"
+                class="btn btn-outline-danger btn-sm ms-3"
+                title="Rimuovi questa lista"
+                @click="removeList(list)"
+              >
+                <img
+                  class="icon"
+                  src="~bootstrap-icons/icons/trash.svg"
+                  alt="view icon"
+                  width="18"
+                  height="18"
+                />
+              </button>
+            </button>
+          </li>
+          <li>
+            <div style="position: absolute; right: 1em" class="btn-group">
+              <button
                 type="button"
-                class="btn btn-outline-primary btn-sm ms-3"
+                class="btn btn-primary ms-3"
                 title="Copia il link al feed RSS di questa lista"
                 @click="copy_link(`https://${host}/api/lists/${current_list_id}/rss/`)"
               >
@@ -425,23 +443,23 @@ function window_open(url: string): void {
                   width="18"
                   height="18"
                 />
+                RSS
               </button>
               <button
                 type="button"
                 id="button-speak"
-                class="btn btn-success btn-sm"
+                class="btn btn-success"
                 title="Leggi ad alta voce tutti gli articoli in questa lista"
-                v-show="list.id == current_list_id"
                 v-if="tts"
                 :disabled="tts_open || articles.length === 0"
                 v-on:click="tts_speak()"
               >
-                <img src="~bootstrap-icons/icons/megaphone.svg" alt="tts icon" />
+                <img src="~bootstrap-icons/icons/megaphone.svg" alt="tts icon" /> Leggi
               </button>
-              <span class="dropdown" role="group" v-show="list.id == current_list_id">
+              <span class="dropdown" role="group">
                 <button
                   id="download_menu"
-                  class="btn btn-outline-warning btn-sm"
+                  class="btn btn-secondary"
                   type="button"
                   data-bs-toggle="dropdown"
                   aria-haspopup="true"
@@ -455,8 +473,8 @@ function window_open(url: string): void {
                     width="18"
                     height="18"
                   />
+                  Scarica
                 </button>
-
                 <span class="dropdown-menu" aria-labelledby="download_menu">
                   <a class="dropdown-item" href="#" tabindex="-1" aria-disabled="true"
                     >Scarica questa lista:</a
@@ -466,7 +484,7 @@ function window_open(url: string): void {
                     href="#"
                     title="Scarica in formato html"
                     role="button"
-                    @click="window_open(`/api/lists/${list.id}/html/`)"
+                    @click="window_open(`/api/lists/${current_list_id}/html/`)"
                   >
                     <img
                       class="icon"
@@ -482,7 +500,7 @@ function window_open(url: string): void {
                     href="#"
                     title="Scarica in formato epub"
                     role="button"
-                    @click="window_open(`/api/lists/${list.id}/epub/`)"
+                    @click="window_open(`/api/lists/${current_list_id}/epub/`)"
                   >
                     <img
                       class="icon"
@@ -498,7 +516,7 @@ function window_open(url: string): void {
                     href="#"
                     title="Scarica in formato pdf"
                     role="button"
-                    @click="window_open(`/api/lists/${list.id}/pdf/`)"
+                    @click="window_open(`/api/lists/${current_list_id}/pdf/`)"
                   >
                     <img
                       class="icon"
@@ -511,22 +529,7 @@ function window_open(url: string): void {
                   </a>
                 </span>
               </span>
-              <button
-                v-if="!list.automatic"
-                v-show="list.id == current_list_id"
-                class="btn btn-outline-danger btn-sm"
-                title="Rimuovi questa lista"
-                @click="removeList(list)"
-              >
-                <img
-                  class="icon"
-                  src="~bootstrap-icons/icons/trash.svg"
-                  alt="view icon"
-                  width="18"
-                  height="18"
-                />
-              </button>
-            </button>
+            </div>
           </li>
         </ul>
         <div class="tab-content my-3" id="myTabContent">
