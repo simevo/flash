@@ -45,6 +45,14 @@
           },
           {
             "in": "query",
+            "name": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Cerca"
+          },
+          {
+            "in": "query",
             "name": "read",
             "schema": {
               "type": "boolean"
@@ -304,6 +312,182 @@
         "responses": {
           "204": {
             "description": "No response body"
+          }
+        }
+      }
+    },
+    "/api/articles/{id}/epub/": {
+      "get": {
+        "operationId": "articles_epub_retrieve",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "integer",
+              "maximum": 2147483647,
+              "minimum": -2147483648
+            },
+            "description": "A unique value identifying this articles combined.",
+            "required": true
+          }
+        ],
+        "tags": ["articles"],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "tokenAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArticleRead"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/articles/{id}/html/": {
+      "get": {
+        "operationId": "articles_html_retrieve",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "integer",
+              "maximum": 2147483647,
+              "minimum": -2147483648
+            },
+            "description": "A unique value identifying this articles combined.",
+            "required": true
+          }
+        ],
+        "tags": ["articles"],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "tokenAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArticleRead"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/articles/{id}/pdf/": {
+      "get": {
+        "operationId": "articles_pdf_retrieve",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "integer",
+              "maximum": 2147483647,
+              "minimum": -2147483648
+            },
+            "description": "A unique value identifying this articles combined.",
+            "required": true
+          }
+        ],
+        "tags": ["articles"],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "tokenAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArticleRead"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/articles/{id}/translate/": {
+      "post": {
+        "operationId": "articles_translate_create",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "integer",
+              "maximum": 2147483647,
+              "minimum": -2147483648
+            },
+            "description": "A unique value identifying this articles combined.",
+            "required": true
+          }
+        ],
+        "tags": ["articles"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Article"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/Article"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Article"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "tokenAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Article"
+                }
+              }
+            },
+            "description": ""
           }
         }
       }
@@ -922,6 +1106,120 @@
           },
           "required": true
         },
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "tokenAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserArticleLists"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/lists/{id}/epub/": {
+      "get": {
+        "operationId": "lists_epub_retrieve",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "A UUID string identifying this user article lists.",
+            "required": true
+          }
+        ],
+        "tags": ["lists"],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "tokenAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserArticleLists"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/lists/{id}/html/": {
+      "get": {
+        "operationId": "lists_html_retrieve",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "A UUID string identifying this user article lists.",
+            "required": true
+          }
+        ],
+        "tags": ["lists"],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "tokenAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserArticleLists"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/lists/{id}/pdf/": {
+      "get": {
+        "operationId": "lists_pdf_retrieve",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "A UUID string identifying this user article lists.",
+            "required": true
+          }
+        ],
+        "tags": ["lists"],
         "security": [
           {
             "cookieAuth": []
@@ -1940,52 +2238,6 @@
             "format": "date-time",
             "nullable": true
           },
-          "incomplete": {
-            "type": "boolean",
-            "nullable": true
-          },
-          "salt_url": {
-            "type": "boolean",
-            "nullable": true
-          },
-          "rating": {
-            "type": "integer",
-            "maximum": 2147483647,
-            "minimum": -2147483648,
-            "nullable": true
-          },
-          "premium": {
-            "type": "boolean",
-            "nullable": true
-          },
-          "cookies": {
-            "type": "string",
-            "nullable": true
-          },
-          "exclude": {
-            "type": "string",
-            "nullable": true
-          },
-          "main": {
-            "type": "string",
-            "nullable": true
-          },
-          "tor": {
-            "type": "boolean",
-            "nullable": true
-          },
-          "asy": {
-            "type": "boolean",
-            "nullable": true
-          },
-          "script": {
-            "type": "string",
-            "nullable": true
-          },
-          "frequency": {
-            "type": "string",
-            "nullable": true
-          },
           "tags": {
             "type": "array",
             "items": {
@@ -2247,52 +2499,6 @@
             "format": "date-time",
             "nullable": true
           },
-          "incomplete": {
-            "type": "boolean",
-            "nullable": true
-          },
-          "salt_url": {
-            "type": "boolean",
-            "nullable": true
-          },
-          "rating": {
-            "type": "integer",
-            "maximum": 2147483647,
-            "minimum": -2147483648,
-            "nullable": true
-          },
-          "premium": {
-            "type": "boolean",
-            "nullable": true
-          },
-          "cookies": {
-            "type": "string",
-            "nullable": true
-          },
-          "exclude": {
-            "type": "string",
-            "nullable": true
-          },
-          "main": {
-            "type": "string",
-            "nullable": true
-          },
-          "tor": {
-            "type": "boolean",
-            "nullable": true
-          },
-          "asy": {
-            "type": "boolean",
-            "nullable": true
-          },
-          "script": {
-            "type": "string",
-            "nullable": true
-          },
-          "frequency": {
-            "type": "string",
-            "nullable": true
-          },
           "tags": {
             "type": "array",
             "items": {
@@ -2437,6 +2643,11 @@
             "type": "string",
             "format": "uri",
             "readOnly": true
+          },
+          "is_staff": {
+            "type": "boolean",
+            "title": "Staff status",
+            "description": "Designates whether the user can log into this admin site."
           }
         }
       },
@@ -2592,6 +2803,11 @@
             "type": "string",
             "format": "uri",
             "readOnly": true
+          },
+          "is_staff": {
+            "type": "boolean",
+            "title": "Staff status",
+            "description": "Designates whether the user can log into this admin site."
           }
         },
         "required": ["url", "username"]

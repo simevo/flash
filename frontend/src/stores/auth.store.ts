@@ -1,14 +1,11 @@
 import { defineStore } from "pinia"
 import { useLocalStorage, type RemovableRef, StorageSerializers } from "@vueuse/core"
-import router from "@/router"
+import type { components } from "../generated/schema.d.ts"
+type PatchedUser = components["schemas"]["PatchedUser"]
 
 const STORE_NAME = "auth"
 
-type User = null | {
-  username: string
-  email: string
-  groups: string[]
-}
+type User = null | PatchedUser
 
 export const useAuthStore = defineStore(STORE_NAME, {
   state: () => {
@@ -19,16 +16,12 @@ export const useAuthStore = defineStore(STORE_NAME, {
     return { user }
   },
   actions: {
-    async login(username: string /*, password: string*/) {
-      this.user = {
-        username: username,
-        email: "pablo@example.com",
-        groups: ["soci", "staff"],
-      }
+    async login(user: User) {
+      this.user = user
     },
     logout() {
       this.user = null
-      router.push("/account/login")
+      document.location = "/accounts/"
     },
   },
 })

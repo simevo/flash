@@ -36,6 +36,70 @@ export interface paths {
     patch: operations["articles_partial_update"]
     trace?: never
   }
+  "/api/articles/{id}/epub/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations["articles_epub_retrieve"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/articles/{id}/html/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations["articles_html_retrieve"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/articles/{id}/pdf/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations["articles_pdf_retrieve"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/articles/{id}/translate/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations["articles_translate_create"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   "/api/auth-token/": {
     parameters: {
       query?: never
@@ -141,6 +205,54 @@ export interface paths {
     }
     get?: never
     put: operations["lists_add_article_update"]
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/lists/{id}/epub/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations["lists_epub_retrieve"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/lists/{id}/html/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations["lists_html_retrieve"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/lists/{id}/pdf/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations["lists_pdf_retrieve"]
+    put?: never
     post?: never
     delete?: never
     options?: never
@@ -384,17 +496,6 @@ export interface components {
       active?: boolean | null
       /** Format: date-time */
       last_polled?: string | null
-      incomplete?: boolean | null
-      salt_url?: boolean | null
-      rating?: number | null
-      premium?: boolean | null
-      cookies?: string | null
-      exclude?: string | null
-      main?: string | null
-      tor?: boolean | null
-      asy?: boolean | null
-      script?: string | null
-      frequency?: string | null
       tags?: string[] | null
       /** Format: double */
       last_polled_epoch?: number | null
@@ -474,17 +575,6 @@ export interface components {
       active?: boolean | null
       /** Format: date-time */
       last_polled?: string | null
-      incomplete?: boolean | null
-      salt_url?: boolean | null
-      rating?: number | null
-      premium?: boolean | null
-      cookies?: string | null
-      exclude?: string | null
-      main?: string | null
-      tor?: boolean | null
-      asy?: boolean | null
-      script?: string | null
-      frequency?: string | null
       tags?: string[] | null
       /** Format: double */
       last_polled_epoch?: number | null
@@ -525,6 +615,11 @@ export interface components {
       name?: string
       /** Format: uri */
       readonly url?: string
+      /**
+       * Staff status
+       * @description Designates whether the user can log into this admin site.
+       */
+      is_staff?: boolean
     }
     PatchedUserArticleLists: {
       /** Format: uuid */
@@ -570,6 +665,11 @@ export interface components {
       name?: string
       /** Format: uri */
       readonly url: string
+      /**
+       * Staff status
+       * @description Designates whether the user can log into this admin site.
+       */
+      is_staff?: boolean
     }
     UserArticleLists: {
       /** Format: uuid */
@@ -607,6 +707,8 @@ export interface operations {
         ids?: number[]
         /** @description A page number within the paginated result set. */
         page?: number
+        /** @description Cerca */
+        query?: string
         /** @description Articoli letti */
         read?: boolean
         search_author?: string
@@ -738,6 +840,100 @@ export interface operations {
         "application/json": components["schemas"]["PatchedArticle"]
         "application/x-www-form-urlencoded": components["schemas"]["PatchedArticle"]
         "multipart/form-data": components["schemas"]["PatchedArticle"]
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["Article"]
+        }
+      }
+    }
+  }
+  articles_epub_retrieve: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        /** @description A unique value identifying this articles combined. */
+        id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ArticleRead"]
+        }
+      }
+    }
+  }
+  articles_html_retrieve: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        /** @description A unique value identifying this articles combined. */
+        id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ArticleRead"]
+        }
+      }
+    }
+  }
+  articles_pdf_retrieve: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        /** @description A unique value identifying this articles combined. */
+        id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ArticleRead"]
+        }
+      }
+    }
+  }
+  articles_translate_create: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        /** @description A unique value identifying this articles combined. */
+        id: number
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["Article"]
+        "application/x-www-form-urlencoded": components["schemas"]["Article"]
+        "multipart/form-data": components["schemas"]["Article"]
       }
     }
     responses: {
@@ -1098,6 +1294,72 @@ export interface operations {
         "multipart/form-data": components["schemas"]["UserArticleLists"]
       }
     }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["UserArticleLists"]
+        }
+      }
+    }
+  }
+  lists_epub_retrieve: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        /** @description A UUID string identifying this user article lists. */
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["UserArticleLists"]
+        }
+      }
+    }
+  }
+  lists_html_retrieve: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        /** @description A UUID string identifying this user article lists. */
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["UserArticleLists"]
+        }
+      }
+    }
+  }
+  lists_pdf_retrieve: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        /** @description A UUID string identifying this user article lists. */
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
     responses: {
       200: {
         headers: {

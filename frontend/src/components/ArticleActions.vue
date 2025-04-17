@@ -3,6 +3,9 @@ import { computed, inject, onMounted, type Ref, ref } from "vue"
 import { copy_link, fetch_wrapper } from "../utils"
 import type { components } from "../generated/schema.js"
 import { useProfileStore } from "../stores/profile.store"
+import { useAuthStore } from "../stores/auth.store"
+
+const auth = useAuthStore()
 
 type Article = components["schemas"]["ArticleSerializerFull"]
 type UserArticleListsSerializerFull = components["schemas"]["UserArticleListsSerializerFull"]
@@ -340,7 +343,7 @@ function window_open(url: string): void {
           <img
             class="icon"
             src="~bootstrap-icons/icons/telegram.svg"
-            alt="linkedin icon"
+            alt="telegram icon"
             width="18"
             height="18"
           />
@@ -356,7 +359,7 @@ function window_open(url: string): void {
           <img
             class="icon"
             src="~bootstrap-icons/icons/twitter.svg"
-            alt="linkedin icon"
+            alt="twitter icon"
             width="18"
             height="18"
           />
@@ -372,7 +375,7 @@ function window_open(url: string): void {
           <img
             class="icon"
             src="~bootstrap-icons/icons/whatsapp.svg"
-            alt="linkedin icon"
+            alt="whatsapp icon"
             width="18"
             height="18"
           />
@@ -464,11 +467,28 @@ function window_open(url: string): void {
       <img
         class="icon"
         src="~bootstrap-icons/icons/globe.svg"
-        alt="linkedin icon"
+        alt="globe icon"
         width="18"
         height="18"
       />
     </button>
+    <RouterLink
+      id="edit"
+      class="btn btn-outline-danger btn-sm"
+      title="Modifica l'articolo (funzione riservata agli utenti di staff)"
+      role="button"
+      type="button"
+      :to="`../edit_article/${article.id}`"
+      v-if="auth.user?.is_staff"
+    >
+      <img
+        class="icon"
+        src="~bootstrap-icons/icons/pencil.svg"
+        alt="pencil icon"
+        width="18"
+        height="18"
+      />
+    </RouterLink>
   </div>
 </template>
 <style>

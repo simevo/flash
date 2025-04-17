@@ -1,5 +1,33 @@
 <script setup lang="ts">
 import { RouterLink, RouterView } from "vue-router"
+import { fetch_wrapper } from "./utils"
+import type { components } from "./generated/schema.d.ts"
+type PatchedUser = components["schemas"]["PatchedUser"]
+import { useAuthStore } from "./stores/auth.store"
+import { onMounted } from "vue"
+
+const auth = useAuthStore()
+
+async function fetchUser() {
+  const url = `/api/users/me/`
+  const response = await fetch_wrapper(url)
+  if (response.status == 403) {
+    document.location = "/accounts/"
+  } else {
+    const user: PatchedUser = await response.json()
+    auth.login(user)
+  }
+}
+
+onMounted(() => {
+  console.log("App mounted")
+  fetchUser()
+})
+
+function logout() {
+  auth.logout()
+  document.location = "/accounts/logout/"
+}
 </script>
 
 <template>
@@ -118,15 +146,31 @@ import { RouterLink, RouterView } from "vue-router"
               />Info
             </a>
           </li>
+          <li class="nav-item" v-if="auth.user?.is_staff">
+            <a
+              href="/admin"
+              class="btn btn-danger nav-link me-2"
+              title="Pannello di amministrazione del sito (funzione riservata agli utenti di staff)"
+            >
+              <img
+                class="inverted-icon icon me-2"
+                src="~bootstrap-icons/icons/lock.svg"
+                alt="view icon"
+                width="18"
+                height="18"
+              />Admin
+            </a>
+          </li>
         </ul>
         <ul class="navbar-nav ms-auto mb-2 mb-md-0">
           <li class="nav-item">
             <a
-              href="/accounts/logout/"
+              href="#"
               class="btn btn-primary nav-link me-2"
               title="Esci dall'aggregatore"
               role="button"
               type="button"
+              @click="logout()"
             >
               <img
                 class="inverted-icon icon me-2"
@@ -134,7 +178,7 @@ import { RouterLink, RouterView } from "vue-router"
                 alt="view icon"
                 width="18"
                 height="18"
-              />Esci
+              />Disconnetti [{{ auth.user?.username }}]
             </a>
           </li>
         </ul>
