@@ -465,10 +465,12 @@ function sanitize(doc: Document) {
   for (i = 0; i < blacklist.length; i++) {
     const tag = blacklist[i]
     const elements = doc.getElementsByTagName(tag)
-    let j
-    for (j = 0; j < elements.length; j++) {
-      const e = elements[j]
-      e.remove()
+    if (elements.length > 0) {
+      console.log(`sanitizing tag <${tag}>, found ${elements.length} occurrences`)
+      let index
+      for (index = elements.length - 1; index >= 0; index--) {
+        elements[index].parentNode?.removeChild(elements[index])
+      }
     }
   }
 }
