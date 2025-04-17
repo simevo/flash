@@ -1,7 +1,7 @@
 ARG APP_BASE_IMAGE=deps-backend-base
 
 # define an alias for the specific python version used in this file.
-FROM docker.io/python:3.12.8-slim-bookworm AS python
+FROM docker.io/python:3.12.10-slim-bookworm AS python
 
 # Python build stage
 FROM python as deps-backend-base
