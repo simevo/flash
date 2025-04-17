@@ -1,5 +1,5 @@
 <template>
-  <div class="container my-3" v-if="count_fetch == 0">
+  <div class="container my-3 overflow-hidden" v-if="count_fetch == 0">
     <div class="row my-3" v-if="article == null">
       <div class="col-md-12">
         <div class="alert alert-danger text-center" role="alert">Articolo non trovato.</div>
