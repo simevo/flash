@@ -3,6 +3,7 @@ import re
 
 import requests
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import F
 from django.http import HttpResponse
 from django.shortcuts import redirect
 from django.views import View
@@ -10,6 +11,7 @@ from django.views.generic import ListView
 from django.views.generic.detail import DetailView
 
 from news.models import Articles
+from news.models import GuestArticles
 
 
 class ArticleListView(ListView):
@@ -37,6 +39,12 @@ class ArticleDetailView(DetailView):
             return redirect(url)
         if request.GET.get("redirect"):
             article = context["object"]
+            if GuestArticles.objects.filter(article_id=article.id).exists():
+                GuestArticles.objects.filter(article_id=article.id).update(
+                    views=F("views") + 1,
+                )
+            else:
+                GuestArticles.objects.create(article_id=article.id, views=1)
             url = article.url
             return redirect(url)
         return self.render_to_response(context)

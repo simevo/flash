@@ -25,6 +25,15 @@ class Articles(models.Model):
         return f"{self.id}"
 
 
+class GuestArticles(models.Model):
+    id = models.AutoField(primary_key=True)
+    article = models.OneToOneField(Articles, models.CASCADE)
+    views = models.BigIntegerField()
+
+    def __str__(self):
+        return f"{self.id}"
+
+
 class ArticlesData(models.Model):
     id = models.OneToOneField(
         "Articles",
