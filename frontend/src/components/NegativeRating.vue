@@ -28,9 +28,10 @@
 import { fetch_wrapper } from "../utils"
 import type { components } from "../generated/schema.d.ts"
 type Feed = components["schemas"]["Feed"]
+type PatchedFeed = Feed & { my_rating: number }
 
 const props = defineProps<{
-  item: Feed
+  item: PatchedFeed
   threshold: number
   endpoint: string
   readonly: boolean
@@ -41,14 +42,13 @@ const emit = defineEmits<{
   (e: "updating", status: boolean): void
 }>()
 
-function set(item: Feed, rating: number, endpoint: string) {
+function set(item: PatchedFeed, rating: number, endpoint: string) {
   if (props.readonly) {
     return
   }
   if (item.my_rating == rating) {
     rating = 0
   }
-  // @ts-expect-error we override my_rating
   item.my_rating = rating
 
   emit("updating", true)

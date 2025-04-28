@@ -19,7 +19,7 @@
             type="text"
             class="form-control mb-3"
             v-model="search"
-            placeholder="Cerca..."
+            placeholder="Cerca per parola..."
             aria-label="Cerca"
             title="Cerca"
           />
@@ -31,6 +31,28 @@
             aria-label="Cancella"
             :disabled="search == ''"
             @click="resetSearch()"
+          ></button>
+        </div>
+        <div class="mb-3">
+          <span
+            v-for="[tag, value] of Object.entries(tags)"
+            :key="tag"
+            class="badge text-bg-secondary m-1 p-2"
+          >
+            <input
+              type="checkbox"
+              :checked="value"
+              @input="(event) => (tags[<tag_keys>tag] = !value)"
+            />
+            {{ tag }}
+          </span>
+          <button
+            type="button"
+            class="btn-close"
+            style="float: right; margin-right: 8px"
+            aria-label="ripristina"
+            title="ripistina selezione dei tag"
+            @click="resetTags()"
           ></button>
         </div>
         <div v-if="filtered_feeds.length == 0">
@@ -61,10 +83,43 @@ import type { components } from "../generated/schema.d.ts"
 import FeedCard from "../components/FeedCard.vue"
 
 type Feed = components["schemas"]["Feed"]
+type PatchedFeed = Feed & { my_rating: number }
+type UserFeed = components["schemas"]["UserFeed"]
 
-const feeds: Ref<Feed[]> = ref([])
+const feeds: Ref<PatchedFeed[]> = ref([])
 const language = ref("all")
 const search = ref("")
+
+type tag_keys =
+  | "cultura"
+  | "società"
+  | "italia"
+  | "estero"
+  | "scienza_tecnica"
+  | "sport"
+  | "economia"
+  | "blog"
+  | "notiziario"
+  | "rivista"
+
+const tags = ref({
+  cultura: true,
+  società: true,
+  italia: true,
+  estero: true,
+  scienza_tecnica: true,
+  sport: true,
+  economia: true,
+  blog: true,
+  notiziario: true,
+  rivista: true,
+})
+
+function resetTags() {
+  Object.keys(tags.value).forEach((tag) => {
+    tags.value[<tag_keys>tag] = true
+  })
+}
 
 const languages: { [key: string]: string } = {
   ar: "Arabo",
@@ -84,8 +139,14 @@ async function fetchFeeds() {
   if (response.status == 403) {
     document.location = "/accounts/"
   } else {
+    const response2 = await fetch_wrapper(`../../api/user-feeds/`)
+    const ufs: UserFeed[] = await response2.json()
+    const ufd: { [key: number]: number | undefined } = {}
+    ufs.forEach((element) => {
+      ufd[element.feed_id] = element.rating
+    })
     const data: Feed[] = await response.json()
-    feeds.value = data
+    feeds.value = data.map((value) => <PatchedFeed>{ ...value, my_rating: ufd[value.id] })
   }
 }
 
@@ -96,18 +157,29 @@ const filtered_feeds = computed(() => {
       : feeds.value.filter((feed) => {
           return feed.language === language.value
         })
+  const fff = ff.filter((feed) => {
+    if (feed.tags) {
+      return !feed.tags.some((tag) => {
+        if (!tags.value[<tag_keys>tag]) {
+          return true
+        }
+      })
+    } else {
+      return true
+    }
+  })
   const search_value = search.value.toLowerCase()
   if (search_value) {
     const regex =
       /[^\p{Alphabetic}\p{Mark}\p{Decimal_Number}\p{Connector_Punctuation}\p{Join_Control} ]/gu
     const sanitized = search_value.replace(regex, "")
     const trimmed = sanitized.replace(/\s/g, "")
-    return ff.filter((feed) => {
+    return fff.filter((feed) => {
       const text = feed.title + " " + feed.url
       return text.toLowerCase().includes(trimmed)
     })
   } else {
-    return ff
+    return fff
   }
 })
 
