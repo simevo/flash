@@ -4,9 +4,10 @@ import RatingToolbar from "./RatingToolbar.vue"
 
 import type { components } from "../generated/schema.d.ts"
 type Feed = components["schemas"]["Feed"]
+type PatchedFeed = Feed & { my_rating: number }
 
 defineProps<{
-  feed: Feed
+  feed: PatchedFeed
 }>()
 </script>
 

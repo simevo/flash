@@ -1593,8 +1593,7 @@
                 "$ref": "#/components/schemas/UserFeed"
               }
             }
-          },
-          "required": true
+          }
         },
         "security": [
           {
@@ -1685,8 +1684,7 @@
                 "$ref": "#/components/schemas/UserFeed"
               }
             }
-          },
-          "required": true
+          }
         },
         "security": [
           {
@@ -2206,10 +2204,6 @@
             "maximum": 2147483647,
             "minimum": -2147483648
           },
-          "my_rating": {
-            "type": "number",
-            "readOnly": true
-          },
           "homepage": {
             "type": "string"
           },
@@ -2264,7 +2258,7 @@
             "nullable": true
           }
         },
-        "required": ["homepage", "icon", "id", "language", "my_rating", "title", "url"]
+        "required": ["homepage", "icon", "id", "language", "title", "url"]
       },
       "FeedSerializerSimple": {
         "type": "object",
@@ -2467,10 +2461,6 @@
             "maximum": 2147483647,
             "minimum": -2147483648
           },
-          "my_rating": {
-            "type": "number",
-            "readOnly": true
-          },
           "homepage": {
             "type": "string"
           },
@@ -2670,13 +2660,11 @@
       "PatchedUserFeed": {
         "type": "object",
         "properties": {
-          "feed": {
+          "feed_id": {
             "type": "integer",
             "maximum": 2147483647,
-            "minimum": -2147483648
-          },
-          "user": {
-            "type": "integer"
+            "minimum": -2147483648,
+            "readOnly": true
           },
           "rating": {
             "type": "integer",
@@ -2859,13 +2847,11 @@
       "UserFeed": {
         "type": "object",
         "properties": {
-          "feed": {
+          "feed_id": {
             "type": "integer",
             "maximum": 2147483647,
-            "minimum": -2147483648
-          },
-          "user": {
-            "type": "integer"
+            "minimum": -2147483648,
+            "readOnly": true
           },
           "rating": {
             "type": "integer",
@@ -2873,7 +2859,7 @@
             "minimum": -2147483648
           }
         },
-        "required": ["feed", "user"]
+        "required": ["feed_id"]
       }
     },
     "securitySchemes": {

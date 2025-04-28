@@ -486,7 +486,6 @@ export interface components {
     }
     Feed: {
       id: number
-      readonly my_rating: number
       homepage: string
       url: string
       language: string
@@ -565,7 +564,6 @@ export interface components {
     }
     PatchedFeed: {
       id?: number
-      readonly my_rating?: number
       homepage?: string
       url?: string
       language?: string
@@ -628,8 +626,7 @@ export interface components {
       automatic?: boolean
     }
     PatchedUserFeed: {
-      feed?: number
-      user?: number
+      readonly feed_id?: number
       rating?: number
     }
     Profile: {
@@ -686,8 +683,7 @@ export interface components {
       readonly articles: number[]
     }
     UserFeed: {
-      feed: number
-      user: number
+      readonly feed_id: number
       rating?: number
     }
   }
@@ -1567,7 +1563,7 @@ export interface operations {
       path?: never
       cookie?: never
     }
-    requestBody: {
+    requestBody?: {
       content: {
         "application/json": components["schemas"]["UserFeed"]
         "application/x-www-form-urlencoded": components["schemas"]["UserFeed"]
@@ -1617,7 +1613,7 @@ export interface operations {
       }
       cookie?: never
     }
-    requestBody: {
+    requestBody?: {
       content: {
         "application/json": components["schemas"]["UserFeed"]
         "application/x-www-form-urlencoded": components["schemas"]["UserFeed"]

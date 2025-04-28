@@ -61,8 +61,10 @@ import type { components } from "../generated/schema.d.ts"
 import FeedCard from "../components/FeedCard.vue"
 
 type Feed = components["schemas"]["Feed"]
+type PatchedFeed = Feed & { my_rating: number }
+type UserFeed = components["schemas"]["UserFeed"]
 
-const feeds: Ref<Feed[]> = ref([])
+const feeds: Ref<PatchedFeed[]> = ref([])
 const language = ref("all")
 const search = ref("")
 
@@ -84,8 +86,14 @@ async function fetchFeeds() {
   if (response.status == 403) {
     document.location = "/accounts/"
   } else {
+    const response2 = await fetch_wrapper(`../../api/user-feeds/`)
+    const ufs: UserFeed[] = await response2.json()
+    const ufd: { [key: number]: number | undefined } = {}
+    ufs.forEach((element) => {
+      ufd[element.feed_id] = element.rating
+    })
     const data: Feed[] = await response.json()
-    feeds.value = data
+    feeds.value = data.map((value) => <PatchedFeed>{ ...value, my_rating: ufd[value.id] })
   }
 }
 
