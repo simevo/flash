@@ -118,7 +118,7 @@ async function removeArticleFromList(list_id: string): Promise<void> {
           <img
             class="icon"
             src="~bootstrap-icons/icons/clock.svg"
-            alt="view icon"
+            alt="clock icon"
             width="18"
             height="18"
           />
@@ -134,7 +134,7 @@ async function removeArticleFromList(list_id: string): Promise<void> {
           <img
             class="icon"
             src="~bootstrap-icons/icons/trash.svg"
-            alt="view icon"
+            alt="trash icon"
             width="18"
             height="18"
           />

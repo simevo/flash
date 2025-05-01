@@ -42,7 +42,7 @@
         ><img
           class="icon me-2"
           src="~bootstrap-icons/icons/heart-fill.svg"
-          alt="view icon"
+          alt="filled heart icon"
           width="18"
           height="18"
         /><b>Salvati</b></RouterLink

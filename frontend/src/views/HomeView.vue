@@ -225,7 +225,7 @@ watch(
       v-if="not_filtering"
       class="icon"
       src="~bootstrap-icons/icons/funnel.svg"
-      alt="view icon"
+      alt="funnel icon"
       width="18"
       height="18"
     />
@@ -233,7 +233,7 @@ watch(
       v-else
       class="icon"
       src="~bootstrap-icons/icons/funnel-fill.svg"
-      alt="view icon"
+      alt="filled funnel icon"
       width="18"
       height="18"
     />
