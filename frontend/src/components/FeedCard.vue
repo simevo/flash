@@ -13,7 +13,7 @@ defineProps<{
 </script>
 
 <template>
-  <div class="card mb-3" :id="'feed_' + feed.id">
+  <div class="card mb-3" :id="'feed_' + feed.id" :class="feed.active ? '' : 'bg-dark-subtle'">
     <div class="row g-0">
       <div class="col-md-1 p-2 text-center align-center">
         <RouterLink
