@@ -355,6 +355,14 @@
               >
                 Salva
               </button>
+              <router-link
+                class="btn btn-secondary"
+                :to="'/feed/' + encodeURIComponent(feed.id)"
+                aria-label="Apri la fonte"
+                title="Apri la fonte"
+              >
+                Apri
+              </router-link>
             </div>
           </div>
         </form>
