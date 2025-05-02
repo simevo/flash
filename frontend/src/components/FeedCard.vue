@@ -45,7 +45,10 @@ defineProps<{
             :style="{ cursor: clickable ? 'pointer' : '' }"
           >
             <h5 class="card-title">{{ feed.title }} ({{ feed.article_count }} articoli)</h5>
-            <span class="card-text text-decoration-underline">{{ feed.homepage }}</span>
+            <span v-if="clickable" class="card-text text-decoration-underline">{{
+              feed.homepage
+            }}</span>
+            <a v-else :href="feed.homepage" target="_blank">{{ feed.homepage }}</a>
           </component>
           <RouterLink
             id="edit"
