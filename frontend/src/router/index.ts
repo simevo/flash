@@ -85,6 +85,12 @@ const router = createRouter({
       meta: { requiresAdmin: true },
     },
     {
+      path: "/new_feed/",
+      name: "new_feed",
+      component: () => import("../views/NewFeed.vue"),
+      meta: { requiresAdmin: true },
+    },
+    {
       path: "/author/:author",
       name: "author",
       props: true,

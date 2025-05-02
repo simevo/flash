@@ -1,5 +1,5 @@
 CREATE TABLE feeds (
-    id integer NOT NULL PRIMARY KEY,
+    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     homepage text NOT NULL,
     url text NOT NULL,
     language text NOT NULL,

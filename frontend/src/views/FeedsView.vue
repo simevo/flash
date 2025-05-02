@@ -2,7 +2,26 @@
   <div class="container" v-if="feeds.length > 0">
     <div class="row my-3">
       <div class="col-md-12">
-        <h1>Fonti</h1>
+        <h1>
+          Fonti
+          <RouterLink
+            class="btn btn-danger float-end"
+            title="Crea una nuova fonte (funzione riservata agli utenti di staff)"
+            role="button"
+            type="button"
+            to="../new_feed/"
+            v-if="auth.user?.is_staff"
+          >
+            <img
+              class="icon"
+              src="~bootstrap-icons/icons/plus.svg"
+              alt="pencil icon"
+              width="18"
+              height="18"
+            />
+            Nuova fonte
+          </RouterLink>
+        </h1>
         <select
           v-model="language"
           class="form-select mb-3"
@@ -27,7 +46,6 @@
             type="button"
             class="btn-close position-absolute"
             style="right: 0.5em; top: 0.5em"
-            data-bs-dismiss="alert"
             aria-label="Cancella"
             :disabled="search == ''"
             @click="resetSearch()"
@@ -120,8 +138,11 @@
 <script setup lang="ts">
 import { fetch_wrapper } from "../utils"
 import { ref, onMounted, type Ref, computed } from "vue"
-import type { components } from "../generated/schema.d.ts"
 
+import { useAuthStore } from "../stores/auth.store"
+const auth = useAuthStore()
+
+import type { components } from "../generated/schema.d.ts"
 import FeedCard from "../components/FeedCard.vue"
 
 type Feed = components["schemas"]["Feed"]

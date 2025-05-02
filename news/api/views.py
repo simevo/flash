@@ -28,6 +28,7 @@ import news.translate
 from news.api.serializers import ArticleReadSerializer
 from news.api.serializers import ArticleSerializer
 from news.api.serializers import ArticleSerializerFull
+from news.api.serializers import FeedCreateSerializer
 from news.api.serializers import FeedSerializer
 from news.api.serializers import FeedSerializerSimple
 from news.api.serializers import ProfileSerializer
@@ -332,6 +333,13 @@ class FeedsView(
             "last_polled_epoch",
             "article_count",
             "average_time_from_last_post",
+            "incomplete",
+            "salt_url",
+            "cookies",
+            "exclude",
+            "main",
+            "script",
+            "frequency",
         )
     )
     serializer_class = FeedSerializer
@@ -353,6 +361,20 @@ class FeedsView(
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
         return Response(serializer.data)
+
+    @extend_schema(
+        responses={201: FeedCreateSerializer},
+    )
+    def create(self, request, *args, **kwargs):
+        serializer = FeedCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        headers = self.get_success_headers(serializer.data)
+        return Response(
+            serializer.data,
+            status=status.HTTP_201_CREATED,
+            headers=headers,
+        )
 
 
 class ProfileView(

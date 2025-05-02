@@ -22,18 +22,17 @@ class FeedSerializer(serializers.ModelSerializer):
         model = FeedsCombined
         exclude = [
             "iconblob",
-            "incomplete",
-            "salt_url",
             "rating",
             "premium",
-            "cookies",
-            "exclude",
-            "main",
             "tor",
             "asy",
-            "script",
-            "frequency",
         ]
+
+
+class FeedCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Feeds
+        fields = "__all__"
 
 
 class ArticleSerializer(serializers.ModelSerializer):

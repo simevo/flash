@@ -56,8 +56,7 @@ class ArticlesData(models.Model):
 
 
 class ArticlesCombined(models.Model):
-    id = models.IntegerField(primary_key=True)
-
+    id = models.BigIntegerField(primary_key=True)
     stamp = models.DateTimeField()
     author = models.TextField(blank=True, null=True)  # noqa: DJ001
     title_original = models.TextField(blank=True, null=True)  # noqa: DJ001
@@ -82,7 +81,6 @@ class ArticlesCombined(models.Model):
 
 
 class Feeds(models.Model):
-    id = models.IntegerField(primary_key=True)
     homepage = models.TextField()
     url = models.TextField(unique=True)
     language = models.TextField()

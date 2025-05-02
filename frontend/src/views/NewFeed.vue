@@ -1,8 +1,8 @@
 <template>
-  <div class="container-fluid my-3" v-if="count_fetch == 0">
+  <div class="container-fluid my-3">
     <div class="row">
       <div class="col-md-10 offset-md-1">
-        <h1 id="page-top" class="text-center">Modifica la fonte</h1>
+        <h1 id="page-top" class="text-center">Crea una nuova fonte</h1>
       </div>
     </div>
     <div class="row" v-if="feed">
@@ -24,6 +24,7 @@
                 name="titolo"
                 placeholder="titolo"
                 v-model="feed.title"
+                :class="{ 'is-invalid': errors['title'] }"
               />
               <button
                 type="button"
@@ -34,6 +35,7 @@
                 :disabled="!feed.title"
               ></button>
             </div>
+            <p class="text-danger" v-if="errors['title']">{{ errors["title"] }}</p>
           </div>
           <div class="form-group my-3">
             <label for="homepage">Homepage</label>
@@ -49,6 +51,7 @@
                 name="homepage"
                 placeholder="homepage"
                 v-model="feed.homepage"
+                :class="{ 'is-invalid': errors['homepage'] }"
               />
               <button
                 type="button"
@@ -81,6 +84,7 @@
                 Apri Homepage
               </button>
             </div>
+            <p class="text-danger" v-if="errors['homepage']">{{ errors["homepage"] }}</p>
           </div>
           <div class="form-group my-3">
             <label for="url">Url del feed RSS</label>
@@ -96,6 +100,7 @@
                 name="url"
                 placeholder="url"
                 v-model="feed.url"
+                :class="{ 'is-invalid': errors['url'] }"
               />
               <button
                 type="button"
@@ -128,6 +133,7 @@
                 Apri URL
               </button>
             </div>
+            <p class="text-danger" v-if="errors['url']">{{ errors["url"] }}</p>
           </div>
           <div class="form-group my-3">
             <label for="language">Lingua</label>
@@ -145,15 +151,6 @@
             </select>
           </div>
           <div class="form-group my-3">
-            <label for="active" class="form-check-label">Attiva</label>
-            <input
-              id="active"
-              class="form-check-input float-end"
-              type="checkbox"
-              v-model="feed.active"
-            />
-          </div>
-          <div class="form-group my-3">
             <label for="license">Licenza</label>
             <div class="input-group position-relative d-inline-flex align-items-center">
               <input
@@ -168,6 +165,7 @@
                 name="licenza"
                 placeholder="licenza"
                 v-model="feed.license"
+                :class="{ 'is-invalid': errors['license'] }"
               />
               <button
                 type="button"
@@ -177,6 +175,7 @@
                 @click="resetLicense()"
               ></button>
             </div>
+            <p class="text-danger" v-if="errors['license']">{{ errors["license"] }}</p>
           </div>
           <div class="form-group my-3">
             <label for="icon">Tags:</label>
@@ -343,28 +342,30 @@
               </div>
             </div>
           </div>
-
           <div class="text-center mt-3">
             <div class="btn-group" role="group" aria-label="Azioni">
               <button
-                @click="save()"
+                @click="send()"
                 type="button"
                 class="btn btn-primary"
-                aria-label="Salva la fonte"
-                title="Salva la fonte"
+                aria-label="Crea la fonte"
+                title="Crea la fonte"
+                :disabled="errors_any"
               >
-                Salva
+                Crea
+              </button>
+              <button
+                @click="clean()"
+                type="button"
+                class="btn btn-secondary"
+                aria-label="Pulisci tutti i campi"
+                title="Pulisci tutti i campi"
+              >
+                Azzera
               </button>
             </div>
           </div>
         </form>
-      </div>
-    </div>
-    <div class="row" v-else>
-      <div class="text-center col-md-8 offset-md-2">
-        <div class="spinner-border text-primary" role="status">
-          <span class="visually-hidden">Loading...</span>
-        </div>
       </div>
     </div>
   </div>
@@ -372,24 +373,45 @@
 
 <script setup lang="ts">
 import { fetch_wrapper } from "../utils"
-import { onActivated, watch } from "vue"
-import { useRoute } from "vue-router"
+import { computed } from "vue"
 import { ref, onMounted, type Ref } from "vue"
 
 import type { components } from "../generated/schema.d.ts"
-type Feed = components["schemas"]["Feed"]
+type FeedCreate = components["schemas"]["FeedCreate"]
+type FeedCreatePatched = Pick<
+  FeedCreate,
+  | "homepage"
+  | "url"
+  | "language"
+  | "title"
+  | "license"
+  | "icon"
+  | "active"
+  | "tags"
+  | "exclude"
+  | "main"
+  | "script"
+  | "frequency"
+  | "cookies"
+  | "incomplete"
+  | "salt_url"
+>
 
-const feed: Ref<Feed | null> = ref(null)
-const count_fetch = ref(1)
+const feed: Ref<FeedCreatePatched> = ref({
+  homepage: "",
+  url: "",
+  language: "en",
+  title: "",
+  license: "",
+  icon: "static/icons/unknown.png",
+  active: true,
+  tags: [],
 
-const route = useRoute()
-
-export interface Props {
-  feed_id: string
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  feed_id: "",
+  exclude: "",
+  main: "",
+  script: "",
+  frequency: "",
+  cookies: "",
 })
 
 type tag_keys =
@@ -417,48 +439,18 @@ const tags = ref({
   rivista: false,
 })
 
-async function fetchFeed() {
-  const response = await fetch_wrapper(`../../api/feeds/${props.feed_id}`)
-  if (response.status == 403) {
-    document.location = "/accounts/"
-  } else {
-    const data: Feed = await response.json()
-    feed.value = data
-    resetTags()
-    feed.value.tags?.forEach((tag) => {
-      tags.value[<tag_keys>tag] = true
-    })
-    count_fetch.value -= 1
-  }
-}
-
 onMounted(() => {
-  console.log("FeedEdit mounted")
-  fetchFeed()
+  console.log("NewFeed mounted")
 })
 
-onActivated(() => {
-  console.log("FeedEdit activated")
-})
-
-watch(
-  () => route.params.feed_id,
-  async (newId, oldId) => {
-    console.log(`FeedEdit watch id, newId = [${newId}] oldId = [${oldId}]`)
-    if (newId && newId != oldId) {
-      count_fetch.value += 1
-      await fetchFeed()
-    }
-  },
-)
-
-async function save() {
-  if (!feed.value) return
-  const id = feed.value.id
+async function send() {
+  if (errors_any.value) {
+    return
+  }
   const data = { ...feed.value }
   data.tags = Object.keys(tags.value).filter((v) => tags.value[<tag_keys>v])
-  fetch_wrapper(`/api/feeds/${id}/`, {
-    method: "PUT",
+  fetch_wrapper(`/api/feeds/`, {
+    method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
@@ -467,9 +459,12 @@ async function save() {
     .then((response) => {
       if (response.status == 403) {
         document.location = "/accounts/"
-      } else if (response.status == 200) {
-        alert("Fonte modificata con successo")
-        document.location = "/res/feed/" + id
+      } else if (response.status == 201) {
+        alert("Fonte aggiunta con successo")
+        clean()
+        response.json().then((data) => {
+          document.location = "/res/feed/" + data.id
+        })
       } else {
         response.json().then((data) => {
           alert("Errore: " + response.statusText + "; " + JSON.stringify(data))
@@ -506,4 +501,35 @@ function resetTags() {
 function resetIcon() {
   if (feed.value) feed.value.icon = "static/icons/unknown.png"
 }
+
+function clean() {
+  resetUrl()
+  resetTitle()
+  resetHomepage()
+  resetLicense()
+  resetTags()
+  resetIcon()
+}
+
+function isValidUrl(url: string): boolean {
+  try {
+    new URL(url)
+    return true
+  } catch {
+    return false
+  }
+}
+
+const errors = computed(() => {
+  return {
+    title: feed.value.title ? "" : "Campo obbligatorio",
+    url: isValidUrl(feed.value.url) ? "" : "Inserisci un RSS URL valido",
+    license: feed.value.license ? "" : "Campo obbligatorio",
+    homepage: isValidUrl(feed.value.homepage) ? "" : "Inserisci un homepage URL valido",
+  }
+})
+
+const errors_any = computed(() => {
+  return Object.values(errors.value).some((e) => e)
+})
 </script>
