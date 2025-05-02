@@ -30,7 +30,7 @@ import NegativeRating from "./NegativeRating.vue"
 import type { components } from "../generated/schema.d.ts"
 import { ref } from "vue"
 type Feed = components["schemas"]["Feed"]
-type PatchedFeed = Feed & { my_rating: number }
+type PatchedFeed = Feed & { my_rating: number | undefined }
 
 const updating = ref(false)
 

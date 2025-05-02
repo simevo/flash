@@ -87,6 +87,7 @@
             <option value="article_count">Numero articoli</option>
             <option value="average_time_from_last_post">Frequenza di pubblicazione</option>
             <option value="active">Attivo</option>
+            <option value="my_rating">Voto</option>
           </select>
           <img
             v-if="sort_ascending"
@@ -146,7 +147,7 @@ import type { components } from "../generated/schema.d.ts"
 import FeedCard from "../components/FeedCard.vue"
 
 type Feed = components["schemas"]["Feed"]
-type PatchedFeed = Feed & { my_rating: number }
+type PatchedFeed = Feed & { my_rating: number | undefined }
 type UserFeed = components["schemas"]["UserFeed"]
 
 const feeds: Ref<PatchedFeed[]> = ref([])
@@ -254,6 +255,7 @@ type Sortable =
   | "last_polled_epoch"
   | "title"
   | "url"
+  | "my_rating"
 
 const sort_by: Ref<Sortable> = ref("id")
 const sort_ascending = ref(true)
@@ -265,12 +267,16 @@ function toggle_sort() {
 const sorted_feeds = computed(() => {
   return [...filtered_feeds.value].sort((a: PatchedFeed, b: PatchedFeed) => {
     if (
-      ["id", "last_polled_epoch", "article_count", "average_time_from_last_post"].indexOf(
-        sort_by.value,
-      ) != -1
+      [
+        "id",
+        "last_polled_epoch",
+        "article_count",
+        "average_time_from_last_post",
+        "my_rating",
+      ].indexOf(sort_by.value) != -1
     ) {
-      const av = <number>a[sort_by.value]
-      const bv = <number>b[sort_by.value]
+      const av = <number>(a[sort_by.value] || 0)
+      const bv = <number>(b[sort_by.value] || 0)
       return (sort_ascending.value ? 1 : -1) * (av - bv)
     } else if (sort_by.value === "active") {
       const av = <boolean>a[sort_by.value]

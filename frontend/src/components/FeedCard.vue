@@ -8,7 +8,7 @@ const auth = useAuthStore()
 
 import type { components } from "../generated/schema.d.ts"
 type Feed = components["schemas"]["Feed"]
-type PatchedFeed = Feed & { my_rating: number }
+type PatchedFeed = Feed & { my_rating: number | undefined }
 
 defineProps<{
   feed: PatchedFeed
