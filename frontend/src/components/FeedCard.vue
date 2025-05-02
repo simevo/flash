@@ -52,8 +52,9 @@ defineProps<{
           </component>
           <RouterLink
             id="edit"
-            class="btn btn-outline-danger float-end"
+            class="btn btn-outline-danger position-absolute"
             title="Modifica la fonte (funzione riservata agli utenti di staff)"
+            style="top: 1em; right: 1em"
             role="button"
             type="button"
             :to="`../edit_feed/${feed.id}`"
