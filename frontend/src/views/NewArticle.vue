@@ -93,7 +93,6 @@
                   type="button"
                   class="btn-close position-absolute"
                   style="right: 0.5em"
-                  data-bs-dismiss="alert"
                   aria-label="Cancella"
                   @click="resetTitle()"
                 ></button>
@@ -123,7 +122,6 @@
                   type="button"
                   class="btn-close position-absolute"
                   style="right: 0.5em"
-                  data-bs-dismiss="alert"
                   aria-label="Cancella"
                   title="Cancella"
                   @click="resetAuthor()"
@@ -407,10 +405,10 @@ function send() {
         document.location = "/accounts/"
       } else if (response.status == 201) {
         alert("Articolo inviato con successo")
+        clean()
         response.json().then((data) => {
           document.location = "/res/article/" + data.id
         })
-        clean()
       } else {
         response.json().then((data) => {
           alert("Errore: " + response.statusText + "; " + JSON.stringify(data))

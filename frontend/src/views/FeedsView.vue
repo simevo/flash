@@ -2,7 +2,26 @@
   <div class="container" v-if="feeds.length > 0">
     <div class="row my-3">
       <div class="col-md-12">
-        <h1>Fonti</h1>
+        <h1>
+          Fonti
+          <RouterLink
+            class="btn btn-danger float-end"
+            title="Crea una nuova fonte (funzione riservata agli utenti di staff)"
+            role="button"
+            type="button"
+            to="../new_feed/"
+            v-if="auth.user?.is_staff"
+          >
+            <img
+              class="icon"
+              src="~bootstrap-icons/icons/plus.svg"
+              alt="pencil icon"
+              width="18"
+              height="18"
+            />
+            Nuova fonte
+          </RouterLink>
+        </h1>
         <select
           v-model="language"
           class="form-select mb-3"
@@ -27,7 +46,6 @@
             type="button"
             class="btn-close position-absolute"
             style="right: 0.5em; top: 0.5em"
-            data-bs-dismiss="alert"
             aria-label="Cancella"
             :disabled="search == ''"
             @click="resetSearch()"
@@ -55,12 +73,55 @@
             @click="resetTags()"
           ></button>
         </div>
+        <div class="input-group position-relative d-inline-flex align-items-center mb-3">
+          <select
+            v-model="sort_by"
+            class="form-select"
+            aria-label="Ordinamento"
+            title="Ordinamento"
+          >
+            <option value="id" selected>Creazione</option>
+            <option value="url">Link</option>
+            <option value="title">Nome</option>
+            <option value="last_polled_epoch">Ultimo aggiornamento</option>
+            <option value="article_count">Numero articoli</option>
+            <option value="average_time_from_last_post">Frequenza di pubblicazione</option>
+            <option value="active">Attivo</option>
+            <option value="my_rating">Voto</option>
+          </select>
+          <img
+            v-if="sort_ascending"
+            class="icon ms-2"
+            src="~bootstrap-icons/icons/sort-up.svg"
+            alt="ascending sort icon"
+            title="Ordinamento a salire"
+            width="30"
+            height="30"
+            @click="toggle_sort()"
+          />
+          <img
+            v-else
+            class="icon ms-2"
+            src="~bootstrap-icons/icons/sort-down-alt.svg"
+            alt="descending sort icon"
+            title="Ordinamento a scendere"
+            width="30"
+            height="30"
+            @click="toggle_sort()"
+          />
+        </div>
         <div v-if="filtered_feeds.length == 0">
           <div class="alert alert-warning text-center" role="alert">
             Non ci sono fonti da visualizzare.
           </div>
         </div>
-        <FeedCard v-else v-for="feed in filtered_feeds" :key="feed.id" :feed="feed" />
+        <FeedCard
+          v-else
+          v-for="feed in sorted_feeds"
+          :key="feed.id"
+          :feed="feed"
+          :clickable="true"
+        />
       </div>
     </div>
   </div>
@@ -78,12 +139,15 @@
 <script setup lang="ts">
 import { fetch_wrapper } from "../utils"
 import { ref, onMounted, type Ref, computed } from "vue"
-import type { components } from "../generated/schema.d.ts"
 
+import { useAuthStore } from "../stores/auth.store"
+const auth = useAuthStore()
+
+import type { components } from "../generated/schema.d.ts"
 import FeedCard from "../components/FeedCard.vue"
 
 type Feed = components["schemas"]["Feed"]
-type PatchedFeed = Feed & { my_rating: number }
+type PatchedFeed = Feed & { my_rating: number | undefined }
 type UserFeed = components["schemas"]["UserFeed"]
 
 const feeds: Ref<PatchedFeed[]> = ref([])
@@ -181,6 +245,49 @@ const filtered_feeds = computed(() => {
   } else {
     return fff
   }
+})
+
+type Sortable =
+  | "active"
+  | "id"
+  | "article_count"
+  | "average_time_from_last_post"
+  | "last_polled_epoch"
+  | "title"
+  | "url"
+  | "my_rating"
+
+const sort_by: Ref<Sortable> = ref("id")
+const sort_ascending = ref(true)
+
+function toggle_sort() {
+  sort_ascending.value = !sort_ascending.value
+}
+
+const sorted_feeds = computed(() => {
+  return [...filtered_feeds.value].sort((a: PatchedFeed, b: PatchedFeed) => {
+    if (
+      [
+        "id",
+        "last_polled_epoch",
+        "article_count",
+        "average_time_from_last_post",
+        "my_rating",
+      ].indexOf(sort_by.value) != -1
+    ) {
+      const av = <number>(a[sort_by.value] || 0)
+      const bv = <number>(b[sort_by.value] || 0)
+      return (sort_ascending.value ? 1 : -1) * (av - bv)
+    } else if (sort_by.value === "active") {
+      const av = <boolean>a[sort_by.value]
+      const bv = <boolean>b[sort_by.value]
+      return (sort_ascending.value ? 1 : -1) * (av === bv ? 0 : av ? -1 : 1)
+    } else {
+      const av = <string>a[sort_by.value]
+      const bv = <string>b[sort_by.value]
+      return (sort_ascending.value ? 1 : -1) * av.localeCompare(bv)
+    }
+  })
 })
 
 function resetSearch() {

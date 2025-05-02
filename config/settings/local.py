@@ -75,3 +75,12 @@ INSTALLED_APPS += ["django_extensions"]
 CELERY_TASK_EAGER_PROPAGATES = True
 # Your stuff...
 # ------------------------------------------------------------------------------
+
+# https://github.com/django-extensions/django-extensions/blob/main/docs/runserver_plus.rst#configuration
+RUNSERVER_PLUS_EXCLUDE_PATTERNS = [
+    ".cache",
+    ".ipython",
+    ".ruff_cache",
+    "frontend",
+    "node_modules",
+]

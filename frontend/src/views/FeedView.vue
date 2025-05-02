@@ -1,18 +1,6 @@
 <template>
   <div class="container-fluid my-3" v-if="count_fetch == 0">
-    <div class="row">
-      <h1>Fonte: {{ feed_dict[Number(feed_id)].title }}</h1>
-      <div>
-        <span class="float-start">
-          <a :href="feed_dict[Number(feed_id)].homepage" target="_blank">{{
-            feed_dict[Number(feed_id)].homepage
-          }}</a>
-        </span>
-        <span class="float-end">
-          {{ feed_dict[Number(feed_id)].tags }}
-        </span>
-      </div>
-    </div>
+    <FeedCard v-if="feed" :feed="feed" :clickable="false" />
     <hr />
     <div class="row" v-if="articles.length == 0">
       <div class="col-md-12">
@@ -49,18 +37,24 @@
 
 <script setup lang="ts">
 import { fetch_wrapper } from "../utils"
-import { computed, onActivated, watch } from "vue"
+import { onActivated, watch } from "vue"
 import { useRoute } from "vue-router"
 import { ref, onMounted, type Ref } from "vue"
-import type { components } from "../generated/schema.d.ts"
-import ArticleCard from "../components/ArticleCard.vue"
 
+import type { components } from "../generated/schema.d.ts"
 type ArticleRead = components["schemas"]["ArticleRead"]
 type Feed = components["schemas"]["Feed"]
 type PaginatedArticleReadList = components["schemas"]["PaginatedArticleReadList"]
+type PatchedFeed = Feed & { my_rating: number }
+type UserFeed = components["schemas"]["UserFeed"]
+
+import ArticleCard from "../components/ArticleCard.vue"
+import FeedCard from "../components/FeedCard.vue"
 
 const articles: Ref<ArticleRead[]> = ref([])
 const feeds: Ref<Feed[]> = ref([])
+const feed_dict: Ref<{ [key: number]: Feed }> = ref({})
+const feed: Ref<PatchedFeed | null> = ref(null)
 const count_fetch = ref(2)
 
 const route = useRoute()
@@ -89,19 +83,24 @@ async function fetchFeeds() {
   if (response.status == 403) {
     document.location = "/accounts/"
   } else {
+    const response2 = await fetch_wrapper(`../../api/user-feeds/`)
+    const ufs: UserFeed[] = await response2.json()
+    const ufd: { [key: number]: number | undefined } = {}
+    ufs.forEach((element) => {
+      ufd[element.feed_id] = element.rating
+    })
     const data: Feed[] = await response.json()
     feeds.value = data
+    feeds.value.forEach((feed) => {
+      feed_dict.value[feed.id] = feed
+    })
+    feed.value = <PatchedFeed>{
+      ...feed_dict.value[Number(props.feed_id)],
+      my_rating: ufd[Number(props.feed_id)],
+    }
     count_fetch.value -= 1
   }
 }
-
-const feed_dict = computed(() => {
-  const feed_dict: { [key: number]: Feed } = {}
-  feeds.value.forEach((feed) => {
-    feed_dict[feed.id] = feed
-  })
-  return feed_dict
-})
 
 onMounted(() => {
   console.log("FeedView mounted")
@@ -115,11 +114,12 @@ onActivated(() => {
 
 watch(
   () => route.params.feed_id,
-  async (newId, oldId) => {
+  (newId, oldId) => {
     console.log(`FeedView watch id, newId = [${newId}] oldId = [${oldId}]`)
     if (newId && newId != oldId) {
-      count_fetch.value += 1
-      await fetchArticles()
+      count_fetch.value += 2
+      fetchArticles()
+      fetchFeeds()
     }
   },
 )

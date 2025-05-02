@@ -5,8 +5,8 @@
     class="btn btn-outline-success btn-sm p-1"
     :disabled="readonly"
     :class="{
-      'icon-success': item.my_rating > threshold,
-      'icon-light': item.my_rating <= threshold,
+      'icon-success': (item.my_rating || 0) > threshold,
+      'icon-light': (item.my_rating || 0) <= threshold,
     }"
     :title="`Dai ${threshold + 1} voti positivi`"
   >
@@ -28,7 +28,7 @@
 import { fetch_wrapper } from "../utils"
 import type { components } from "../generated/schema.d.ts"
 type Feed = components["schemas"]["Feed"]
-type PatchedFeed = Feed & { my_rating: number }
+type PatchedFeed = Feed & { my_rating: number | undefined }
 
 const props = defineProps<{
   item: PatchedFeed

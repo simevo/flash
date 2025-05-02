@@ -111,6 +111,8 @@ def create_views(apps, schema_editor):
                                 feeds
                                 JOIN feeds_data ON feeds.id = feeds_data.id)""")
 
+        cursor.execute("INSERT INTO feeds_data SELECT feeds_data_view.* FROM feeds_data_view")
+
         cursor.execute("""
                        CREATE FUNCTION uad() RETURNS trigger AS $$
                             BEGIN

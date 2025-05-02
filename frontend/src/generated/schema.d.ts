@@ -30,7 +30,7 @@ export interface paths {
     get: operations["articles_retrieve"]
     put: operations["articles_update"]
     post?: never
-    delete: operations["articles_destroy"]
+    delete?: never
     options?: never
     head?: never
     patch: operations["articles_partial_update"]
@@ -142,7 +142,7 @@ export interface paths {
     get: operations["feeds_retrieve"]
     put: operations["feeds_update"]
     post?: never
-    delete: operations["feeds_destroy"]
+    delete?: never
     options?: never
     head?: never
     patch: operations["feeds_partial_update"]
@@ -442,6 +442,7 @@ export interface components {
       feed: number
     }
     ArticleRead: {
+      /** Format: int64 */
       id: number
       readonly stamp: number
       author?: string | null
@@ -460,6 +461,7 @@ export interface components {
       feed: number
     }
     ArticleSerializerFull: {
+      /** Format: int64 */
       id: number
       readonly stamp: number
       author?: string | null
@@ -495,6 +497,13 @@ export interface components {
       active?: boolean | null
       /** Format: date-time */
       last_polled?: string | null
+      incomplete?: boolean | null
+      salt_url?: boolean | null
+      cookies?: string | null
+      exclude?: string | null
+      main?: string | null
+      script?: string | null
+      frequency?: string | null
       tags?: string[] | null
       /** Format: double */
       last_polled_epoch?: number | null
@@ -502,14 +511,40 @@ export interface components {
       article_count?: number | null
       average_time_from_last_post?: number | null
     }
+    FeedCreate: {
+      readonly id: number
+      homepage: string
+      url: string
+      language: string
+      title: string
+      license?: string | null
+      icon: string
+      active?: boolean | null
+      /** Format: date-time */
+      last_polled?: string | null
+      incomplete?: boolean | null
+      salt_url?: boolean | null
+      rating?: number | null
+      premium?: boolean | null
+      cookies?: string | null
+      exclude?: string | null
+      main?: string | null
+      tor?: boolean | null
+      asy?: boolean | null
+      /** Format: byte */
+      readonly iconblob: string | null
+      script?: string | null
+      frequency?: string | null
+      tags?: string[] | null
+    }
     FeedSerializerSimple: {
-      id: number
+      readonly id: number
       title: string
       icon: string
       license?: string | null
     }
     Nested: {
-      id: number
+      readonly id: number
       homepage: string
       url: string
       language: string
@@ -573,6 +608,13 @@ export interface components {
       active?: boolean | null
       /** Format: date-time */
       last_polled?: string | null
+      incomplete?: boolean | null
+      salt_url?: boolean | null
+      cookies?: string | null
+      exclude?: string | null
+      main?: string | null
+      script?: string | null
+      frequency?: string | null
       tags?: string[] | null
       /** Format: double */
       last_polled_epoch?: number | null
@@ -800,27 +842,6 @@ export interface operations {
       }
     }
   }
-  articles_destroy: {
-    parameters: {
-      query?: never
-      header?: never
-      path: {
-        /** @description A unique value identifying this articles combined. */
-        id: number
-      }
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description No response body */
-      204: {
-        headers: {
-          [name: string]: unknown
-        }
-        content?: never
-      }
-    }
-  }
   articles_partial_update: {
     parameters: {
       query?: never
@@ -1007,7 +1028,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          "application/json": components["schemas"]["Feed"]
+          "application/json": components["schemas"]["FeedCreate"]
         }
       }
     }
@@ -1059,27 +1080,6 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["Feed"]
         }
-      }
-    }
-  }
-  feeds_destroy: {
-    parameters: {
-      query?: never
-      header?: never
-      path: {
-        /** @description A unique value identifying this feeds combined. */
-        id: number
-      }
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description No response body */
-      204: {
-        headers: {
-          [name: string]: unknown
-        }
-        content?: never
       }
     }
   }

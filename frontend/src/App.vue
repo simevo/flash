@@ -61,7 +61,7 @@ function logout() {
               <img
                 class="inverted-icon icon me-2"
                 src="~bootstrap-icons/icons/heart-fill.svg"
-                alt="view icon"
+                alt="heart icon"
                 width="18"
                 height="18"
               />Salvati
@@ -78,7 +78,7 @@ function logout() {
               <img
                 class="inverted-icon icon me-2"
                 src="~bootstrap-icons/icons/eyeglasses.svg"
-                alt="view icon"
+                alt="eyeglasses icon"
                 width="18"
                 height="18"
               />Letti
@@ -95,7 +95,7 @@ function logout() {
               <img
                 class="inverted-icon icon me-2"
                 src="~bootstrap-icons/icons/plus-circle-fill.svg"
-                alt="view icon"
+                alt="plus circle fill icon"
                 width="18"
                 height="18"
               />Nuovo
@@ -112,7 +112,7 @@ function logout() {
               <img
                 class="inverted-icon icon me-2"
                 src="~bootstrap-icons/icons/rss.svg"
-                alt="view icon"
+                alt="rss icon"
                 width="18"
                 height="18"
               />Fonti
@@ -140,7 +140,7 @@ function logout() {
               <img
                 class="inverted-icon icon me-2"
                 src="~bootstrap-icons/icons/question.svg"
-                alt="view icon"
+                alt="question icon"
                 width="18"
                 height="18"
               />Info
@@ -155,7 +155,7 @@ function logout() {
               <img
                 class="inverted-icon icon me-2"
                 src="~bootstrap-icons/icons/lock.svg"
-                alt="view icon"
+                alt="lock icon"
                 width="18"
                 height="18"
               />Admin
@@ -175,7 +175,7 @@ function logout() {
               <img
                 class="inverted-icon icon me-2"
                 src="~bootstrap-icons/icons/unlock.svg"
-                alt="view icon"
+                alt="unlock icon"
                 width="18"
                 height="18"
               />Disconnetti [{{ auth.user?.username }}]

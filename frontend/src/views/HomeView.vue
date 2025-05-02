@@ -73,7 +73,7 @@ const filters_summary = computed(() => {
   if (not_filtering.value) {
     return "Filtra gli articoli"
   } else {
-    let summary = "Articoli filtrati"
+    let summary = "Filtro articoli attivo"
     if (filters.what.trim()) {
       summary += ` - per parole chiave [${filters.what.trim()}]`
     }
@@ -225,7 +225,7 @@ watch(
       v-if="not_filtering"
       class="icon"
       src="~bootstrap-icons/icons/funnel.svg"
-      alt="view icon"
+      alt="funnel icon"
       width="18"
       height="18"
     />
@@ -233,7 +233,7 @@ watch(
       v-else
       class="icon"
       src="~bootstrap-icons/icons/funnel-fill.svg"
-      alt="view icon"
+      alt="filled funnel icon"
       width="18"
       height="18"
     />
@@ -243,6 +243,18 @@ watch(
       <div class="col-md-12">
         <div class="alert alert-warning text-center" role="alert">
           Non ci sono articoli da visualizzare.
+          <span v-if="!not_filtering"
+            >Forse i tuoi criteri di ricerca sono troppo restrittivi? Controlla il
+            <b>bottone filtro articoli</b>
+            <img
+              class="icon"
+              src="~bootstrap-icons/icons/funnel-fill.svg"
+              alt="filled funnel icon"
+              width="18"
+              height="18"
+            />
+            a sinistra!</span
+          >
         </div>
       </div>
     </div>

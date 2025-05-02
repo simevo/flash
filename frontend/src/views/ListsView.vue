@@ -381,7 +381,7 @@ function window_open(url: string): void {
           <img
             class="icon me-2"
             src="~bootstrap-icons/icons/heart-fill.svg"
-            alt="view icon"
+            alt="filled heart icon"
             width="18"
             height="18"
           />.
@@ -421,7 +421,7 @@ function window_open(url: string): void {
                 <img
                   class="icon"
                   src="~bootstrap-icons/icons/trash.svg"
-                  alt="view icon"
+                  alt="trash icon"
                   width="18"
                   height="18"
                 />
@@ -547,7 +547,7 @@ function window_open(url: string): void {
                 <img
                   class="icon me-2"
                   src="~bootstrap-icons/icons/heart-fill.svg"
-                  alt="view icon"
+                  alt="filled heart icon"
                   width="18"
                   height="18"
                 />.

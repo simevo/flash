@@ -30,7 +30,6 @@
                   type="button"
                   class="btn-close position-absolute"
                   style="right: 0.5em"
-                  data-bs-dismiss="alert"
                   aria-label="Cancella"
                   @click="resetTitle()"
                 ></button>
@@ -56,7 +55,6 @@
                   type="button"
                   class="btn-close position-absolute"
                   style="right: 0.5em"
-                  data-bs-dismiss="alert"
                   aria-label="Cancella"
                   @click="resetTitleOriginal()"
                 ></button>
@@ -83,7 +81,6 @@
                 type="button"
                 class="btn-close position-absolute"
                 style="right: 0.5em"
-                data-bs-dismiss="alert"
                 aria-label="Cancella"
                 title="Cancella"
                 @click="resetAuthor()"
@@ -109,7 +106,6 @@
                 type="button"
                 class="btn-close position-absolute"
                 style="right: 6em"
-                data-bs-dismiss="alert"
                 aria-label="Cancella"
                 title="Cancella"
                 @click="resetUrl()"
@@ -131,8 +127,8 @@
                 disabled
                 type="button"
                 class="btn btn-danger"
-                aria-label="Scarica il contenuto dell'URL"
-                title="Scarica il contenuto dell'URL"
+                aria-label="Apri il link in un nuovo tab"
+                title="Apri il link in un nuovo tab"
               >
                 Apri URL
               </button>
