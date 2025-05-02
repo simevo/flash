@@ -373,7 +373,6 @@
 <script setup lang="ts">
 import { fetch_wrapper } from "../utils"
 import { onActivated, watch } from "vue"
-import { useRoute } from "vue-router"
 import { ref, onMounted, type Ref } from "vue"
 
 import type { components } from "../generated/schema.d.ts"
@@ -381,8 +380,6 @@ type Feed = components["schemas"]["Feed"]
 
 const feed: Ref<Feed | null> = ref(null)
 const count_fetch = ref(1)
-
-const route = useRoute()
 
 export interface Props {
   feed_id: string
@@ -442,10 +439,11 @@ onActivated(() => {
 })
 
 watch(
-  () => route.params.feed_id,
+  () => props.feed_id,
   async (newId, oldId) => {
     console.log(`FeedEdit watch id, newId = [${newId}] oldId = [${oldId}]`)
     if (newId && newId != oldId) {
+      feed.value = null
       count_fetch.value += 1
       await fetchFeed()
     }

@@ -223,11 +223,8 @@
 <script setup lang="ts">
 import { fetch_wrapper } from "../utils"
 import { inject, nextTick, onActivated, onMounted, ref, watch, type Ref } from "vue"
-import { useRoute } from "vue-router"
 import type { components } from "../generated/schema.d.ts"
 import Quill from "quill"
-
-const route = useRoute()
 
 type Article = components["schemas"]["ArticleSerializerFull"]
 
@@ -250,6 +247,16 @@ async function fetchArticle() {
     const data: Article = await response.json()
     article.value = data
     count_fetch.value -= 1
+    nextTick(() => {
+      quill = new Quill("#editor", {
+        theme: "snow",
+      })
+      setHtml(quill, article.value?.content || "")
+      quill_original = new Quill("#editor_original", {
+        theme: "snow",
+      })
+      setHtml(quill_original, article.value?.content_original || "")
+    })
   }
 }
 
@@ -264,16 +271,6 @@ function setHtml(quill: Quill, html: string) {
 onMounted(async () => {
   console.log("EditArticle mounted")
   await fetchArticle()
-  nextTick(() => {
-    quill = new Quill("#editor", {
-      theme: "snow",
-    })
-    setHtml(quill, article.value?.content || "")
-    quill_original = new Quill("#editor_original", {
-      theme: "snow",
-    })
-    setHtml(quill_original, article.value?.content_original || "")
-  })
 })
 
 onActivated(() => {
@@ -281,9 +278,9 @@ onActivated(() => {
 })
 
 watch(
-  () => route.params.article_id,
+  () => props.article_id,
   async (newId, oldId) => {
-    console.log(`ArticleView watch, newId = [${newId}] oldId = [${oldId}]`)
+    console.log(`ArticleEdit watch, newId = [${newId}] oldId = [${oldId}]`)
     if (newId && newId !== oldId) {
       article.value = null
       count_fetch.value = 1
