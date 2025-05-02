@@ -131,8 +131,8 @@
                 disabled
                 type="button"
                 class="btn btn-danger"
-                aria-label="Scarica il contenuto dell'URL"
-                title="Scarica il contenuto dell'URL"
+                aria-label="Apri il link in un nuovo tab"
+                title="Apri il link in un nuovo tab"
               >
                 Apri URL
               </button>

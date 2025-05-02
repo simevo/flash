@@ -1,5 +1,7 @@
 import { createRouter, createWebHistory } from "vue-router"
 
+import { useAuthStore } from "../stores/auth.store"
+
 const router = createRouter({
   history: createWebHistory("/res/"),
   routes: [
@@ -22,6 +24,7 @@ const router = createRouter({
       name: "edit_article",
       props: true,
       component: () => import("../views/ArticleEdit.vue"),
+      meta: { requiresAdmin: true },
     },
     {
       path: "/lists/",
@@ -75,6 +78,13 @@ const router = createRouter({
       component: () => import("../views/FeedView.vue"),
     },
     {
+      path: "/edit_feed/:feed_id",
+      name: "edit_feed",
+      props: true,
+      component: () => import("../views/FeedEdit.vue"),
+      meta: { requiresAdmin: true },
+    },
+    {
       path: "/author/:author",
       name: "author",
       props: true,
@@ -93,6 +103,13 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from, next) => {
+  if (to.matched.some((record) => record.meta.requiresAdmin)) {
+    const auth = useAuthStore()
+    if (!auth.user?.is_staff) {
+      alert("Funzione riservata agli utenti di staff")
+      return
+    }
+  }
   if (to.params.article_id) {
     document.title = `Articolo ${to.params.article_id} - Flash`
   } else if (to.params.feed_id) {

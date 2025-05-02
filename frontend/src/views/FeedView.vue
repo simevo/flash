@@ -1,6 +1,6 @@
 <template>
   <div class="container-fluid my-3" v-if="count_fetch == 0">
-    <FeedCard v-if="feed" :feed="feed" />
+    <FeedCard v-if="feed" :feed="feed" :clickable="false" />
     <hr />
     <div class="row" v-if="articles.length == 0">
       <div class="col-md-12">
@@ -114,11 +114,12 @@ onActivated(() => {
 
 watch(
   () => route.params.feed_id,
-  async (newId, oldId) => {
+  (newId, oldId) => {
     console.log(`FeedView watch id, newId = [${newId}] oldId = [${oldId}]`)
     if (newId && newId != oldId) {
-      count_fetch.value += 1
-      await fetchArticles()
+      count_fetch.value += 2
+      fetchArticles()
+      fetchFeeds()
     }
   },
 )

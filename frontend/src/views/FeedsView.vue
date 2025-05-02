@@ -96,7 +96,13 @@
             Non ci sono fonti da visualizzare.
           </div>
         </div>
-        <FeedCard v-else v-for="feed in sorted_feeds" :key="feed.id" :feed="feed" />
+        <FeedCard
+          v-else
+          v-for="feed in sorted_feeds"
+          :key="feed.id"
+          :feed="feed"
+          :clickable="true"
+        />
       </div>
     </div>
   </div>

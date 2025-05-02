@@ -41,9 +41,23 @@ from news.models import UserArticleLists
 from news.models import UserFeeds
 
 
-class ReadOnly(permissions.BasePermission):
+class ArticlePermissions(permissions.BasePermission):
     def has_permission(self, request, view):
-        return request.method in permissions.SAFE_METHODS
+        # we also allow POST for the new_article page
+        if request.method in ("GET", "HEAD", "OPTIONS", "POST"):
+            # IsAuthenticated
+            return bool(request.user and request.user.is_authenticated)
+        # IsAdminUser
+        return bool(request.user and request.user.is_staff)
+
+
+class FeedPermissions(permissions.BasePermission):
+    def has_permission(self, request, view):
+        if request.method in permissions.SAFE_METHODS:
+            # IsAuthenticated
+            return bool(request.user and request.user.is_authenticated)
+        # IsAdminUser
+        return bool(request.user and request.user.is_staff)
 
 
 class StandardResultsSetPagination(pagination.PageNumberPagination):
@@ -187,9 +201,15 @@ class ArticlesFilter(filters.FilterSet):
         fields = ["feed_id"]
 
 
-class ArticlesView(viewsets.ModelViewSet, mixins.CreateModelMixin):
+class ArticlesView(
+    viewsets.GenericViewSet,
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.CreateModelMixin,
+    mixins.UpdateModelMixin,
+):
     queryset = ArticlesCombined.objects.all().order_by("-id")
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [ArticlePermissions]
     filterset_class = ArticlesFilter
     pagination_class = StandardResultsSetPagination
 
@@ -288,7 +308,13 @@ class ArticlesView(viewsets.ModelViewSet, mixins.CreateModelMixin):
         return response
 
 
-class FeedsView(viewsets.ModelViewSet):
+class FeedsView(
+    viewsets.GenericViewSet,
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.CreateModelMixin,
+    mixins.UpdateModelMixin,
+):
     queryset = (
         FeedsCombined.objects.all()
         .order_by("id")
@@ -309,7 +335,7 @@ class FeedsView(viewsets.ModelViewSet):
         )
     )
     serializer_class = FeedSerializer
-    permission_classes = [ReadOnly, permissions.IsAuthenticated]
+    permission_classes = [FeedPermissions]
 
     @extend_schema(
         responses=FeedSerializerSimple,
@@ -318,6 +344,14 @@ class FeedsView(viewsets.ModelViewSet):
     def simple(self, request, *args, **kwargs):
         queryset = Feeds.objects.all().values("id", "title", "icon", "license")
         serializer = FeedSerializerSimple(queryset, many=True)
+        return Response(serializer.data)
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop("partial", False)
+        instance = Feeds.objects.get(pk=kwargs["pk"])
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
         return Response(serializer.data)
 
 
