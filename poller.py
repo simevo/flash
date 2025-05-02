@@ -148,10 +148,12 @@ async def main(loop, entries, feed, verbose):
     headers = {
         "User-Agent": USER_AGENT,
     }
+    timeout = aiohttp.ClientTimeout(total=30)
     async with aiohttp.ClientSession(
         loop=loop,
         cookies=cookies,
         headers=headers,
+        timeout=timeout,
     ) as client:
         return await asyncio.gather(
             *[retrieve(client, e, feed, verbose) for e in entries],
