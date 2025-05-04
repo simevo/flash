@@ -1,6 +1,6 @@
 <template>
   <div class="container-fluid my-3" v-if="count_fetch == 0">
-    <FeedCard v-if="feed" :feed="feed" :clickable="false" />
+    <FeedCard v-if="feed" :feed="feed" :clickable="false" @refresh_feed="refresh_feed" />
     <hr />
     <div class="row" v-if="articles.length == 0">
       <div class="col-md-12">
@@ -123,4 +123,19 @@ watch(
     }
   },
 )
+
+async function refresh_feed(feed_id: number) {
+  count_fetch.value = 2
+  const response = await fetch_wrapper(`../../api/feeds/${feed_id}/refresh/`, {
+    method: "POST",
+  })
+  if (response.status == 403) {
+    document.location = "/accounts/"
+  } else {
+    const data = await response.json()
+    alert(`Fonte aggiornata: ${JSON.stringify(data)}`)
+    fetchArticles()
+    fetchFeeds()
+  }
+}
 </script>

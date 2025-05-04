@@ -29,6 +29,7 @@ from rest_framework.views import APIView
 from xhtml2pdf import pisa
 
 import news.translate
+import poller
 from news.api.serializers import ArticleReadSerializer
 from news.api.serializers import ArticleSerializer
 from news.api.serializers import ArticleSerializerFull
@@ -385,6 +386,22 @@ class FeedsView(
             serializer.data,
             status=status.HTTP_201_CREATED,
             headers=headers,
+        )
+
+    @action(detail=True, methods=["POST"])
+    def refresh(self, request, pk=None):
+        queryset = Feeds.objects
+        feed = get_object_or_404(queryset, pk=pk)
+        p = poller.Poller(feed)
+        p.poll()
+        data = {
+            "retrieved": p.retrieved,
+            "failed": p.failed,
+            "stored": p.stored,
+        }
+        return Response(
+            data,
+            status=status.HTTP_201_CREATED,
         )
 
 

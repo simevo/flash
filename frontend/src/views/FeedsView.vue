@@ -121,6 +121,7 @@
           :key="feed.id"
           :feed="feed"
           :clickable="true"
+          @refresh_feed="refresh_feed"
         />
       </div>
     </div>
@@ -298,4 +299,18 @@ onMounted(() => {
   console.log("FeedsView mounted")
   fetchFeeds()
 })
+
+async function refresh_feed(feed_id: number) {
+  feeds.value = []
+  const response = await fetch_wrapper(`../../api/feeds/${feed_id}/refresh/`, {
+    method: "POST",
+  })
+  if (response.status == 403) {
+    document.location = "/accounts/"
+  } else {
+    const data = await response.json()
+    alert(`Fonte aggiornata: ${JSON.stringify(data)}`)
+    fetchFeeds()
+  }
+}
 </script>

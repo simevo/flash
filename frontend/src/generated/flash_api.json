@@ -739,6 +739,65 @@
         }
       }
     },
+    "/api/feeds/{id}/refresh/": {
+      "post": {
+        "operationId": "feeds_refresh_create",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "integer",
+              "maximum": 2147483647,
+              "minimum": -2147483648
+            },
+            "description": "A unique value identifying this feeds combined.",
+            "required": true
+          }
+        ],
+        "tags": ["feeds"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Feed"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/Feed"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Feed"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "tokenAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Feed"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/feeds/simple/": {
       "get": {
         "operationId": "feeds_simple_retrieve",

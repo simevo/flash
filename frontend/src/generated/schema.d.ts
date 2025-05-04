@@ -148,6 +148,22 @@ export interface paths {
     patch: operations["feeds_partial_update"]
     trace?: never
   }
+  "/api/feeds/{id}/refresh/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations["feeds_refresh_create"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   "/api/feeds/simple/": {
     parameters: {
       query?: never
@@ -1085,6 +1101,34 @@ export interface operations {
         "application/json": components["schemas"]["PatchedFeed"]
         "application/x-www-form-urlencoded": components["schemas"]["PatchedFeed"]
         "multipart/form-data": components["schemas"]["PatchedFeed"]
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["Feed"]
+        }
+      }
+    }
+  }
+  feeds_refresh_create: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        /** @description A unique value identifying this feeds combined. */
+        id: number
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["Feed"]
+        "application/x-www-form-urlencoded": components["schemas"]["Feed"]
+        "multipart/form-data": components["schemas"]["Feed"]
       }
     }
     responses: {
