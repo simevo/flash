@@ -48,27 +48,17 @@ async function removeArticleFromList(list_id: string): Promise<void> {
 <template>
   <div class="card m-1">
     <div class="card-body">
-      <img
-        style="margin: 5px"
-        class="card-img-start"
-        width="30"
-        height="30"
-        src="https://notizie.calomelano.it/static/icons/unknown.png"
-        alt="feed logo"
-        v-if="!feed_dict[article.feed]"
-      />
       <router-link
         :to="`/feed/${article.feed}`"
         class="float-start"
         :title="`vai a tutti gli articoli della fonte ${feed_dict[article.feed].title}`"
-        v-else
       >
         <img
           style="margin: 5px"
           class="card-img-start"
           width="30"
           height="30"
-          :src="`https://notizie.calomelano.it/${feed_dict[article.feed].icon}`"
+          :src="`${feed_dict[article.feed].image}`"
           alt="feed logo"
         />
       </router-link>

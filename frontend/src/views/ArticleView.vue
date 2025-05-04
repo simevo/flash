@@ -10,18 +10,18 @@
         <div class="text-center col-md-8 offset-md-2">
           <div>
             <router-link
-              :to="`/feed/${article.feed.id}`"
-              :href="`/feed/${article.feed.id}`"
+              :to="`/feed/${article.feed}`"
+              :href="`/feed/${article.feed}`"
               :title="`vai a tutti gli articoli della fonte ${article.feed}`"
             >
               <span class="h2">
                 <img
                   width="30"
                   height="30"
-                  :src="`https://notizie.calomelano.it/${article.feed.icon}`"
+                  :src="`${feed_dict[article.feed].image}`"
                   alt="feed logo"
                 />
-                {{ article.feed.title }}
+                {{ feed_dict[article.feed].title }}
               </span>
             </router-link>
           </div>
@@ -180,8 +180,8 @@
         </div>
       </div>
       <div class="row">
-        <div class="col-md-8 offset-md-2" v-if="article.feed.license">
-          <small class="text-muted">Licenza: {{ article.feed.license }}</small>
+        <div class="col-md-8 offset-md-2" v-if="feed_dict[article.feed].license">
+          <small class="text-muted">Licenza: {{ feed_dict[article.feed].license }}</small>
         </div>
       </div>
       <div class="row mt-3" v-if="article.language == base_language">
@@ -230,13 +230,16 @@ import type { components } from "../generated/schema.d.ts"
 import { secondsToString, secondsToString1 } from "@/components/sts"
 
 import ArticleActions from "@/components/ArticleActions.vue"
+type FeedSerializerSimple = components["schemas"]["FeedSerializerSimple"]
 
 const route = useRoute()
 
 type Article = components["schemas"]["ArticleSerializerFull"]
 
 const article: Ref<Article | null> = ref(null)
-const count_fetch = ref(1)
+const feeds: Ref<FeedSerializerSimple[]> = ref([])
+
+const count_fetch = ref(2)
 const tts = ref(false)
 const tts_open = ref(false)
 const stopped = ref(true)
@@ -275,6 +278,25 @@ async function fetchArticle() {
   }
 }
 
+async function fetchFeeds() {
+  const response = await fetch_wrapper(`../../api/feeds/simple/`)
+  if (response.status == 403) {
+    document.location = "/accounts/"
+  } else {
+    const data: FeedSerializerSimple[] = await response.json()
+    feeds.value = data
+    count_fetch.value -= 1
+  }
+}
+
+const feed_dict = computed(() => {
+  const feed_dict: { [key: number]: FeedSerializerSimple } = {}
+  feeds.value.forEach((feed) => {
+    feed_dict[feed.id] = feed
+  })
+  return feed_dict
+})
+
 const article_length = computed(() => {
   if (article.value) {
     if (article.value.content) {
@@ -289,6 +311,7 @@ const article_length = computed(() => {
 onMounted(async () => {
   console.log("ArticleView mounted")
   await fetchArticle()
+  await fetchFeeds()
   nextTick(tts_init)
 })
 
@@ -302,8 +325,9 @@ watch(
     console.log(`ArticleView watch, newId = [${newId}] oldId = [${oldId}]`)
     if (newId && newId !== oldId) {
       article.value = null
-      count_fetch.value = 1
+      count_fetch.value = 2
       await fetchArticle()
+      await fetchFeeds()
       nextTick(tts_init)
     }
   },

@@ -148,6 +148,22 @@ export interface paths {
     patch: operations["feeds_partial_update"]
     trace?: never
   }
+  "/api/feeds/{id}/refresh/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations["feeds_refresh_create"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   "/api/feeds/simple/": {
     parameters: {
       query?: never
@@ -344,6 +360,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  "/api/upload/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations["upload_create"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   "/api/user-feeds/": {
     parameters: {
       query?: never
@@ -479,7 +511,7 @@ export interface components {
       to_reads: number
       length: number
       excerpt?: string | null
-      readonly feed: components["schemas"]["Nested"]
+      feed: number
     }
     AuthToken: {
       username: string
@@ -493,7 +525,6 @@ export interface components {
       language: string
       title: string
       license?: string | null
-      icon: string
       active?: boolean | null
       /** Format: date-time */
       last_polled?: string | null
@@ -510,6 +541,7 @@ export interface components {
       /** Format: int64 */
       article_count?: number | null
       average_time_from_last_post?: number | null
+      image: string
     }
     FeedCreate: {
       readonly id: number
@@ -518,7 +550,6 @@ export interface components {
       language: string
       title: string
       license?: string | null
-      icon: string
       active?: boolean | null
       /** Format: date-time */
       last_polled?: string | null
@@ -531,43 +562,15 @@ export interface components {
       main?: string | null
       tor?: boolean | null
       asy?: boolean | null
-      /** Format: byte */
-      readonly iconblob: string | null
       script?: string | null
       frequency?: string | null
       tags?: string[] | null
     }
     FeedSerializerSimple: {
-      readonly id: number
+      id: number
       title: string
-      icon: string
+      image: string
       license?: string | null
-    }
-    Nested: {
-      readonly id: number
-      homepage: string
-      url: string
-      language: string
-      title: string
-      license?: string | null
-      icon: string
-      active?: boolean | null
-      /** Format: date-time */
-      last_polled?: string | null
-      incomplete?: boolean | null
-      salt_url?: boolean | null
-      rating?: number | null
-      premium?: boolean | null
-      cookies?: string | null
-      exclude?: string | null
-      main?: string | null
-      tor?: boolean | null
-      asy?: boolean | null
-      /** Format: byte */
-      readonly iconblob: string | null
-      script?: string | null
-      frequency?: string | null
-      tags?: string[] | null
     }
     PaginatedArticleReadList: {
       /** @example 123 */
@@ -604,7 +607,6 @@ export interface components {
       language?: string
       title?: string
       license?: string | null
-      icon?: string
       active?: boolean | null
       /** Format: date-time */
       last_polled?: string | null
@@ -621,6 +623,7 @@ export interface components {
       /** Format: int64 */
       article_count?: number | null
       average_time_from_last_post?: number | null
+      image?: string
     }
     PatchedProfile: {
       readonly id?: number
@@ -1111,6 +1114,34 @@ export interface operations {
       }
     }
   }
+  feeds_refresh_create: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        /** @description A unique value identifying this feeds combined. */
+        id: number
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["Feed"]
+        "application/x-www-form-urlencoded": components["schemas"]["Feed"]
+        "multipart/form-data": components["schemas"]["Feed"]
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["Feed"]
+        }
+      }
+    }
+  }
   feeds_simple_retrieve: {
     parameters: {
       query?: never
@@ -1534,6 +1565,24 @@ export interface operations {
             [key: string]: unknown
           }
         }
+      }
+    }
+  }
+  upload_create: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description No response body */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
       }
     }
   }

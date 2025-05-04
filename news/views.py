@@ -11,6 +11,7 @@ from django.views.generic import ListView
 from django.views.generic.detail import DetailView
 
 from news.models import Articles
+from news.models import FeedsCombined
 from news.models import GuestArticles
 
 
@@ -19,6 +20,11 @@ class ArticleListView(ListView):
     model = Articles
     queryset = Articles.objects.filter(articlesdata__views__gt="0")
     ordering = "-id"
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+        context["feeds"] = {feed.id: feed for feed in FeedsCombined.objects.all()}
+        return context
 
     def get(self, request, *args, **kwargs):
         if request.user.is_authenticated:
@@ -69,6 +75,9 @@ class ArticleDetailView(DetailView):
         # trim
         content = content.strip()
         context["excerpt"] = content[:200]
+        context["feed_image"] = FeedsCombined.objects.get(
+            pk=context["object"].feed.id,
+        ).image
         return context
 
 

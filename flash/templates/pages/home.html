@@ -2,6 +2,7 @@
 
 {% load static %}
 {% load i18n %}
+{% load dictionary_extras %}
 
 {% block title %}
   Homepage
@@ -24,7 +25,7 @@
                      class="float-start"
                      width="30"
                      height="30"
-                     src="https://notizie.calomelano.it/{{ article.feed.icon }}"
+                     src="{{ feeds | get_image:article.feed.id }}"
                      alt="feed logo" />
                 <div class="card-body text-secondary p-1">
                   <a class="text-decoration-none" href="{% url 'detail' article.id %}">

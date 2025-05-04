@@ -7,7 +7,7 @@
     </div>
     <div class="row" v-if="feed">
       <div class="col-md-10 offset-md-1">
-        <form class="needs-validation" novalidate>
+        <form id="form" class="needs-validation" novalidate>
           <hr />
           <div class="form-group my-3 col">
             <label for="title">Nome della fonte</label>
@@ -179,7 +179,7 @@
             </div>
           </div>
           <div class="form-group my-3">
-            <label for="icon">Tags:</label>
+            <label>Tags:</label>
             <div>
               <span
                 v-for="[tag, value] of Object.entries(tags)"
@@ -226,7 +226,7 @@
                   <div class="row m-1 bg-light">
                     <div class="col-md-2">Icona</div>
                     <div class="col-md-2">
-                      <input class="form-control" type="text" v-model="feed.icon" />
+                      <input class="form-control" type="text" v-model="feed.image" />
                       <button
                         type="button"
                         class="btn-close"
@@ -237,9 +237,23 @@
                     <div class="col-md-8">
                       <img
                         width="100"
-                        :src="`https://notizie.calomelano.it/${feed.icon}`"
+                        :src="`${feed.image}`"
                         class="img-fluid border"
                         alt="feed logo"
+                      />
+                      <p>
+                        <small class="text-muted">
+                          Sono accettabili immagini in formato GIF, JPG/JPEG, PNG, SVG e WEBP più o
+                          meno quadrate con lato minimo 16 pixel e dimensione massima 1 MB
+                        </small>
+                      </p>
+                      <input
+                        type="file"
+                        id="image-input"
+                        accept="image/svg+xml,image/png,image/jpeg,image/webp,image/gif"
+                        class="form-control"
+                        @change="handleFileSelect"
+                        aria-label="Scegli un nuovo logo per la fonte"
                       />
                     </div>
                   </div>
@@ -348,12 +362,23 @@
             <div class="btn-group" role="group" aria-label="Azioni">
               <button
                 @click="save()"
+                :disabled="!dirty"
                 type="button"
                 class="btn btn-primary"
                 aria-label="Salva la fonte"
                 title="Salva la fonte"
               >
                 Salva
+              </button>
+              <button
+                @click="restore()"
+                :disabled="!dirty"
+                type="button"
+                class="btn btn-danger"
+                aria-label="Ripristina la fonte ai valori originali"
+                title="Ripristina la fonte ai valori originali"
+              >
+                Ripristina
               </button>
               <router-link
                 class="btn btn-secondary"
@@ -379,14 +404,15 @@
 </template>
 
 <script setup lang="ts">
-import { fetch_wrapper } from "../utils"
-import { onActivated, watch } from "vue"
+import { fetch_wrapper, getCookie } from "../utils"
+import { computed, onActivated, watch } from "vue"
 import { ref, onMounted, type Ref } from "vue"
 
 import type { components } from "../generated/schema.d.ts"
 type Feed = components["schemas"]["Feed"]
 
 const feed: Ref<Feed | null> = ref(null)
+let feed_original: Feed | null = null
 const count_fetch = ref(1)
 
 export interface Props {
@@ -429,6 +455,7 @@ async function fetchFeed() {
   } else {
     const data: Feed = await response.json()
     feed.value = data
+    feed_original = { ...data }
     resetTags()
     feed.value.tags?.forEach((tag) => {
       tags.value[<tag_keys>tag] = true
@@ -444,6 +471,10 @@ onMounted(() => {
 
 onActivated(() => {
   console.log("FeedEdit activated")
+})
+
+const dirty = computed(() => {
+  return JSON.stringify(feed.value) !== JSON.stringify(feed_original)
 })
 
 watch(
@@ -487,6 +518,12 @@ async function save() {
     })
 }
 
+function restore() {
+  const form = document.getElementById("form") as HTMLFormElement
+  form.reset()
+  feed.value = feed_original
+}
+
 function resetUrl() {
   if (feed.value) feed.value.url = ""
 }
@@ -510,6 +547,49 @@ function resetTags() {
 }
 
 function resetIcon() {
-  if (feed.value) feed.value.icon = "static/icons/unknown.png"
+  if (feed.value) feed.value.image = "/static/icons/unknown.png"
+}
+
+async function handleFileSelect(event: Event) {
+  if (!event.target) return
+  const target = event.target as HTMLInputElement
+  if (!target.files) return
+  const file = target.files[0]
+  if (!file) return
+
+  try {
+    const formData = new FormData()
+    formData.append("image", file)
+
+    const csrftoken = getCookie("csrftoken")
+    const response = await fetch("/api/upload/", {
+      method: "POST",
+      body: formData,
+      headers: {
+        "X-CSRFToken": csrftoken,
+      },
+    })
+
+    if (!response.ok) {
+      const text = await response.text()
+      throw new Error(`${response.status} - ${text}`)
+    }
+
+    const data = await response.json()
+    handleSuccess(data)
+  } catch (error) {
+    alert(`Impossibile caricare l'immagine: ${error}`)
+  }
+}
+
+type SuccessResponse = {
+  fileUrl: string
+  filename: string
+}
+
+function handleSuccess(data: SuccessResponse) {
+  console.log("Upload successful:", data)
+  if (feed.value) feed.value.image = data.fileUrl
+  // Update UI with success message
 }
 </script>

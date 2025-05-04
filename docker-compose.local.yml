@@ -3,6 +3,7 @@
 volumes:
   flash_local_postgres_data: {}
   flash_local_redis_data: {}
+  flash_local_django_media: {}
 
 services:
   django: &django
@@ -17,14 +18,13 @@ services:
     volumes:
       - .:/app:z
       - ./.cache:/root/.cache:z
+      - flash_local_django_media:/app/flash/media
     env_file:
       - ./.envs/.local/.django
       - ./.envs/.local/.postgres
     ports:
       - '8000:8000'
     command: /start
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
 
   redis:
     image: docker.io/redis:6

@@ -739,6 +739,65 @@
         }
       }
     },
+    "/api/feeds/{id}/refresh/": {
+      "post": {
+        "operationId": "feeds_refresh_create",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "integer",
+              "maximum": 2147483647,
+              "minimum": -2147483648
+            },
+            "description": "A unique value identifying this feeds combined.",
+            "required": true
+          }
+        ],
+        "tags": ["feeds"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Feed"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/Feed"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Feed"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "tokenAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Feed"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/feeds/simple/": {
       "get": {
         "operationId": "feeds_simple_retrieve",
@@ -1491,6 +1550,25 @@
         }
       }
     },
+    "/api/upload/": {
+      "post": {
+        "operationId": "upload_create",
+        "tags": ["upload"],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "tokenAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "No response body"
+          }
+        }
+      }
+    },
     "/api/user-feeds/": {
       "get": {
         "operationId": "user_feeds_list",
@@ -2112,12 +2190,7 @@
             "nullable": true
           },
           "feed": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/Nested"
-              }
-            ],
-            "readOnly": true
+            "type": "integer"
           }
         },
         "required": ["feed", "id", "length", "rating", "stamp", "to_reads", "views"]
@@ -2163,9 +2236,6 @@
           "license": {
             "type": "string",
             "nullable": true
-          },
-          "icon": {
-            "type": "string"
           },
           "active": {
             "type": "boolean",
@@ -2228,9 +2298,12 @@
             "maximum": 2147483647,
             "minimum": -2147483648,
             "nullable": true
+          },
+          "image": {
+            "type": "string"
           }
         },
-        "required": ["homepage", "icon", "id", "language", "title", "url"]
+        "required": ["homepage", "id", "image", "language", "title", "url"]
       },
       "FeedCreate": {
         "type": "object",
@@ -2255,9 +2328,6 @@
             "type": "string",
             "nullable": true
           },
-          "icon": {
-            "type": "string"
-          },
           "active": {
             "type": "boolean",
             "nullable": true
@@ -2305,12 +2375,6 @@
             "type": "boolean",
             "nullable": true
           },
-          "iconblob": {
-            "type": "string",
-            "format": "byte",
-            "readOnly": true,
-            "nullable": true
-          },
           "script": {
             "type": "string",
             "nullable": true
@@ -2327,124 +2391,28 @@
             "nullable": true
           }
         },
-        "required": ["homepage", "icon", "iconblob", "id", "language", "title", "url"]
+        "required": ["homepage", "id", "language", "title", "url"]
       },
       "FeedSerializerSimple": {
         "type": "object",
         "properties": {
           "id": {
             "type": "integer",
-            "readOnly": true
-          },
-          "title": {
-            "type": "string"
-          },
-          "icon": {
-            "type": "string"
-          },
-          "license": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "required": ["icon", "id", "title"]
-      },
-      "Nested": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "readOnly": true
-          },
-          "homepage": {
-            "type": "string"
-          },
-          "url": {
-            "type": "string"
-          },
-          "language": {
-            "type": "string"
-          },
-          "title": {
-            "type": "string"
-          },
-          "license": {
-            "type": "string",
-            "nullable": true
-          },
-          "icon": {
-            "type": "string"
-          },
-          "active": {
-            "type": "boolean",
-            "nullable": true
-          },
-          "last_polled": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "incomplete": {
-            "type": "boolean",
-            "nullable": true
-          },
-          "salt_url": {
-            "type": "boolean",
-            "nullable": true
-          },
-          "rating": {
-            "type": "integer",
             "maximum": 2147483647,
-            "minimum": -2147483648,
-            "nullable": true
+            "minimum": -2147483648
           },
-          "premium": {
-            "type": "boolean",
-            "nullable": true
+          "title": {
+            "type": "string"
           },
-          "cookies": {
+          "image": {
+            "type": "string"
+          },
+          "license": {
             "type": "string",
-            "nullable": true
-          },
-          "exclude": {
-            "type": "string",
-            "nullable": true
-          },
-          "main": {
-            "type": "string",
-            "nullable": true
-          },
-          "tor": {
-            "type": "boolean",
-            "nullable": true
-          },
-          "asy": {
-            "type": "boolean",
-            "nullable": true
-          },
-          "iconblob": {
-            "type": "string",
-            "format": "byte",
-            "readOnly": true,
-            "nullable": true
-          },
-          "script": {
-            "type": "string",
-            "nullable": true
-          },
-          "frequency": {
-            "type": "string",
-            "nullable": true
-          },
-          "tags": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
             "nullable": true
           }
         },
-        "required": ["homepage", "icon", "iconblob", "id", "language", "title", "url"]
+        "required": ["id", "image", "title"]
       },
       "PaginatedArticleReadList": {
         "type": "object",
@@ -2542,9 +2510,6 @@
             "type": "string",
             "nullable": true
           },
-          "icon": {
-            "type": "string"
-          },
           "active": {
             "type": "boolean",
             "nullable": true
@@ -2606,6 +2571,9 @@
             "maximum": 2147483647,
             "minimum": -2147483648,
             "nullable": true
+          },
+          "image": {
+            "type": "string"
           }
         }
       },

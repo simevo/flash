@@ -14,6 +14,10 @@ defineProps<{
   feed: PatchedFeed
   clickable: boolean
 }>()
+
+const emit = defineEmits<{
+  (e: "refresh_feed", feed_id: number): void
+}>()
 </script>
 
 <template>
@@ -27,12 +31,7 @@ defineProps<{
           :title="clickable ? 'vai a tutti gli articoli di ' + feed.title : ''"
           :style="{ cursor: clickable ? 'pointer' : '' }"
         >
-          <img
-            width="100"
-            :src="`https://notizie.calomelano.it/${feed.icon}`"
-            class="img-fluid border"
-            alt="feed logo"
-          />
+          <img width="100" :src="`${feed.image}`" class="img-fluid border" alt="feed logo" />
         </component>
       </div>
       <div class="col-md-11">
@@ -50,24 +49,46 @@ defineProps<{
             }}</span>
             <a v-else :href="feed.homepage" target="_blank">{{ feed.homepage }}</a>
           </component>
-          <RouterLink
-            id="edit"
-            class="btn btn-outline-danger position-absolute"
-            title="Modifica la fonte (funzione riservata agli utenti di staff)"
+
+          <div
+            class="btn-group position-absolute"
+            role="group"
+            aria-label="Azioni"
             style="top: 1em; right: 1em"
-            role="button"
-            type="button"
-            :to="`../edit_feed/${feed.id}`"
-            v-if="auth.user?.is_staff"
           >
-            <img
-              class="icon"
-              src="~bootstrap-icons/icons/pencil.svg"
-              alt="pencil icon"
-              width="18"
-              height="18"
-            />
-          </RouterLink>
+            <RouterLink
+              id="edit"
+              class="btn btn-outline-danger"
+              title="Modifica la fonte (funzione riservata agli utenti di staff)"
+              role="button"
+              type="button"
+              :to="`../edit_feed/${feed.id}`"
+              v-if="auth.user?.is_staff"
+            >
+              <img
+                class="icon"
+                src="~bootstrap-icons/icons/pencil.svg"
+                alt="pencil icon"
+                width="18"
+                height="18"
+              />
+            </RouterLink>
+            <button
+              type="button"
+              class="btn btn-outline-primary"
+              aria-label="Aggiorna la fonte"
+              title="Aggiorna la fonte"
+              @click="emit('refresh_feed', feed.id)"
+            >
+              <img
+                class="icon"
+                src="~bootstrap-icons/icons/arrow-clockwise.svg"
+                alt="clockwise arrow icon"
+                width="18"
+                height="18"
+              />
+            </button>
+          </div>
           <p class="card-text my-1">
             <span v-for="tag in feed.tags" :key="tag" class="badge text-bg-secondary m-1 p-2">
               {{ tag }}

@@ -86,7 +86,6 @@ class Feeds(models.Model):
     language = models.TextField()
     title = models.TextField()
     license = models.TextField(blank=True, null=True)  # noqa: DJ001
-    icon = models.TextField()
     active = models.BooleanField(blank=True, null=True)
     last_polled = models.DateTimeField(blank=True, null=True)
     incomplete = models.BooleanField(blank=True, null=True)
@@ -98,7 +97,6 @@ class Feeds(models.Model):
     main = models.TextField(blank=True, null=True)  # noqa: DJ001
     tor = models.BooleanField(blank=True, null=True)
     asy = models.BooleanField(blank=True, null=True)
-    iconblob = models.BinaryField(blank=True, null=True)
     script = models.TextField(blank=True, null=True)  # noqa: DJ001
     frequency = models.TextField(blank=True, null=True)  # noqa: DJ001
     tags = ArrayField(models.TextField(), blank=True, null=True)
@@ -113,6 +111,18 @@ class Feeds(models.Model):
         return f"{self.id} - {self.title}"
 
 
+class FeedIcons(models.Model):
+    id = models.AutoField(primary_key=True)
+    feed = models.OneToOneField(Feeds, models.CASCADE)
+    image = models.ImageField(
+        upload_to="icons/",
+    )
+    stamp = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.id}"
+
+
 class FeedsCombined(models.Model):
     id = models.IntegerField(primary_key=True)
     homepage = models.TextField()
@@ -120,7 +130,6 @@ class FeedsCombined(models.Model):
     language = models.TextField()
     title = models.TextField()
     license = models.TextField(blank=True, null=True)  # noqa: DJ001
-    icon = models.TextField()
     active = models.BooleanField(blank=True, null=True)
     last_polled = models.DateTimeField(blank=True, null=True)
     incomplete = models.BooleanField(blank=True, null=True)
@@ -132,13 +141,13 @@ class FeedsCombined(models.Model):
     main = models.TextField(blank=True, null=True)  # noqa: DJ001
     tor = models.BooleanField(blank=True, null=True)
     asy = models.BooleanField(blank=True, null=True)
-    iconblob = models.BinaryField(blank=True, null=True)
     script = models.TextField(blank=True, null=True)  # noqa: DJ001
     frequency = models.TextField(blank=True, null=True)  # noqa: DJ001
     tags = ArrayField(models.TextField(), blank=True, null=True)
     last_polled_epoch = models.FloatField(blank=True, null=True)
     article_count = models.BigIntegerField(blank=True, null=True)
     average_time_from_last_post = models.IntegerField(blank=True, null=True)
+    image = models.TextField(blank=False, null=False)
 
     class Meta:
         managed = False  # Created from a view. Don't remove.
