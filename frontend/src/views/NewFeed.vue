@@ -178,7 +178,7 @@
             <p class="text-danger" v-if="errors['license']">{{ errors["license"] }}</p>
           </div>
           <div class="form-group my-3">
-            <label for="icon">Tags:</label>
+            <label>Tags:</label>
             <div>
               <span
                 v-for="[tag, value] of Object.entries(tags)"
@@ -222,26 +222,6 @@
                 data-bs-parent="#advancedAccordion"
               >
                 <div class="accordion-body">
-                  <div class="row m-1 bg-light">
-                    <div class="col-md-2">Icona</div>
-                    <div class="col-md-2">
-                      <input class="form-control" type="text" v-model="feed.icon" />
-                      <button
-                        type="button"
-                        class="btn-close"
-                        aria-label="Cancella"
-                        @click="resetIcon()"
-                      ></button>
-                    </div>
-                    <div class="col-md-8">
-                      <img
-                        width="100"
-                        :src="`https://notizie.calomelano.it/${feed.icon}`"
-                        class="img-fluid border"
-                        alt="feed logo"
-                      />
-                    </div>
-                  </div>
                   <div class="row m-1 bg-light">
                     <div class="col-md-2">Attiva</div>
                     <div class="col-md-2">
@@ -385,7 +365,6 @@ type FeedCreatePatched = Pick<
   | "language"
   | "title"
   | "license"
-  | "icon"
   | "active"
   | "tags"
   | "exclude"
@@ -403,7 +382,6 @@ const feed: Ref<FeedCreatePatched> = ref({
   language: "en",
   title: "",
   license: "",
-  icon: "static/icons/unknown.png",
   active: true,
   tags: [],
 
@@ -498,17 +476,12 @@ function resetTags() {
   })
 }
 
-function resetIcon() {
-  if (feed.value) feed.value.icon = "static/icons/unknown.png"
-}
-
 function clean() {
   resetUrl()
   resetTitle()
   resetHomepage()
   resetLicense()
   resetTags()
-  resetIcon()
 }
 
 function isValidUrl(url: string): boolean {

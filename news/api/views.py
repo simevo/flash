@@ -6,8 +6,10 @@ import time
 import uuid
 from io import BytesIO
 
+from django.conf import settings
 from django.contrib.postgres.aggregates import ArrayAgg
 from django.contrib.postgres.search import SearchVector
+from django.core.files.storage import FileSystemStorage
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.shortcuts import render
@@ -15,6 +17,7 @@ from django_filters import rest_framework as filters
 from drf_spectacular.utils import extend_schema
 from ebooklib import epub
 from feedgen.feed import FeedGenerator
+from PIL import Image
 from rest_framework import mixins
 from rest_framework import pagination
 from rest_framework import permissions
@@ -22,6 +25,7 @@ from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from xhtml2pdf import pisa
 
 import news.translate
@@ -36,6 +40,7 @@ from news.api.serializers import UserArticleListsSerializer
 from news.api.serializers import UserArticleListsSerializerFull
 from news.api.serializers import UserFeedSerializer
 from news.models import ArticlesCombined
+from news.models import FeedIcons
 from news.models import Feeds
 from news.models import FeedsCombined
 from news.models import UserArticleLists
@@ -326,7 +331,6 @@ class FeedsView(
             "language",
             "title",
             "license",
-            "icon",
             "active",
             "last_polled",
             "tags",
@@ -340,6 +344,7 @@ class FeedsView(
             "main",
             "script",
             "frequency",
+            "image",
         )
     )
     serializer_class = FeedSerializer
@@ -350,7 +355,7 @@ class FeedsView(
     )
     @action(detail=False, methods=["GET"])
     def simple(self, request, *args, **kwargs):
-        queryset = Feeds.objects.all().values("id", "title", "icon", "license")
+        queryset = FeedsCombined.objects.all().values("id", "title", "image", "license")
         serializer = FeedSerializerSimple(queryset, many=True)
         return Response(serializer.data)
 
@@ -360,6 +365,12 @@ class FeedsView(
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
+        feed_icon = FeedIcons.objects.filter(feed_id=kwargs["pk"]).first()
+        if feed_icon:
+            feed_icon.image = request.data["image"]
+            feed_icon.save()
+        else:
+            FeedIcons.objects.create(image=request.data["image"], feed=instance)
         return Response(serializer.data)
 
     @extend_schema(
@@ -559,3 +570,60 @@ class UserArticleListsView(viewsets.ModelViewSet):
         )
         epub.write_epub(response, book, {})
         return response
+
+
+class ImageUploadView(APIView):
+    def post(self, request):
+        # Get the uploaded file
+        file = request.FILES.get("image")
+
+        if not file:
+            return Response(
+                {"error": "No file provided"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if file.name.lower().endswith(".svg"):
+            fs = FileSystemStorage(location=settings.MEDIA_ROOT)
+            filename = fs.save(file.name, file)
+        else:
+            img = Image.open(file)
+            min_size = 16
+            max_size = 200
+            max_square_deviation = 0.1
+            current_width, current_height = img.size
+            if current_width < min_size or current_height < min_size:
+                return Response(
+                    {
+                        "error": f"Immagine troppo piccola, dimensione minima: {min_size} pixel",
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            if (
+                abs(current_width - current_height) / (current_width + current_height)
+                > 2 * max_square_deviation
+            ):
+                return Response(
+                    {"error": "Immagine non quadrata: differenza tra i lati > 10%"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            if current_width > max_size or current_height > max_size:
+                resized_img = img.resize((max_size, max_size), Image.Resampling.LANCZOS)
+                buffer = BytesIO()
+                resized_img.save(buffer, format=img.format or "PNG")
+                buffer.seek(0)
+                fs = FileSystemStorage(location=settings.MEDIA_ROOT)
+                filename = fs.save(f"{file.name}", buffer)
+            else:
+                fs = FileSystemStorage(location=settings.MEDIA_ROOT)
+                filename = fs.save(file.name, file)
+
+        uploaded_file_url = f"{settings.MEDIA_URL}{filename}"
+
+        return Response(
+            {
+                "fileUrl": uploaded_file_url,
+                "filename": filename,
+            },
+            status=status.HTTP_200_OK,
+        )

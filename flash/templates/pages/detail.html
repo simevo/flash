@@ -11,7 +11,7 @@
   <meta property="og:description" content="{{ excerpt }} ..." />
   <meta property="og:type" content="article" />
   <meta property="og:image"
-        content="https://notizie.calomelano.it/{{ object.feed.icon }}" />
+        content="https://notizie.calomelano.it/{{ feed_image }}" />
   <meta property="og:url"
         content="https://notizie.calomelano.it/article/{{ object.id }}" />
   <meta property="og:site_name" content="flash" />
@@ -31,7 +31,7 @@
             <img style="margin: 5px"
                  width="30"
                  height="30"
-                 src="https://notizie.calomelano.it/{{ object.feed.icon }}"
+                 src="{{ feed_image }}"
                  alt="feed logo" />
             {{ object.feed.title }}
           </span>

@@ -1,10 +1,12 @@
 from django.conf import settings
+from django.urls import path
 from rest_framework.routers import DefaultRouter
 from rest_framework.routers import SimpleRouter
 
 from flash.users.api.views import UserViewSet
 from news.api.views import ArticlesView
 from news.api.views import FeedsView
+from news.api.views import ImageUploadView
 from news.api.views import ProfileView
 from news.api.views import UserArticleListsView
 from news.api.views import UserFeedsView
@@ -19,4 +21,7 @@ router.register("user-feeds", UserFeedsView, basename="user-feeds")
 router.register("lists", UserArticleListsView, basename="lists")
 
 app_name = "api"
-urlpatterns = router.urls
+urlpatterns = [
+    *router.urls,
+    path("upload/", ImageUploadView.as_view(), name="image-upload"),
+]

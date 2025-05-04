@@ -13,15 +13,14 @@ from news.models import UserFeeds
 
 class FeedSerializerSimple(serializers.ModelSerializer):
     class Meta:
-        model = Feeds
-        fields = ["id", "title", "icon", "license"]
+        model = FeedsCombined
+        fields = ["id", "title", "image", "license"]
 
 
 class FeedSerializer(serializers.ModelSerializer):
     class Meta:
         model = FeedsCombined
         exclude = [
-            "iconblob",
             "rating",
             "premium",
             "tor",
@@ -63,7 +62,6 @@ class ArticleSerializerFull(serializers.ModelSerializer):
     class Meta:
         model = ArticlesCombined
         fields = "__all__"
-        depth = 1
 
 
 class ProfileSerializer(serializers.ModelSerializer):

@@ -5,7 +5,6 @@ CREATE TABLE feeds (
     language text NOT NULL,
     title text NOT NULL,
     license text,
-    icon text NOT NULL,
     active boolean DEFAULT false,
     last_polled timestamp with time zone,
     incomplete boolean DEFAULT false,
@@ -18,7 +17,6 @@ CREATE TABLE feeds (
     main text,
     tor boolean DEFAULT false,
     asy boolean DEFAULT true,
-    iconblob bytea,
     script text,
     frequency text
 );

@@ -13,7 +13,7 @@ export function fetch_wrapper(uri: string, options: RequestInit | undefined = un
   })
 }
 
-function getCookie(name: string) {
+export function getCookie(name: string) {
   let cookieValue = ""
   if (document.cookie && document.cookie !== "") {
     const cookies = document.cookie.split(";")

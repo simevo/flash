@@ -30,7 +30,7 @@ export type Filters = {
 }
 export type FeedCount = {
   feed: string
-  icon: string
+  image: string
   count: number
   feed_id: number
 }

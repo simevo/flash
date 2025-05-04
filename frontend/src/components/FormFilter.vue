@@ -56,7 +56,7 @@ const mergedFeedCounts = computed(() => {
     if (!(feed.id in mfc)) {
       mfc[feed.id] = {
         feed: feed.title,
-        icon: feed.icon,
+        image: feed.image,
         count: 0,
         feed_id: feed.id,
       }
@@ -180,13 +180,7 @@ onMounted(() => {
         @change="emit('toggle_feed', feed.feed_id)"
       />
       <label class="form-check-label" :for="`feed${feed.feed_id}`">
-        <img
-          class="me-2"
-          width="30"
-          height="30"
-          :src="'https://notizie.calomelano.it/' + feed.icon"
-          alt="feed logo"
-        />
+        <img class="me-2" width="30" height="30" :src="feed.image" alt="feed logo" />
         <span class="text-muted">{{ feed.feed }} ({{ feed.count }})</span>
       </label>
     </div>

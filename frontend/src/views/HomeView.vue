@@ -50,7 +50,7 @@ const feed_counts = computed(() => {
     } else {
       feed_counts[article.feed] = {
         feed: feed_dict.value[article.feed].title,
-        icon: feed_dict.value[article.feed].icon,
+        image: feed_dict.value[article.feed].image,
         count: 1,
         feed_id: article.feed,
       }
