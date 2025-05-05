@@ -41,7 +41,7 @@ Additional features:
 4. **Algorithmic newsfeed** based on user preferences – a special article list (identified by the “robot” icon) is the "newsfeed" which is automatically updated every hour by the algorithm™ according to your preferences. The newsfeed personalization options are set:
 
    - languages and whitelisted / blacklisted keywords, from the “Settings” page
-  
+
    - feeds ratings: up to 5 stars (positive) and down to 5 thumbs-downs (if you rate a feed with 5 thumbs-downs, their articles will disappear from your personalized newsfeed completely!).
 
 5. Exporting lists as **RSS** feeds – all lists (including the automatic newsfeed) can be exported as anonymized and public RSS feeds (accessible without authentication) so that they can be consumed by other news aggregators or published automatically elsewhere: just click on the button with the RSS icon to copy the link to the clipboard. This feature can be used to create element / matrix rooms for each topic, where a "Feed Rss" bot publishes the relevant article links to bootstrap conversations.
