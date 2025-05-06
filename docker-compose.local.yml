@@ -120,6 +120,6 @@ services:
     environment:
       - PASSKEY=your_passkey
       - COOKIE_SECRET=your_cookie_secret
-      - ENCRYPTION_KEY=your_encryption_key
+      - ENCRYPTION_KEY=your__encryption
     volumes:
       - ./mkfd:/configs:z
