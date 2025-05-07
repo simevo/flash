@@ -1,15 +1,18 @@
-# ruff: noqa: S603, PLR0913, C901, ASYNC210, S110, PLR0912, FBT003
+# ruff: noqa: S603, C901, ASYNC210, PLR0912, FBT003
 
 import asyncio
 import copy
 import datetime
 import html
+import http.client
 import http.cookiejar
 import json
 import logging
 import subprocess
 import time
 import urllib
+from typing import Any
+from typing import TypedDict
 
 import aiohttp
 import feedparser
@@ -29,41 +32,47 @@ HTTP_SUCCESS_CODE = 200
 USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64; rv:52.0) Gecko/20100101 Firefox/52.0"
 
 
-# https://stackoverflow.com/a/13565185
-def last_day_of_month(any_day):
-    next_month = any_day.replace(day=28) + datetime.timedelta(
-        days=4,
-    )  # this will never fail
+def last_day_of_month(date: datetime.datetime) -> datetime.datetime:
+    """Calculate the last day of the given month."""
+    next_month = date.replace(day=28) + datetime.timedelta(days=4)
     return next_month - datetime.timedelta(days=next_month.day)
 
 
-def sanitize(html, exclude):
-    soup = BeautifulSoup(html, "lxml")
-    for tag in soup.find_all(True):
-        if tag.name in ["style", "script", "svg", "picture"]:
-            tag.extract()
+def sanitize_html(html_content: str, exclude: str | None = None) -> str:
+    soup = BeautifulSoup(html_content, "lxml")
+    for element in soup.find_all(True):
+        if isinstance(element, Tag):
+            if element.name in ["style", "script", "svg", "picture"]:
+                element.extract()
     if exclude and exclude != "":
         for element in soup.select(exclude):
             element.extract()
-    return soup.prettify()
+    raw_bytes = soup.encode_contents()
+    return raw_bytes.decode("utf-8")
 
 
-async def download_content(client, e, feed, verbose):
+async def download_content(
+    client: aiohttp.ClientSession,
+    entry: dict[str, Any],
+    feed: Any,
+    *,
+    verbose: bool,
+) -> tuple[bytes, int, int]:
     # use readability service to extract the content
     proxy = None
     try:
-        async with client.get(url=e.link, proxy=proxy) as response:
+        async with client.get(url=entry["link"], proxy=proxy) as response:
             if verbose:
-                logger.info(f"=== queueing {e.link}")
+                logger.info(f"=== queueing {entry['link']}")
             html = await response.read()
             if response.status == HTTP_SUCCESS_CODE:
                 retrieved = 1
                 failed = 0
-                html = html.decode("utf-8", "ignore")
-                content_sanitized = sanitize(html, feed.exclude)
+                decoded_html = html.decode("utf-8", "ignore")
+                content_sanitized = sanitize_html(decoded_html, feed.exclude)
                 headers = {"Content-Type": "text/html; charset=UTF-8"}
                 r = requests.post(
-                    "http://readability:8081?href=" + e.link,
+                    "http://readability:8081?href=" + entry["link"],
                     headers=headers,
                     data=content_sanitized.encode("utf-8"),
                     timeout=30,
@@ -74,12 +83,14 @@ async def download_content(client, e, feed, verbose):
                 retrieved = 0
                 failed = 1
                 logger.error(
-                    f"=== url {e.link} returned error status {response.status}",
+                    f"=== url {entry['link']} returned error status {response.status}",
                 )
                 if verbose:
                     logger.info("f=== content: {html}")
     except Exception:
-        logger.exception(f"=== exception while asynchronously retrieving {e.link}")
+        logger.exception(
+            f"=== exception while asynchronously retrieving {entry['link']}",
+        )
         content = ""
         retrieved = 0
         failed = 1
@@ -87,54 +98,77 @@ async def download_content(client, e, feed, verbose):
     return (content, retrieved, failed)
 
 
-async def retrieve(client, e, feed, verbose):
+async def retrieve(
+    client: aiohttp.ClientSession,
+    entry: dict[str, Any],
+    feed: Any,
+    *,
+    verbose: bool,
+) -> tuple[int, int, int]:
     retrieved = 0
     failed = 0
     stored = 0
-    content = ""
-    url = e["link"]
-    if feed.incomplete and e.link:
-        content, retrieved, failed = await download_content(client, e, feed, verbose)
-    elif "content" in e:
-        for c in e["content"]:
+    url = entry["link"]
+    if feed.incomplete and entry["link"]:
+        content, retrieved, failed = await download_content(
+            client,
+            entry,
+            feed,
+            verbose=verbose,
+        )
+    elif "content" in entry:
+        content = b"" if isinstance(entry["content"][0], bytes) else ""
+        for c in entry["content"]:
             content += c.value
-    elif "summary" in e:
-        content = e["summary"]
+    elif "summary" in entry:
+        content = entry["summary"]
     else:
         failed += 1
         logger.error(f"=== url {url} has no content and no summary")
+        return (retrieved, failed, stored)
 
-    if isinstance(content, bytes):
-        content = content.decode()
+    decoded_content = content.decode() if isinstance(content, bytes) else content
 
     if feed.salt_url:
         # add some cruft to the urls so that they are unique
         url = f"{url}#{int(time.time())}"
-    if len(content) > 0:
-        article_id = await store_article(
-            author=e.get("author", "anonimo"),
-            title=e.get("title", ""),
-            url=url,
-            content=content,
-            feed_id=feed.id,
-            language=feed.language,
-            stamp=e.get("stamp", 0),
-            salt_url=feed.salt_url,
-            exclude=feed.exclude,
+    if len(decoded_content) > 0:
+        parsed_url = urllib.parse.urlparse(url)
+        base_url = urllib.parse.urlunsplit(
+            (parsed_url.scheme, parsed_url.netloc, "", "", ""),
         )
+        author = clean(entry.get("author", "anonimo"))
+        normalized_content = normalize_content(decoded_content, base_url, feed.exclude)
+        title = clean(entry.get("title", ""))
+        article: ArticleDict = {
+            "author": author,
+            "content": normalized_content,
+            "feed_id": feed.id,
+            "language": feed.language,
+            "stamp": entry.get("stamp", 0),
+            "title": title,
+            "url": url,
+        }
+        article_id = await store_article(article)
         if article_id > 0:
             stored += 1
             if verbose:
                 logger.info(
-                    f"=== new article {e["link"]} asynchronously stored with id {article_id}",  # noqa: E501
+                    f"=== new article {entry["link"]} asynchronously stored with id {article_id}",  # noqa: E501
                 )
         elif article_id < 0:
             failed += 1
     return (retrieved, failed, stored)
 
 
-async def main(loop, entries, feed, verbose):
-    cookies = {}
+async def main(
+    loop: asyncio.AbstractEventLoop,
+    entries: list[dict[str, Any]],
+    feed: Any,
+    *,
+    verbose: bool,
+) -> list[tuple[int, int, int]]:
+    cookies: dict[str, str] = {}
     if feed.cookies and feed.cookies != "":
         cookies_file = feed.cookies.replace("/srv/calo.news/", "/app/")
         # find out if the file exists
@@ -142,7 +176,8 @@ async def main(loop, entries, feed, verbose):
             cj = http.cookiejar.MozillaCookieJar(cookies_file)
             cj.load()
             for c in cj:
-                cookies[c.name] = c.value
+                if c.value:
+                    cookies[c.name] = c.value
         except Exception:
             logger.exception(f"=== could not load cookies from {cookies_file}")
     headers = {
@@ -156,14 +191,11 @@ async def main(loop, entries, feed, verbose):
         timeout=timeout,
     ) as client:
         return await asyncio.gather(
-            *[retrieve(client, e, feed, verbose) for e in entries],
+            *[retrieve(client, entry, feed, verbose=verbose) for entry in entries],
         )
 
 
-def normalize(content, base_url=None, exclude=None):
-    html = " ".join(line.strip() for line in content.split("\n"))
-    soup = BeautifulSoup(html, "lxml")
-
+def normalize_structure(soup, exclude):
     # remove blacklisted tags
     for name in [
         "img",
@@ -198,57 +230,73 @@ def normalize(content, base_url=None, exclude=None):
 
     # turn divs into paragraphs
     for div in soup.find_all("div"):
-        div.name = "p"
+        if isinstance(div, Tag):
+            div.name = "p"
 
     # unpack graylisted tags
     for tag in soup.find_all(True):
-        if tag.name not in [
-            "a",
-            "p",
-            "i",
-            "strong",
-            "b",
-            "br",
-            "table",
-            "tr",
-            "th",
-            "td",
-            "h1",
-            "h2",
-            "h3",
-            "h4",
-            "h5",
-            "h6",
-            "pre",
-            "hr",
-            "blockquote",
-            "ul",
-            "ol",
-            "li",
-            "dl",
-            "dt",
-            "dd",
-            "em",
-            "small",
-            "s",
-            "cite",
-            "code",
-            "sub",
-            "sup",
-            "span",
-            "tbody",
-            "thead",
-            "tfoot",
-        ]:
-            tag.replaceWithChildren()
+        if isinstance(tag, Tag):
+            if tag.name not in [
+                "a",
+                "p",
+                "i",
+                "strong",
+                "b",
+                "br",
+                "table",
+                "tr",
+                "th",
+                "td",
+                "h1",
+                "h2",
+                "h3",
+                "h4",
+                "h5",
+                "h6",
+                "pre",
+                "hr",
+                "blockquote",
+                "ul",
+                "ol",
+                "li",
+                "dl",
+                "dt",
+                "dd",
+                "em",
+                "small",
+                "s",
+                "cite",
+                "code",
+                "sub",
+                "sup",
+                "span",
+                "tbody",
+                "thead",
+                "tfoot",
+            ]:
+                tag.replaceWithChildren()
+
+
+def normalize_content(
+    content: str,
+    base_url: str | None = None,
+    exclude: str | None = None,
+) -> str:
+    html = " ".join(line.strip() for line in content.split("\n"))
+    soup = BeautifulSoup(html, "lxml")
+
+    normalize_structure(soup, exclude)
 
     # normalize links
     if base_url:
         for a in soup.find_all("a", href=True):
-            a["target"] = "_blank"
-            parsed_link = urllib.parse.urlparse(a["href"])
-            if parsed_link.scheme == "":
-                a["href"] = urllib.parse.urljoin(base_url, a["href"])
+            if isinstance(a, Tag):
+                a["target"] = "_blank"
+                href_value = a["href"]
+                if isinstance(href_value, str):
+                    parsed_link = urllib.parse.urlparse(href_value)
+                    if parsed_link.scheme == "":
+                        a["href"] = urllib.parse.urljoin(base_url, href_value)
 
     # remove duplicate br tags
     for br in soup.find_all("br"):
@@ -256,7 +304,7 @@ def normalize(content, base_url=None, exclude=None):
             br.extract()
 
     # remove comments
-    comments = soup.findAll(text=lambda text: isinstance(text, Comment))
+    comments = soup.find_all(string=lambda text: isinstance(text, Comment))
     [comment.extract() for comment in comments]
 
     # identify top-level element
@@ -285,7 +333,7 @@ def normalize(content, base_url=None, exclude=None):
         "sub",
         "sup",
     ]
-    for s in top.contents:
+    for s in top.children:
         if isinstance(s, NavigableString) or s.name in inline_tags:
             current_paragraph.append(copy.copy(s))
         elif s.name == "p":
@@ -310,73 +358,72 @@ def normalize(content, base_url=None, exclude=None):
     # flatten
     soup.html.body.unwrap()
     soup.html.unwrap()
-    pretty = soup.prettify(formatter="html5")
+
+    prettified = soup.prettify(formatter="html5")
+    decoded = (
+        prettified.decode("utf-8") if isinstance(prettified, bytes) else prettified
+    )
     # get rid of nbsp
-    return pretty.replace("&nbsp;", " ")
+    return decoded.replace("&nbsp;", " ")
 
 
-def clean(s):
-    t = html.unescape(s)
-    u = lxml.html.fromstring(t)
-    return u.text_content()
+def clean(s: str) -> str:
+    if s:
+        t = html.unescape(s)
+        u = lxml.html.fromstring(t)
+        return u.text_content()
+    return s
 
 
-# returns:
-# - -1 on failure
-# - a strictly positive integer (the id of the inserted article) on success
+class ArticleDict(TypedDict, total=False):
+    author: str
+    content: str
+    feed_id: int
+    language: str
+    stamp: int
+    title: str
+    url: str
+
+
 @sync_to_async
 def store_article(
-    author,
-    title,
-    url,
-    content,
-    feed_id,
-    language,
-    stamp=0,
-    salt_url=None,
-    exclude=None,
-):
-    parsed_url = urllib.parse.urlparse(url)
-    base_url = urllib.parse.urlunsplit(
-        (parsed_url.scheme, parsed_url.netloc, "", "", ""),
-    )
-    content = normalize(content, base_url, exclude)
-    if author:
-        author = clean(author)
-    if title:
-        title = clean(title)
-    if stamp == 0:
-        stamp = time.strftime(time_format, time.gmtime())
-
+    article: ArticleDict,
+) -> int:
+    """
+    Store an article in the database.
+    returns:
+    - None on failure
+    - a strictly positive integer (the id of the inserted article) on success
+    """
     base_language = "it"
 
-    if language == base_language:
-        article = Articles(
-            author=author,
-            title=title,
-            url=url,
-            content=content,
-            feed_id=feed_id,
-            language=language,
-            stamp=stamp,
+    if article["language"] == base_language:
+        instance = Articles(
+            author=article["author"],
+            title=article["title"],
+            url=article["url"],
+            content=article["content"],
+            feed_id=article["feed_id"],
+            language=article["language"],
+            stamp=article["stamp"],
         )
-        article.save()
-        return article.id
+        instance.save()
+        return instance.id
 
-    article = Articles(
-        author=author,
-        title_original=title,
-        url=url,
-        content_original=content,
-        feed_id=feed_id,
-        language=language,
-        stamp=stamp,
+    instance = Articles(
+        author=article["author"],
+        title_original=article["title"],
+        url=article["url"],
+        content_original=article["content"],
+        feed_id=article["feed_id"],
+        language=article["language"],
+        stamp=article["stamp"],
     )
-    article.save()
-    return article.id
+    instance.save()
+    return instance.id
 
 
-def frequency_skip(frequency_string, feed_id):
+def frequency_skip(frequency_string: str, feed_id: int) -> str | None:
     # polling will happen only if the current UTC date and time satisfy all
     # conditions; frequency_string is in JSON format:
     #   { "day": [1, 2, 3], "hour": [12, 13], "weekday": [7] })
@@ -405,24 +452,40 @@ def frequency_skip(frequency_string, feed_id):
     return None
 
 
-def prune_already_retrieved(entries):
-    # prune from the feed the articles we already pulled
-    # To remove elements from a list while iterating over it, you need to go backwards
-    # http://stackoverflow.com/a/7573706
+def prune_duplicates(entries: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """
+    Removes entries with duplicate 'link' values from a list of dictionaries.
+    Preserves the first occurrence of each link.
+    """
+    seen_links = set()
+    result = []
+    for entry in entries:
+        if entry["link"] not in seen_links:
+            result.append(entry)
+            seen_links.add(entry["link"])
+    return result
+
+
+def prune_already_retrieved(entries: list[dict[str, Any]]) -> int:
+    """
+    prune in-place the articles we already stored in the DB
+    To remove elements from a list while iterating over it, you need to go backwards
+    http://stackoverflow.com/a/7573706
+    """
     pruned = 0
-    for e in entries[-1::-1]:
-        article = Articles.objects.filter(url=e["link"]).first()
+    for entry in entries[-1::-1]:
+        article = Articles.objects.filter(url=entry["link"]).first()
         if article:
             logger.info(
-                f"=== article {e["link"]} already retrieved with id = {article.id}",
+                f"=== article {entry["link"]} already retrieved with id = {article.id}",
             )
-            entries.remove(e)
+            entries.remove(entry)
             pruned += 1
 
     return pruned
 
 
-def poll_feed(feed):
+def _poll_feed(feed):
     verbose = True
     try:
         response = requests.get(
@@ -430,37 +493,55 @@ def poll_feed(feed):
             timeout=60,
             headers={"User-Agent": USER_AGENT},
         )
-    except requests.ReadTimeout:
+    except requests.exceptions.HTTPError:
+        logger.exception(f"== http error when reading RSS {feed.url}:")
+        response = None
+    except requests.exceptions.ConnectionError:
+        logger.exception(f"== connection error when reading RSS {feed.url}")
+        response = None
+    except requests.exceptions.Timeout:
         logger.exception(f"== timeout when reading RSS {feed.url}")
-        return (0, 0, 0)
+        response = None
+    except requests.exceptions.RequestException:
+        logger.exception(
+            f"== generic request exception when reading RSS {feed.url}",
+        )
+        response = None
     except Exception:
-        logger.exception(f"== exception when reading RSS {feed.url}")
+        logger.exception(f"== generic exception when reading RSS {feed.url}")
+        response = None
+    if not response:
         return (0, 0, 0)
     if response.status_code != HTTP_SUCCESS_CODE:
         logger.error(f"== url {feed.url} returned error status {response.status_code}")
         return (0, 0, 0)
+
     rss = response.text
     rss_feed = feedparser.parse(rss)
 
-    prune_already_retrieved(rss_feed["entries"])
+    entries = prune_duplicates(rss_feed["entries"])
+    prune_already_retrieved(entries)
 
     if verbose:
-        for e in rss_feed["entries"]:
-            logger.info(f"== to retrieve: {e['link']}")
+        for entry in entries:
+            logger.info(f"== to retrieve: {entry['link']}")
 
-    for e in rss_feed["entries"]:
-        if e.get("published_parsed"):
-            if e["published_parsed"] > time.gmtime():
-                e["stamp"] = time.strftime(time_format, time.gmtime())
+    for entry in entries:
+        if entry.get("published_parsed"):
+            if entry["published_parsed"] > time.gmtime():
+                entry["stamp"] = time.strftime(time_format, time.gmtime())
             else:
-                e["stamp"] = time.strftime(time_format, e["published_parsed"])
+                entry["stamp"] = time.strftime(
+                    time_format,
+                    entry["published_parsed"],
+                )
         else:
-            e["stamp"] = time.strftime(time_format, time.gmtime())
+            entry["stamp"] = time.strftime(time_format, time.gmtime())
 
-    entries = sorted(rss_feed["entries"], key=lambda e: e["stamp"])
+    sorted_entries = sorted(entries, key=lambda entry: entry["stamp"])
     loop = asyncio.new_event_loop()
     results = loop.run_until_complete(
-        main(loop, entries, feed, verbose),
+        main(loop, sorted_entries, feed, verbose=verbose),
     )
     retrieved = failed = stored = 0
     for r in results:
@@ -472,8 +553,6 @@ def poll_feed(feed):
 
 
 class Poller:
-    verbose = False
-
     def __init__(self, feed):
         self.stored = 0
         self.retrieved = 0
@@ -522,7 +601,7 @@ class Poller:
                 self.failed += int(results[1])
                 self.stored += int(results[2])
         else:
-            results = poll_feed(self.feed)
+            results = _poll_feed(self.feed)
             self.retrieved += results[0]
             self.failed += results[1]
             self.stored += results[2]
