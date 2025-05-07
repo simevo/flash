@@ -449,7 +449,7 @@ const tags = ref({
 })
 
 async function fetchFeed() {
-  const response = await fetch_wrapper(`../../api/feeds/${props.feed_id}`)
+  const response = await fetch_wrapper(`../../api/feeds/${props.feed_id}/`)
   if (response.status == 403) {
     document.location = "/accounts/"
   } else {

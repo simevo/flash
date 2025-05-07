@@ -240,7 +240,7 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 async function fetchArticle() {
-  const response = await fetch_wrapper(`../../api/articles/${props.article_id}`)
+  const response = await fetch_wrapper(`../../api/articles/${props.article_id}/`)
   if (response.status == 403) {
     document.location = "/accounts/"
   } else {

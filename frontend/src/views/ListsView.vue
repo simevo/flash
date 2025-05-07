@@ -280,7 +280,7 @@ async function read_article() {
 }
 
 async function fetchArticle(article_id: number): Promise<Article> {
-  const response = await fetch_wrapper(`../../api/articles/${article_id}`)
+  const response = await fetch_wrapper(`../../api/articles/${article_id}/`)
   const data: Article = await response.json()
   return data
 }
