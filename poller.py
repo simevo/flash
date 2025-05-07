@@ -4,7 +4,6 @@ import asyncio
 import copy
 import datetime
 import html
-import http.client
 import http.cookiejar
 import json
 import logging
@@ -17,6 +16,7 @@ from typing import TypedDict
 import aiohttp
 import feedparser
 import lxml.html
+import pytz
 import requests
 from asgiref.sync import sync_to_async
 from bs4 import BeautifulSoup
@@ -485,6 +485,60 @@ def prune_already_retrieved(entries: list[dict[str, Any]]) -> int:
     return pruned
 
 
+def generate_rss(json_data):
+    # Create the RSS header
+    rss = """<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+<channel>
+<title>News Feed</title>
+<link>https://example.com</link>
+<description>A collection of news articles</description>
+"""
+
+    # Process each item in the JSON data
+    for item in json_data:
+        # Convert published_at to RSS format if available
+        pub_date = ""
+        if item.get("published_at"):
+            dt = datetime.datetime.strptime(
+                item["published_at"],
+                "%Y-%m-%dT%H:%M:%S.%fZ",
+            ).astimezone(datetime.UTC)
+            pub_date = dt.strftime("%a, %d %b %Y %H:%M:%S %z")
+        else:
+            # Use current date/time if none provided
+            dt = datetime.datetime.now(pytz.UTC)
+            pub_date = dt.strftime("%a, %d %b %Y %H:%M:%S %z")
+
+        # Extract author information
+        author = (
+            item.get("author_name") or item.get("provider_name") or "Unknown Author"
+        )
+
+        # Add the item to the RSS feed
+        rss += f"""
+<item>
+<title>{item['title']}</title>
+<link>{item['url']}</link>
+<description>{item['description']}</description>
+<pubDate>{pub_date}</pubDate>
+<author>{author}</author>
+"""
+
+        # Add image if available
+        if item.get("image"):
+            rss += f"""<enclosure url="{item['image']}" type="image/jpeg"/>"""
+
+        rss += "</item>\n"
+
+    # Close the RSS structure
+    rss += """
+</channel>
+</rss>
+"""
+    return rss
+
+
 def _poll_feed(feed):
     verbose = True
     try:
@@ -516,7 +570,12 @@ def _poll_feed(feed):
         logger.error(f"== url {feed.url} returned error status {response.status_code}")
         return (0, 0, 0)
 
-    rss = response.text
+    if feed.url[-29:] == "/api/v1/trends/links?limit=20":
+        json_data = json.loads(response.text)
+        rss = generate_rss(json_data)
+    else:
+        rss = response.text
+
     rss_feed = feedparser.parse(rss)
 
     entries = prune_duplicates(rss_feed["entries"])
