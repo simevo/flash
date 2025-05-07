@@ -21,7 +21,7 @@ def create_views(apps, schema_editor):
                             FROM
                                 feeds
                                 LEFT OUTER JOIN news_feedicons ON feeds.id = news_feedicons.feed_id
-                                JOIN feeds_data ON feeds.id = feeds_data.id)""")
+                                LEFT OUTER JOIN feeds_data ON feeds.id = feeds_data.id)""")
 
 def delete_views(apps, schema_editor):
 
