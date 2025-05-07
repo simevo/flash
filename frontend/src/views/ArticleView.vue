@@ -184,7 +184,7 @@
           <small class="text-muted">Licenza: {{ feed_dict[article.feed].license }}</small>
         </div>
       </div>
-      <div class="row mt-3" v-if="article.language == base_language">
+      <div class="row mt-3" style="min-height: 50vh" v-if="article.language == base_language">
         <div
           id="content_tts"
           :lang="base_language"
@@ -192,7 +192,11 @@
           v-html="article.content || ''"
         />
       </div>
-      <div class="row mt-3" v-else-if="article.content == null || article.content.trim() === ''">
+      <div
+        class="row mt-3"
+        style="min-height: 50vh"
+        v-else-if="article.content == null || article.content.trim() === ''"
+      >
         <div
           id="content_tts"
           :lang="article.language || base_language"
@@ -200,7 +204,7 @@
           v-html="article.content_original || ''"
         />
       </div>
-      <div class="row mt-3" v-else>
+      <div class="row mt-3" style="min-height: 50vh" v-else>
         <div
           id="content_tts"
           :lang="article.language || base_language"
@@ -268,7 +272,7 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 async function fetchArticle() {
-  const response = await fetch_wrapper(`../../api/articles/${props.article_id}`)
+  const response = await fetch_wrapper(`../../api/articles/${props.article_id}/`)
   if (response.status == 403) {
     document.location = "/accounts/"
   } else {
