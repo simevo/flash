@@ -262,7 +262,7 @@ const filtered_feeds = computed(() => {
     const sanitized = search_value.replace(regex, "")
     const trimmed = sanitized.replace(/\s/g, "")
     return fff.filter((feed) => {
-      const text = feed.title + " " + feed.url
+      const text = feed.title + " " + feed.url + " " + feed.license
       return text.toLowerCase().includes(trimmed)
     })
   } else {
