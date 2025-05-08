@@ -5,7 +5,7 @@
         <h1>
           Fonti
           <RouterLink
-            class="btn btn-danger float-end"
+            class="btn btn-success float-end"
             title="Crea una nuova fonte (funzione riservata agli utenti di staff)"
             role="button"
             type="button"
@@ -21,26 +21,44 @@
             />
             Nuova fonte
           </RouterLink>
+          <button
+            @click="clean()"
+            type="button"
+            class="btn btn-danger float-end me-2"
+            aria-label="Pulisci tutti i campi"
+            title="Pulisci tutti i campi"
+            :disabled="not_filtering"
+          >
+            Azzera filtri
+          </button>
         </h1>
-        <select
-          v-model="language"
-          class="form-select mb-3"
-          aria-label="Filtra per lingua"
-          title="Filtra per lingua"
-        >
-          <option value="all" selected>Tutte le lingue</option>
-          <option v-for="code in Object.keys(languages)" :key="code" :value="code">
-            {{ languages[code] }}
-          </option>
-        </select>
-        <div class="input-group position-relative d-inline-flex align-items-center">
+        <div class="input-group position-relative d-inline-flex align-items-center mb-3">
+          <label for="language" class="col-2"> Lingua </label>
+          <select
+            v-model="language"
+            class="form-select"
+            aria-label="Filtra per lingua"
+            title="Filtra per lingua"
+            id="language"
+            name="language"
+          >
+            <option value="all" selected>Tutte le lingue</option>
+            <option v-for="code in Object.keys(languages)" :key="code" :value="code">
+              {{ languages[code] }}
+            </option>
+          </select>
+        </div>
+        <div class="input-group position-relative d-inline-flex align-items-center mb-3">
+          <label for="text" class="col-2"> Ricerca </label>
           <input
             type="text"
-            class="form-control mb-3"
+            class="form-control"
             v-model="search"
             placeholder="Cerca per parola..."
             aria-label="Cerca"
             title="Cerca"
+            id="text"
+            name="text"
           />
           <button
             type="button"
@@ -51,7 +69,8 @@
             @click="resetSearch()"
           ></button>
         </div>
-        <div class="mb-3">
+        <div class="input-group position-relative d-inline-flex align-items-center mb-3">
+          <label class="col-2"> Tags </label>
           <span
             v-for="[tag, value] of Object.entries(tags)"
             :key="tag"
@@ -66,19 +85,21 @@
           </span>
           <button
             type="button"
-            class="btn-close"
-            style="float: right; margin-right: 8px"
+            class="btn-close float-end me-1 ms-auto"
             aria-label="ripristina"
             title="ripistina selezione dei tag"
             @click="resetTags()"
           ></button>
         </div>
         <div class="input-group position-relative d-inline-flex align-items-center mb-3">
+          <label for="ordinamento" class="col-2"> Ordinamento </label>
           <select
             v-model="sort_by"
             class="form-select"
             aria-label="Ordinamento"
             title="Ordinamento"
+            id="ordinamento"
+            name="ordinamento"
           >
             <option value="id" selected>Creazione</option>
             <option value="url">Link</option>
@@ -110,6 +131,7 @@
             @click="toggle_sort()"
           />
         </div>
+        <hr />
         <div v-if="filtered_feeds.length == 0">
           <div class="alert alert-warning text-center" role="alert">
             Non ci sono fonti da visualizzare.
@@ -313,4 +335,19 @@ async function refresh_feed(feed_id: number) {
     fetchFeeds()
   }
 }
+
+function clean() {
+  language.value = "all"
+  Object.keys(tags.value).forEach((x) => (tags.value[<tag_keys>x] = true))
+  sort_by.value = "id"
+  search.value = ""
+}
+
+const not_filtering = computed(
+  () =>
+    language.value == "all" &&
+    Object.values(tags.value).every((x) => x === true) &&
+    sort_by.value == "id" &&
+    search.value == "",
+)
 </script>
