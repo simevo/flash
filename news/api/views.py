@@ -205,7 +205,7 @@ class ArticlesFilter(filters.FilterSet):
 
     class Meta:
         model = ArticlesCombined
-        fields = ["feed_id"]
+        fields = ["feed_id", "url"]
 
 
 class ArticlesView(

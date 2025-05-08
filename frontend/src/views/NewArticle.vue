@@ -3,13 +3,7 @@
     <div class="row">
       <div class="col-md-8 offset-md-2">
         <h1 id="page-top" class="text-center">Segnala un nuovo articolo</h1>
-        <div
-          class="btn-group"
-          role="group"
-          aria-label="Azioni"
-          style="display: none"
-          v-show="received"
-        >
+        <div class="my-3">
           <button
             @click="send()"
             type="button"
@@ -17,6 +11,7 @@
             aria-label="Invia l'articolo all'aggregatore"
             title="Invia l'articolo all'aggregatore"
             v-bind:disabled="errors_any"
+            v-show="received"
           >
             Invia
           </button>
@@ -26,6 +21,7 @@
             class="btn btn-secondary"
             aria-label="Pulisci tutti i campi"
             title="Pulisci tutti i campi"
+            v-show="article.url"
           >
             Azzera
           </button>
@@ -36,11 +32,11 @@
             class="btn btn-danger"
             aria-label="Apri il link in un nuovo tab"
             title="Apri il link in un nuovo tab"
+            v-show="!errors['url']"
           >
             Apri URL
           </a>
         </div>
-        <!-- btn-group -->
       </div>
     </div>
     <div class="row">
@@ -57,7 +53,7 @@
             </label>
             <input
               type="url"
-              class="form-control"
+              class="form-control mt-2"
               id="url"
               name="url"
               placeholder="http://..."
@@ -475,38 +471,58 @@ function sanitize(doc: Document) {
 
 function prefill() {
   const escaped = encodeURIComponent(article.value.url)
-  fetch_wrapper("/proxy/" + escaped, { method: "GET" })
+
+  fetch_wrapper("/api/articles/?url=" + escaped, { method: "GET" })
     .then((response) => {
       if (!response.ok) {
         alert("Errore di rete")
       }
-      return response.text()
+      return response.json()
     })
-    .then((html) => {
-      const parser = document.createElement("a")
-      parser.href = article.value.url
-      const doc = document.implementation.createHTMLDocument("")
-      doc.documentElement.innerHTML = html
-      sanitize(doc)
-      article.value.author = guess_author(doc)
-      const r = new Readability(doc)
-      try {
-        const a = r.parse()
-        if (a) {
-          article.value.title = a.title
-          if (quill) quill.clipboard.dangerouslyPasteHTML(0, a.content)
-          guess_language()
+    .then((data) => {
+      // { "count": 1, "next": null, "previous": null, "results": [...] }
+      if (data.count === 0) {
+        fetch_wrapper("/proxy/" + escaped, { method: "GET" })
+          .then((response) => {
+            if (!response.ok) {
+              alert("Errore di rete")
+            }
+            return response.text()
+          })
+          .then((html) => {
+            const parser = document.createElement("a")
+            parser.href = article.value.url
+            const doc = document.implementation.createHTMLDocument("")
+            doc.documentElement.innerHTML = html
+            sanitize(doc)
+            article.value.author = guess_author(doc)
+            const r = new Readability(doc)
+            try {
+              const a = r.parse()
+              if (a) {
+                article.value.title = a.title
+                if (quill) quill.clipboard.dangerouslyPasteHTML(0, a.content)
+                guess_language()
+              }
+            } catch (error) {
+              alert("Impossibile estrarre il contenuto: " + error)
+            }
+            trying.value = false
+            received.value = true
+          })
+          .catch((error) => {
+            alert("La pagina non risponde: " + error)
+            trying.value = false
+            received.value = true
+          })
+      } else {
+        if (confirm("Un articolo con questa url esiste già, vuoi vederlo?")) {
+          document.location = `/article/${data.results[0].id}`
+        } else {
+          trying.value = false
+          clean()
         }
-      } catch (error) {
-        alert("Impossibile estrarre il contenuto: " + error)
       }
-      trying.value = false
-      received.value = true
-    })
-    .catch((error) => {
-      alert("La pagina non risponde: " + error)
-      trying.value = false
-      received.value = true
     })
 }
 
