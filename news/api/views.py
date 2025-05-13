@@ -4,6 +4,7 @@ import html
 import re
 import uuid
 from io import BytesIO
+from urllib.parse import urlparse
 from xml.etree import ElementTree as ET
 
 from bs4 import BeautifulSoup
@@ -23,6 +24,7 @@ from ebooklib import epub
 from feedgen.feed import FeedGenerator
 from pgvector.django import CosineDistance
 from PIL import Image
+from requests import Request
 from rest_framework import mixins
 from rest_framework import pagination
 from rest_framework import permissions
@@ -262,13 +264,40 @@ class ArticlesFilter(filters.FilterSet):
         model = ArticlesCombined
         fields = ["feed_id", "url"]
 
-
 def clean_html(raw_html):
     # Remove HTML tags
     soup = BeautifulSoup(raw_html, "html.parser")
     text = soup.get_text()
     # Convert HTML entities to characters
     return html.unescape(text)
+
+
+def extract_protocol_host_port(url):
+    """
+    Extract protocol://host:port from a URL.
+
+    Args:
+        url (str): Input URL string
+
+    Returns:
+        str: Formatted protocol://host:port string
+
+    Raises:
+        ValueError: If URL lacks scheme or hostname
+    """
+    parsed = urlparse(url)
+
+    # Validate required components
+    if not parsed.scheme or not parsed.hostname:
+        msg = "Invalid URL format"
+        raise ValueError(msg)
+
+    # Format with port if present
+    return (
+        f"{parsed.scheme}://{parsed.hostname}:{parsed.port}"
+        if parsed.port
+        else f"{parsed.scheme}://{parsed.hostname}"
+    )
 
 
 class ArticlesView(
@@ -359,6 +388,38 @@ class ArticlesView(
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
         return Response(serializer.data)
+
+    def create(self, request, *args, **kwargs):
+        modified_data = request.data.copy()
+        url = request.data["url"]
+        php = extract_protocol_host_port(url)
+        if request.data["content"]:
+            content = request.data["content"]
+            decoded_content = (
+                content.decode() if isinstance(content, bytes) else content
+            )
+            modified_data["content"] = poller.normalize_content(decoded_content, php)
+        elif request.data["content_original"]:
+            content_original = request.data["content_original"]
+            decoded_content = (
+                content_original.decode()
+                if isinstance(content_original, bytes)
+                else content_original
+            )
+            modified_data["content_original"] = poller.normalize_content(
+                decoded_content,
+                php,
+            )
+        return super().create(
+            Request(
+                request.method,
+                request.path,
+                data=modified_data,
+                headers=request.headers,
+            ),
+            *args,
+            **kwargs,
+        )
 
     @action(detail=True, methods=["POST"])
     def translate(self, request, pk=None):

@@ -206,6 +206,7 @@ def normalize_structure(soup, exclude):
         "source",
         "object",
         "video",
+        "iframe",
         "audio",
         "track",
         "embed",
