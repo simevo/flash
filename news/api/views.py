@@ -252,6 +252,17 @@ class ArticlesView(
             user.userarticles_set.create(article_id=article.id, read=True)
         return Response(serializer.data)
 
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop("partial", False)
+        queryset = Articles.objects
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+        filter_kwargs = {self.lookup_field: self.kwargs[lookup_url_kwarg]}
+        instance = get_object_or_404(queryset, **filter_kwargs)
+        serializer = ArticleSerializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data)
+
     @action(detail=True, methods=["POST"])
     def translate(self, request, pk=None):
         queryset = Articles.objects
