@@ -8,6 +8,21 @@ from django.db import models
 from pgvector.django import HalfVectorField
 
 
+class ArticleManager(models.Manager):
+    use_for_related_fields = True
+
+    def get_queryset(self, *args, **kwargs):
+        return (
+            super()
+            .get_queryset(*args, **kwargs)
+            .defer(
+                "paraphrase_multilingual_mpnet_base_v2",
+                "use_cmlm_multilingual",
+                "tsv",
+            )
+        )
+
+
 class Articles(models.Model):
     stamp = models.DateTimeField(default=datetime.datetime.now)
     author = models.TextField(blank=True, null=True)  # noqa: DJ001
@@ -21,6 +36,8 @@ class Articles(models.Model):
     paraphrase_multilingual_mpnet_base_v2 = HalfVectorField(dimensions=768)
     use_cmlm_multilingual = HalfVectorField(dimensions=768)
     tsv = SearchVectorField(null=True)
+
+    objects = ArticleManager()
 
     class Meta:
         managed = False
@@ -79,6 +96,8 @@ class ArticlesCombined(models.Model):
     paraphrase_multilingual_mpnet_base_v2 = HalfVectorField(dimensions=768)
     use_cmlm_multilingual = HalfVectorField(dimensions=768)
     tsv = SearchVectorField(null=True)
+
+    objects = ArticleManager()
 
     class Meta:
         managed = False  # Created from a view. Don't remove.
