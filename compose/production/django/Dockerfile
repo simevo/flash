@@ -26,8 +26,10 @@ RUN pip wheel --wheel-dir /usr/src/app/wheels  \
   -r ${BUILD_ENVIRONMENT}.txt
 
 
+FROM ${APP_BASE_IMAGE} AS backend-base
+
 # Python 'run' stage
-FROM ${APP_BASE_IMAGE} as backend
+FROM python as backend
 
 ARG BUILD_ENVIRONMENT=production
 ARG APP_HOME=/app
@@ -55,8 +57,8 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
   && rm -rf /var/lib/apt/lists/*
 
 # All absolute dir copies ignore workdir instruction. All relative dir copies are wrt to the workdir instruction
-# copy python dependency wheels from deps-backend-base
-COPY --from=deps-backend-base /usr/src/app/wheels  /wheels/
+# copy python dependency wheels from backend-base
+COPY --from=backend-base /usr/src/app/wheels  /wheels/
 
 # use wheels to install python dependencies
 RUN pip install --no-cache-dir --no-index --find-links=/wheels/ /wheels/* \
@@ -64,30 +66,43 @@ RUN pip install --no-cache-dir --no-index --find-links=/wheels/ /wheels/* \
 
 
 COPY --chown=django:django ./compose/production/django/entrypoint /entrypoint
-RUN sed -i 's/\r$//g' /entrypoint &&\
+RUN sed -i 's/\r$//g' /entrypoint && \
     chmod +x /entrypoint
 
 
 COPY --chown=django:django ./compose/production/django/start /start
-RUN sed -i 's/\r$//g' /start &&\
+RUN sed -i 's/\r$//g' /start && \
     chmod +x /start
 COPY --chown=django:django ./compose/production/django/celery/worker/start /start-celeryworker
-RUN sed -i 's/\r$//g' /start-celeryworker &&\
+RUN sed -i 's/\r$//g' /start-celeryworker && \
     chmod +x /start-celeryworker
 
 
 COPY --chown=django:django ./compose/production/django/celery/beat/start /start-celerybeat
-RUN sed -i 's/\r$//g' /start-celerybeat &&\
+RUN sed -i 's/\r$//g' /start-celerybeat && \
     chmod +x /start-celerybeat
 
 
 COPY --chown=django:django ./compose/production/django/celery/flower/start /start-flower
-RUN sed -i 's/\r$//g' /start-flower &&\
+RUN sed -i 's/\r$//g' /start-flower && \
     chmod +x /start-flower
 
 
 # copy application code to WORKDIR
-COPY --chown=django:django . ${APP_HOME}
+COPY --chown=django:django config/ ${APP_HOME}/config/
+COPY --chown=django:django docs/ ${APP_HOME}/docs/
+COPY --chown=django:django flash/ ${APP_HOME}/flash/
+COPY --chown=django:django locale/ ${APP_HOME}/locale/
+COPY --chown=django:django news/ ${APP_HOME}/news/
+COPY --chown=django:django tests/ ${APP_HOME}/tests/
+COPY --chown=django:django \
+  justfile \
+  load_models.py \
+  manage.py \
+  merge_production_dotenvs_in_dotenv.py \
+  poller.py \
+  pyproject.toml \
+  ${APP_HOME}/
 
 # make django owner of the WORKDIR directory as well.
 RUN chown -R django:django ${APP_HOME}

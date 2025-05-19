@@ -37,7 +37,11 @@ class FeedCreateSerializer(serializers.ModelSerializer):
 class ArticleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Articles
-        fields = "__all__"
+        exclude = [
+            "paraphrase_multilingual_mpnet_base_v2",
+            "use_cmlm_multilingual",
+            "tsv",
+        ]
 
 
 class ArticleReadSerializer(serializers.ModelSerializer):
@@ -49,7 +53,13 @@ class ArticleReadSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ArticlesCombined
-        exclude = ["content", "content_original"]
+        exclude = [
+            "content",
+            "content_original",
+            "paraphrase_multilingual_mpnet_base_v2",
+            "use_cmlm_multilingual",
+            "tsv",
+        ]
 
 
 class ArticleSerializerFull(serializers.ModelSerializer):
@@ -61,7 +71,11 @@ class ArticleSerializerFull(serializers.ModelSerializer):
 
     class Meta:
         model = ArticlesCombined
-        fields = "__all__"
+        exclude = [
+            "paraphrase_multilingual_mpnet_base_v2",
+            "use_cmlm_multilingual",
+            "tsv",
+        ]
 
 
 class ProfileSerializer(serializers.ModelSerializer):

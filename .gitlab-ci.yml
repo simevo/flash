@@ -9,16 +9,6 @@ stages:
   - test
   - tag
 
-variables:
-  POSTGRES_USER: 'flash'
-  POSTGRES_PASSWORD: 'flash'
-  POSTGRES_DB: 'flash'
-  POSTGRES_HOST: '127.0.0.1'
-  POSTGRES_PORT: '5432'
-  REDIS_URL: 'redis://redis:6379/0'
-  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
-  USE_DOCKER: yes
-
 precommit:
   stage: lint
   image: python:3.12
@@ -38,6 +28,7 @@ lint-dockerfile:
   script:
     - hadolint --ignore DL3008 --ignore DL3006 compose/local/readability/Dockerfile
     - hadolint --ignore DL3008 --ignore DL3006 compose/production/django/Dockerfile
+    - hadolint --ignore DL3008 --ignore DL3006 compose/local/django/Dockerfile
     - hadolint --ignore DL3008 --ignore DL3006 compose/production/nginx/Dockerfile
     - hadolint --ignore DL3008 --ignore DL3006 frontend/Dockerfile
 
@@ -54,6 +45,8 @@ prepare:
     - TAG=${GIT_VERSION}-${CI_PIPELINE_ID}
     - DEPS_BACKEND_COMMIT_HASH=$(git rev-list -1 HEAD -- compose/production/django requirements/)
     - DEPS_BACKEND_COMMIT_COUNT=$(git rev-list --count "$DEPS_BACKEND_COMMIT_HASH")
+    - DEPS_TEST_COMMIT_HASH=$(git rev-list -1 HEAD -- compose/local/django requirements/)
+    - DEPS_TEST_COMMIT_COUNT=$(git rev-list --count "$DEPS_TEST_COMMIT_HASH")
     - DEPS_FRONTEND_COMMIT_HASH=$(git rev-list -1 HEAD -- frontend/Dockerfile frontend/package.json frontend/yarn.lock)
     - DEPS_FRONTEND_COMMIT_COUNT=$(git rev-list --count "$DEPS_FRONTEND_COMMIT_HASH")
     # yields tags like `deps-20201129-0-89-56fcfcc403a7-main` which ensure that
@@ -65,9 +58,11 @@ prepare:
     # otherwise existing images are re-used on a per-branch basis, skipping the
     # most time-consuming steps in the pipeline
     - DEPS_BACKEND_TAG="deps-${DEPS_STAMP}-${DEPS_BACKEND_COMMIT_COUNT}-${DEPS_BACKEND_COMMIT_HASH}-${CI_COMMIT_REF_SLUG}"
+    - DEPS_TEST_TAG="deps-${DEPS_STAMP}-${DEPS_TEST_COMMIT_COUNT}-${DEPS_TEST_COMMIT_HASH}-${CI_COMMIT_REF_SLUG}"
     - DEPS_FRONTEND_TAG="deps-${DEPS_STAMP}-${DEPS_FRONTEND_COMMIT_COUNT}-${DEPS_FRONTEND_COMMIT_HASH}-${CI_COMMIT_REF_SLUG}"
     - echo "TAG=$TAG" | tee -a build-env.txt
     - echo "DEPS_BACKEND_TAG=$DEPS_BACKEND_TAG" | tee -a build-env.txt
+    - echo "DEPS_TEST_TAG=$DEPS_TEST_TAG" | tee -a build-env.txt
     - echo "DEPS_FRONTEND_TAG=$DEPS_FRONTEND_TAG" | tee -a build-env.txt
   artifacts:
     reports:
@@ -118,6 +113,16 @@ build-docker-image-deps-backend:
     ARGS:
       --target deps-backend-base
 
+build-docker-image-deps-test:
+  extends: .build-docker-image
+  stage: build deps images
+  variables:
+    DOCKERFILE: ./compose/local/django/Dockerfile
+    REPO: $CI_REGISTRY_IMAGE/deps-test
+    JOB_TAG: $DEPS_TEST_TAG
+    ARGS:
+      --target deps-backend-base
+
 build-docker-image-deps-frontend:
   extends: .build-docker-image
   stage: build deps images
@@ -150,6 +155,16 @@ build-docker-image-backend:
       --target backend
       --build-arg APP_BASE_IMAGE=$CI_REGISTRY_IMAGE/deps-backend:$DEPS_BACKEND_TAG
 
+build-docker-image-backend-test:
+  extends: .build-docker-image
+  stage: build final images
+  variables:
+    DOCKERFILE: ./compose/local/django/Dockerfile
+    REPO: $CI_REGISTRY_IMAGE/backend-test
+    ARGS:
+      --target backend
+      --build-arg APP_BASE_IMAGE=$CI_REGISTRY_IMAGE/deps-test:$DEPS_TEST_TAG
+
 build-docker-image-frontend:
   extends: .build-docker-image
   stage: build final images
@@ -169,29 +184,36 @@ build-docker-image-readability:
     REPO: $CI_REGISTRY_IMAGE/readability
     CONTEXT: ./compose/local/readability
 
+lint-python:
+  stage: test
+  image:
+    name: $CI_REGISTRY_IMAGE/backend-test:$TAG
+    entrypoint: [""]
+  script:
+    - pre-commit run --show-diff-on-failure --color=always --all-files
+
 pytest:
   stage: test
-  variables:
-    USE_DOCKER: "no"
   image:
-    name: $CI_REGISTRY_IMAGE/backend:$TAG
-    entrypoint: [""]
-    docker:
-      user: root
-  cache:
-    paths:
-      - .cache/pip
+    name: $CI_REGISTRY_IMAGE/backend-test:$TAG
+  variables:
+    POSTGRES_USER: flash
+    POSTGRES_PASSWORD: flash
+    POSTGRES_HOST: db
+    POSTGRES_DB: flash
+    POSTGRES_PORT: 5432
+    USE_DOCKER: 'yes'
+  services:
+    - name: pgvector/pgvector:pg15
+      alias: db
+      variables:
+        POSTGRES_DB: test_flash
   before_script:
-    - apt update
-    - apt install -y postgresql
-    - /usr/bin/pg_ctlcluster 15 main start
-    - pip3 install -r requirements/local.txt
-    - su - postgres -c 'psql -c "create role '"${POSTGRES_USER}"' with login password '"'${POSTGRES_PASSWORD}';"'"'
-    - su - postgres -c "createdb -O ${POSTGRES_USER} test_${POSTGRES_DB}"
+    - ls -l sql/
+    - wait-for-it "${POSTGRES_HOST}:${POSTGRES_PORT}" -t 30
     - PGPASSWORD=${POSTGRES_PASSWORD} psql -h ${POSTGRES_HOST} -U ${POSTGRES_USER} test_${POSTGRES_DB} -f sql/00_tables.sql
-    - export DATABASE_URL="postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/test_${POSTGRES_DB}"
-    - python3 manage.py migrate
-    - export DATABASE_URL="postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}"
+    - PGPASSWORD=${POSTGRES_PASSWORD} psql -h ${POSTGRES_HOST} -U ${POSTGRES_USER} test_${POSTGRES_DB} -f sql/01_feeds.sql
+    - PGPASSWORD=${POSTGRES_PASSWORD} psql -h ${POSTGRES_HOST} -U ${POSTGRES_USER} test_${POSTGRES_DB} -f sql/02_pgvector.sql
   script:
     - /usr/local/bin/pytest
 

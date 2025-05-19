@@ -32,18 +32,30 @@ CREATE TABLE articles (
     language text,
     url text,
     feed_id integer REFERENCES feeds(id),
-    tsv TSVECTOR,
-    tsv_simple TSVECTOR
+    tsv TSVECTOR
 );
 
 DROP TRIGGER IF EXISTS tsvectorupdate ON articles;
 
-CREATE TRIGGER tsvectorupdate BEFORE INSERT OR UPDATE
-ON articles FOR EACH ROW EXECUTE PROCEDURE
-tsvector_update_trigger(tsv, 'pg_catalog.italian', title, content);
+CREATE OR REPLACE FUNCTION articles_tsv_trigger()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.tsv := to_tsvector('pg_catalog.simple',
+        coalesce(NEW.title, NEW.title_original) || ' ' ||
+        coalesce(NEW.content, NEW.content_original)
+    );
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS tsvectorsimpleupdate ON articles;
+CREATE TRIGGER tsvectorupdate
+BEFORE INSERT OR UPDATE ON articles
+FOR EACH ROW EXECUTE PROCEDURE articles_tsv_trigger();
 
-CREATE TRIGGER tsvectorsimpleupdate BEFORE INSERT OR UPDATE
-ON articles FOR EACH ROW EXECUTE PROCEDURE
-tsvector_update_trigger(tsv_simple, 'pg_catalog.simple', title_original, content_original);
+-- UPDATE articles
+-- SET tsv = to_tsvector(
+--   'pg_catalog.simple',
+--   COALESCE(title, title_original) || ' ' || COALESCE(content, content_original)
+-- );
+
+CREATE INDEX articles_tsv_idx ON articles USING GIN (tsv);

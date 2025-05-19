@@ -10,6 +10,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.local")
 
 django.setup()
 
+from news.tasks import embeddings  # noqa: E402
 from news.tasks import poll  # noqa: E402
 from news.tasks import precompute  # noqa: E402
 
@@ -33,6 +34,11 @@ def setup_periodic_tasks(sender, **kwargs):
         crontab(minute="34"),
         precompute.s(),
         name="precompute",
+    )
+    sender.add_periodic_task(
+        crontab(minute="44"),
+        embeddings.s(),
+        name="embeddings",
     )
 
 

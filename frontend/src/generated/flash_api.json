@@ -64,6 +64,13 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "in": "query",
+            "name": "url",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "tags": ["articles"],
@@ -371,6 +378,86 @@
     "/api/articles/{id}/pdf/": {
       "get": {
         "operationId": "articles_pdf_retrieve",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "integer",
+              "maximum": 9223372036854775807,
+              "minimum": -9223372036854775808,
+              "format": "int64"
+            },
+            "description": "A unique value identifying this articles combined.",
+            "required": true
+          }
+        ],
+        "tags": ["articles"],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "tokenAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArticleRead"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/articles/{id}/related/": {
+      "get": {
+        "operationId": "articles_related_retrieve",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "integer",
+              "maximum": 9223372036854775807,
+              "minimum": -9223372036854775808,
+              "format": "int64"
+            },
+            "description": "A unique value identifying this articles combined.",
+            "required": true
+          }
+        ],
+        "tags": ["articles"],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "tokenAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArticleRead"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/articles/{id}/search/": {
+      "get": {
+        "operationId": "articles_search_retrieve",
         "parameters": [
           {
             "in": "path",

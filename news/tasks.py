@@ -1,146 +1,28 @@
+import datetime
+import html
 import logging
+import os
+import time
 
+import psycopg
+import torch
+from bs4 import BeautifulSoup
 from celery import shared_task
 from django.contrib.auth import get_user_model
-from django.db import connection
+from django.contrib.postgres.search import SearchQuery
+from pgvector.django import CosineDistance
+from pgvector.psycopg import register_vector
+from psycopg.rows import dict_row
 
 import poller
+from news.models import Articles
 from news.models import Feeds
 from news.models import UserArticleLists
+from news.models import UserFeeds
+from news.services import TextEmbeddingService
 
 logger = logging.getLogger(__name__)
 time_format = "%Y-%m-%dT%H:%M:%SZ"
-newsfeed_query = """
-    WITH u AS (
-        SELECT
-            whitelist,
-            blacklist,
-            tags AS my_tags,
-            languages AS my_languages
-        FROM
-            news_profile
-        WHERE
-            user_id=%s),
-    uf AS (
-        SELECT
-            feed_id,
-            rating
-        FROM
-            news_userfeeds
-        WHERE
-            user_id=%s),
-    f AS (
-        SELECT
-            id AS feed_id,
-            uf.rating AS my_feed_rating
-        FROM
-            u,
-            feeds LEFT JOIN uf ON feeds.id = uf.feed_id
-        WHERE
-            (
-                uf.rating IS NULL OR
-                uf.rating >= -4
-            ) AND (
-                u.my_tags IS NULL
-                OR u.my_tags = array[]::text[]
-                OR feeds.tags && u.my_tags
-            )),
-    aaa AS (
-        SELECT
-            articles.id,
-            articles.tsv,
-            articles.tsv_simple,
-            articles.stamp,
-            f.*
-        FROM
-            u,
-            f INNER JOIN articles ON articles.feed_id = f.feed_id
-        WHERE
-            u.my_languages IS NULL
-            OR u.my_languages = array[]::text[]
-            OR articles.language = ANY(u.my_languages)
-            OR ('it' = ANY(u.my_languages) AND articles.title IS NOT NULL)
-        ORDER BY id DESC
-        LIMIT 4000),
-    ua AS (
-        SELECT
-            article_id,
-            rating,
-            read
-        FROM
-            news_userarticles
-        WHERE
-            user_id=%s),
-    aa AS (
-        SELECT
-            aaa.*,
-            COALESCE(ua.rating, 0) AS my_rating,
-            COALESCE(ua.read, FALSE) AS read
-        FROM
-            aaa
-            LEFT JOIN ua ON aaa.id = ua.article_id)
-    SELECT
-        aa.id,
-        aa.stamp,
-        COALESCE(
-            (
-                1 +
-                10 * (
-                    articles_data.views +
-                    articles_data.to_reads +
-                    GREATEST(0, articles_data.rating)
-                ) +
-                10 * (
-                    GREATEST(
-                        0,
-                        aa.my_rating +
-                            CASE WHEN feeds.premium THEN 2 ELSE 0 END +
-                            COALESCE(my_feed_rating, COALESCE(feeds.rating, 0))
-                    )
-                )
-            ) /
-            POWER(
-                GREATEST(
-                    1.0,
-                    EXTRACT(EPOCH FROM (NOW() - aa.stamp))
-                ) / (1000 * SQRT(1 + feeds_data.average_time_from_last_post)) -
-                LEAST(
-                    0,
-                    10 * (
-                        articles_data.rating +
-                        CASE WHEN feeds.premium THEN 2 ELSE 0 END
-                    ) +
-                    10 * (
-                        aa.my_rating +
-                        COALESCE(my_feed_rating, COALESCE(feeds.rating, 0))
-                    )
-                ),
-                1.5
-            ),
-            0
-        ) AS score
-    FROM
-        u,
-        aa
-        INNER JOIN articles_data ON articles_data.id = aa.id
-        INNER JOIN feeds ON aa.feed_id = feeds.id
-        INNER JOIN feeds_data ON feeds.id = feeds_data.id
-    WHERE
-        NOT read
-        AND (
-                tsv @@
-                to_tsquery('pg_catalog.italian', array_to_string(whitelist, '|'))
-            OR
-                tsv_simple @@
-                to_tsquery('pg_catalog.simple', array_to_string(whitelist, '|'))
-        )
-        AND NOT tsv @@
-            to_tsquery('pg_catalog.italian', array_to_string(blacklist, '|'))
-        AND NOT tsv_simple @@
-            to_tsquery('pg_catalog.simple', array_to_string(blacklist, '|'))
-    ORDER BY score DESC, stamp DESC
-    LIMIT 100;
-"""
 
 
 @shared_task(time_limit=3550, soft_time_limit=3500)
@@ -154,28 +36,229 @@ def poll():
     logger.info("Polling finished")
 
 
-@shared_task(time_limit=3550, soft_time_limit=3500)
-def precompute():
-    logger.info("Precomputing started")
-    users = get_user_model().objects.all()
-    for user in users:
-        logger.info(f"= Precomputing user: {user.id}")
-        newsfeed_list = UserArticleLists.objects.filter(
+def precompute_user(user, start_timestamp, embedding_service):
+    logger.info(f"= Precomputing user: {user.id}")
+    newsfeed_list = UserArticleLists.objects.filter(
+        user=user,
+        name="newsfeed",
+    ).first()
+    if not newsfeed_list:
+        newsfeed_list = UserArticleLists.objects.create(
             user=user,
             name="newsfeed",
-        ).first()
-        if not newsfeed_list:
-            newsfeed_list = UserArticleLists.objects.create(
-                user=user,
-                name="newsfeed",
-                automatic=True,
-            )
-        newsfeed_list.articles.clear()
-        with connection.cursor() as cursor:
-            cursor.execute(newsfeed_query, [user.id, user.id, user.id])
-            rows = cursor.fetchall()
-            for row in rows:
-                article_id = row[0]
-                newsfeed_list.articles.add(article_id)
-        newsfeed_list.save()
+            automatic=True,
+        )
+    newsfeed_list.articles.clear()
+
+    qs = Articles.objects.filter(stamp__gte=start_timestamp)
+    filtered = False
+
+    ufe = UserFeeds.objects.filter(user=user, rating=-5)
+    exclude_feeds = [o.feed_id for o in ufe]
+    if len(exclude_feeds) > 0:
+        logger.debug(f"== filtering by excluded feeds: {exclude_feeds}")
+        qs = qs.exclude(feed_id__in=exclude_feeds)
+        filtered = True
+
+    if len(user.profile.languages) > 0:
+        logger.debug(f"== filtering by languages: {user.profile.languages}")
+        qs = qs.filter(language__in=user.profile.languages)
+        filtered = True
+
+    if len(user.profile.blacklist) > 0:
+        terms = "|".join(user.profile.blacklist)
+        logger.debug(f"== filtering by blacklist: {terms}")
+        query = SearchQuery(terms, search_type="raw", config="pg_catalog.simple")
+        qs = qs.exclude(tsv=query)
+        filtered = True
+
+    if len(user.profile.whitelist) > 0:
+        terms = " ".join(user.profile.whitelist)
+        logger.debug(f"== filtering by whitelist: {terms}")
+        embedding = embedding_service.get_embedding(terms)
+        qs = qs.order_by(
+            CosineDistance(
+                "use_cmlm_multilingual",
+                embedding,
+            ),
+        )[:10000]
+        filtered = True
+
+    if filtered:
+        sorted_articles = sorted(qs, key=lambda a: a.id, reverse=True)
+        for article in list(sorted_articles)[:200]:
+            newsfeed_list.articles.add(article.id)
+
+    newsfeed_list.save()
+
+
+@shared_task(time_limit=1750, soft_time_limit=1600)
+def precompute():
+    logger.info("Precomputing started")
+    one_month_ago = datetime.datetime.now(tz=datetime.UTC) - datetime.timedelta(days=30)
+    embedding_service = TextEmbeddingService()
+    users = get_user_model().objects.all()
+    for user in users:
+        precompute_user(user, one_month_ago, embedding_service)
+
     logger.info("Precomputing finished")
+
+
+def clean_html(raw_html):
+    # Remove HTML tags
+    soup = BeautifulSoup(raw_html, "html.parser")
+    text = soup.get_text()
+    # Convert HTML entities to characters
+    return html.unescape(text)
+
+
+def embed(n):
+    postgres_host = os.environ["POSTGRES_HOST"]
+    postgres_port = os.environ["POSTGRES_PORT"]
+    postgres_db = os.environ["POSTGRES_DB"]
+    postgres_user = os.environ["POSTGRES_USER"]
+    postgres_password = os.environ["POSTGRES_PASSWORD"]
+
+    with psycopg.connect(
+        conninfo=f"postgresql://{postgres_user}:{postgres_password}@{postgres_host}:{postgres_port}/{postgres_db}",
+        row_factory=dict_row,
+    ) as conn:
+        register_vector(conn)
+        with conn.cursor() as cur:
+            logger.info(f"  ========== embedding {n} records")
+            cur.execute(
+                """
+                SELECT COUNT(*)
+                FROM articles
+                WHERE use_cmlm_multilingual IS NOT NULL
+                """,
+            )
+            before = cur.fetchone()
+            logger.info(f"  processed articles before: {before['count']}")
+
+            start_time = time.perf_counter()
+            cur.execute(
+                """
+                SELECT
+                    id,
+                    (CASE
+                        WHEN language = 'it' THEN title
+                        ELSE title_original END
+                    ) as title,
+                    (CASE
+                        WHEN language = 'it' THEN content
+                        ELSE content_original END
+                    ) AS content
+                FROM articles
+                WHERE use_cmlm_multilingual IS NULL
+                ORDER BY id DESC
+                LIMIT %(n)s
+                """,
+                {"n": n},
+            )
+            articles = cur.fetchall()
+
+            sentences = [
+                article["title"] + " - " + clean_html(article["content"])
+                for article in articles
+            ]
+            end_time = time.perf_counter()
+            execution_time = end_time - start_time
+            logger.info(f"  DB reading took: {execution_time:.4f} seconds")
+
+            start_time = time.perf_counter()
+
+            embedding_service = TextEmbeddingService()
+            embeddings_use_cmlm_multilingual = embedding_service.get_embedding(
+                sentences,
+            )
+
+            end_time = time.perf_counter()
+            execution_time = end_time - start_time
+            logger.info(f"  model encode: {execution_time:.4f} seconds")
+
+    start_time = time.perf_counter()
+
+    with psycopg.connect(
+        conninfo=f"postgresql://no_triggers:no_triggers@{postgres_host}:{postgres_port}/{postgres_db}",
+    ) as conn:
+        register_vector(conn)
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                CREATE TEMPORARY TABLE articles_temp (
+                    id INTEGER,
+                    use_cmlm_multilingual halfvec
+                ) ON COMMIT DROP
+            """,
+            )
+
+            with cur.copy(
+                """
+                COPY articles_temp (
+                        id,
+                        use_cmlm_multilingual
+                    )
+                FROM STDIN WITH (FORMAT BINARY)""",
+            ) as copy:
+                # use set_types for binary copy
+                # https://www.psycopg.org/psycopg3/docs/basic/copy.html#binary-copy
+                copy.set_types(["integer", "halfvec", "halfvec"])
+
+                for index, article in enumerate(articles):
+                    copy.write_row(
+                        [
+                            article["id"],
+                            embeddings_use_cmlm_multilingual[index],
+                        ],
+                    )
+
+            cur.execute(
+                """
+                UPDATE articles a
+                SET use_cmlm_multilingual = t.use_cmlm_multilingual
+                FROM articles_temp t
+                WHERE a.id = t.id
+                """,
+            )
+
+            end_time = time.perf_counter()
+            execution_time = end_time - start_time
+            logger.info(f"  DB writing: {execution_time:.4f} seconds")
+
+            cur.execute(
+                """
+                SELECT COUNT(*)
+                FROM articles
+                WHERE use_cmlm_multilingual IS NOT NULL
+                """,
+            )
+            after = cur.fetchone()
+            logger.info(f"  processed articles after: {after[0]}")
+            return len(articles)
+
+
+@shared_task(time_limit=1750, soft_time_limit=1600)
+def embeddings():
+    logger.info(f"Embedding started at: {datetime.datetime.now(tz=datetime.UTC)}")
+    logger.info(f"= PyTorch Version: {torch.__version__}")
+    logger.info(f"= CPU Available: {torch.cpu.is_available()}")
+    logger.info(f"= GPU Available: {torch.cuda.is_available()}")
+    logger.info(
+        f"= Apple M1 MPS available: {torch.backends.mps.is_available()}",
+    )
+
+    iterations = 1000
+    articles_per_iterations = 1000
+    for i in range(iterations):
+        logger.info(f"= Loop {i}")
+        try:
+            updated = embed(articles_per_iterations)
+            if updated < articles_per_iterations:
+                break
+        except ConnectionError:
+            logging.exception("Database connection error")
+        except Exception:
+            logging.exception("Generic exception")
+
+    logger.info(f"Embedding completed at: {datetime.datetime.now(tz=datetime.UTC)}")
