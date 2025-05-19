@@ -334,10 +334,11 @@ class ArticlesView(
                     "use_cmlm_multilingual",
                     article.use_cmlm_multilingual,
                 ),
-            )[1:11],
+            )[1:100],
             many=True,
         )
-        return Response(serializer.data)
+        results = sorted(serializer.data, key=lambda x: x["id"], reverse=True)[:10]
+        return Response(results)
 
     @action(detail=True, methods=["get"])
     def search(self, request, pk=None):
