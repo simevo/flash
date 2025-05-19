@@ -360,6 +360,7 @@ watch(
       count_fetch.value = 2
       await fetchArticle()
       await fetchFeeds()
+      await fetchRelated()
       nextTick(tts_init)
     }
   },
