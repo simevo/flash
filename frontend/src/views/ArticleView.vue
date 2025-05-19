@@ -214,6 +214,19 @@
         <div :lang="base_language" class="content col-md-4" v-html="article.content || ''" />
       </div>
     </div>
+    <div class="row my-3" v-if="related_articles.length > 0">
+      <div class="col-md-8 offset-md-2">
+        <h1>Articoli correlati:</h1>
+        <ArticleCard
+          v-for="article in related_articles"
+          :key="article.id"
+          :article="article"
+          :feed_dict="feed_dict"
+          :index="1"
+          :list_id="null"
+        />
+      </div>
+    </div>
   </div>
   <div class="container my-3" v-else>
     <div class="row">
@@ -234,13 +247,17 @@ import type { components } from "../generated/schema.d.ts"
 import { secondsToString, secondsToString1 } from "@/components/sts"
 
 import ArticleActions from "@/components/ArticleActions.vue"
+import ArticleCard from "@/components/ArticleCard.vue"
+
 type FeedSerializerSimple = components["schemas"]["FeedSerializerSimple"]
 
 const route = useRoute()
 
 type Article = components["schemas"]["ArticleSerializerFull"]
+type ArticleRead = components["schemas"]["ArticleRead"]
 
 const article: Ref<Article | null> = ref(null)
+const related_articles: Ref<ArticleRead[]> = ref([])
 const feeds: Ref<FeedSerializerSimple[]> = ref([])
 
 const count_fetch = ref(2)
@@ -293,6 +310,16 @@ async function fetchFeeds() {
   }
 }
 
+async function fetchRelated() {
+  const url = `../../api/articles/${props.article_id}/related/`
+  const response = await fetch_wrapper(url)
+  if (response.status == 403) {
+    document.location = "/accounts/"
+  } else {
+    related_articles.value = await response.json()
+  }
+}
+
 const feed_dict = computed(() => {
   const feed_dict: { [key: number]: FeedSerializerSimple } = {}
   feeds.value.forEach((feed) => {
@@ -316,6 +343,7 @@ onMounted(async () => {
   console.log("ArticleView mounted")
   await fetchArticle()
   await fetchFeeds()
+  await fetchRelated()
   nextTick(tts_init)
 })
 

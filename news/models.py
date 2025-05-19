@@ -3,7 +3,9 @@ import uuid
 
 from django.conf import settings
 from django.contrib.postgres.fields import ArrayField
+from django.contrib.postgres.search import SearchVectorField
 from django.db import models
+from pgvector.django import HalfVectorField
 
 
 class Articles(models.Model):
@@ -16,6 +18,9 @@ class Articles(models.Model):
     language = models.TextField(blank=True, null=True)  # noqa: DJ001
     url = models.TextField(unique=True, blank=True, null=True)
     feed = models.ForeignKey("Feeds", models.DO_NOTHING)
+    paraphrase_multilingual_mpnet_base_v2 = HalfVectorField(dimensions=768)
+    use_cmlm_multilingual = HalfVectorField(dimensions=768)
+    tsv = SearchVectorField(null=True)
 
     class Meta:
         managed = False
@@ -71,6 +76,9 @@ class ArticlesCombined(models.Model):
     to_reads = models.FloatField()
     length = models.IntegerField()
     excerpt = models.TextField(null=True)  # noqa: DJ001
+    paraphrase_multilingual_mpnet_base_v2 = HalfVectorField(dimensions=768)
+    use_cmlm_multilingual = HalfVectorField(dimensions=768)
+    tsv = SearchVectorField(null=True)
 
     class Meta:
         managed = False  # Created from a view. Don't remove.

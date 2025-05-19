@@ -87,7 +87,20 @@ RUN sed -i 's/\r$//g' /start-flower &&\
 
 
 # copy application code to WORKDIR
-COPY --chown=django:django . ${APP_HOME}
+COPY --chown=django:django config/ ${APP_HOME}/config/
+COPY --chown=django:django docs/ ${APP_HOME}/docs/
+COPY --chown=django:django flash/ ${APP_HOME}/flash/
+COPY --chown=django:django locale/ ${APP_HOME}/locale/
+COPY --chown=django:django news/ ${APP_HOME}/news/
+COPY --chown=django:django tests/ ${APP_HOME}/tests/
+COPY --chown=django:django \
+  justfile \
+  load_models.py \
+  manage.py \
+  merge_production_dotenvs_in_dotenv.py \
+  poller.py \
+  pyproject.toml \
+  ${APP_HOME}/
 
 # make django owner of the WORKDIR directory as well.
 RUN chown -R django:django ${APP_HOME}

@@ -79,6 +79,19 @@ RUN chmod +x /start-flower
 
 
 # copy application code to WORKDIR
-COPY . ${APP_HOME}
+COPY config/ ${APP_HOME}/config/
+COPY docs/ ${APP_HOME}/docs/
+COPY flash/ ${APP_HOME}/flash/
+COPY locale/ ${APP_HOME}/locale/
+COPY news/ ${APP_HOME}/news/
+COPY tests/ ${APP_HOME}/tests/
+COPY \
+  justfile \
+  load_models.py \
+  manage.py \
+  merge_production_dotenvs_in_dotenv.py \
+  poller.py \
+  pyproject.toml \
+  ${APP_HOME}/
 
 ENTRYPOINT ["/entrypoint"]

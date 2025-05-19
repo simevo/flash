@@ -6,6 +6,7 @@ import time
 import uuid
 from io import BytesIO
 
+from bs4 import BeautifulSoup
 from django.conf import settings
 from django.contrib.postgres.aggregates import ArrayAgg
 from django.contrib.postgres.search import SearchVector
@@ -17,6 +18,7 @@ from django_filters import rest_framework as filters
 from drf_spectacular.utils import extend_schema
 from ebooklib import epub
 from feedgen.feed import FeedGenerator
+from pgvector.django import CosineDistance
 from PIL import Image
 from rest_framework import mixins
 from rest_framework import pagination
@@ -46,6 +48,7 @@ from news.models import Feeds
 from news.models import FeedsCombined
 from news.models import UserArticleLists
 from news.models import UserFeeds
+from news.services import TextEmbeddingService
 
 
 class ArticlePermissions(permissions.BasePermission):
@@ -196,9 +199,7 @@ class ArticlesFilter(filters.FilterSet):
     def filter_query(self, queryset, name, value):
         return queryset.extra(
             where=[
-                """
-            articles_combined.tsv @@ plainto_tsquery('pg_catalog.italian', %s) OR
-            articles_combined.tsv_simple @@ plainto_tsquery('pg_catalog.simple', %s)""",
+                "articles_combined.tsv @@ plainto_tsquery('pg_catalog.simple', %s)",
             ],
             params=[value, value],
         )
@@ -206,6 +207,14 @@ class ArticlesFilter(filters.FilterSet):
     class Meta:
         model = ArticlesCombined
         fields = ["feed_id", "url"]
+
+
+def clean_html(raw_html):
+    # Remove HTML tags
+    soup = BeautifulSoup(raw_html, "html.parser")
+    text = soup.get_text()
+    # Convert HTML entities to characters
+    return html.unescape(text)
 
 
 class ArticlesView(
@@ -313,6 +322,40 @@ class ArticlesView(
         )
         epub.write_epub(response, book, {})
         return response
+
+    @action(detail=True)
+    def related(self, request, pk=None):
+        queryset = ArticlesCombined.objects
+        article = get_object_or_404(queryset, pk=pk)
+        serializer = self.get_serializer(
+            queryset.order_by(
+                CosineDistance(
+                    "use_cmlm_multilingual",
+                    article.use_cmlm_multilingual,
+                ),
+            )[1:11],
+            many=True,
+        )
+        return Response(serializer.data)
+
+    @action(detail=True, methods=["get"])
+    def search(self, request, pk=None):
+        queryset = self.get_queryset()
+        embedding_service = TextEmbeddingService()
+        q_embedding = embedding_service.get_embedding(pk)
+        queryset = queryset.order_by(
+            CosineDistance(
+                "use_cmlm_multilingual",
+                q_embedding,
+            ),
+        )
+        # Paginate the results
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
 
 class FeedsView(
