@@ -42,6 +42,7 @@ from news.api.serializers import ProfileSerializer
 from news.api.serializers import UserArticleListsSerializer
 from news.api.serializers import UserArticleListsSerializerFull
 from news.api.serializers import UserFeedSerializer
+from news.models import Articles
 from news.models import ArticlesCombined
 from news.models import FeedIcons
 from news.models import Feeds
@@ -253,7 +254,7 @@ class ArticlesView(
 
     @action(detail=True, methods=["POST"])
     def translate(self, request, pk=None):
-        queryset = ArticlesCombined.objects
+        queryset = Articles.objects
         article = get_object_or_404(queryset, pk=pk)
         token = news.translate.get_token()
         if token != "":
