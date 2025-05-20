@@ -58,4 +58,4 @@ FOR EACH ROW EXECUTE PROCEDURE articles_tsv_trigger();
 --   COALESCE(title, title_original) || ' ' || COALESCE(content, content_original)
 -- );
 
-CREATE INDEX articles_tsv_idx ON articles USING GIN (tsv);
+CREATE INDEX IF NOT EXISTS articles_tsv_idx ON articles USING GIN (tsv);

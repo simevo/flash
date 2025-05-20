@@ -132,7 +132,7 @@ async function fetchArticles() {
     if (words.length > 0) {
       const query = words.join("&")
       const encodedQuery = encodeURIComponent(query)
-      url += `${encodedQuery}/search/`
+      url += `?query=${encodedQuery}`
     }
   }
   const response = await fetch_wrapper(url)

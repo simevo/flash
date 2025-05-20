@@ -202,7 +202,7 @@ class ArticlesFilter(filters.FilterSet):
             where=[
                 "articles_combined.tsv @@ plainto_tsquery('pg_catalog.simple', %s)",
             ],
-            params=[value, value],
+            params=[value],
         )
 
     class Meta:
