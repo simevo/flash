@@ -43,25 +43,25 @@ jobs:
         with:
           dockerfile: compose/local/readability/Dockerfile
           ignore: DL3008,DL3006
-          
+
       - name: Run hadolint (production django)
         uses: hadolint/hadolint-action@v3.1.0
         with:
           dockerfile: compose/production/django/Dockerfile
           ignore: DL3008,DL3006
-          
+
       - name: Run hadolint (local django)
         uses: hadolint/hadolint-action@v3.1.0
         with:
           dockerfile: compose/local/django/Dockerfile
           ignore: DL3008,DL3006
-          
+
       - name: Run hadolint (nginx)
         uses: hadolint/hadolint-action@v3.1.0
         with:
           dockerfile: compose/production/nginx/Dockerfile
           ignore: DL3008,DL3006
-          
+
       - name: Run hadolint (frontend)
         uses: hadolint/hadolint-action@v3.1.0
         with:
@@ -92,11 +92,11 @@ jobs:
           DEPS_TEST_COMMIT_COUNT=$(git rev-list --count "$DEPS_TEST_COMMIT_HASH")
           DEPS_FRONTEND_COMMIT_HASH=$(git rev-list -1 HEAD -- frontend/Dockerfile frontend/package.json frontend/yarn.lock)
           DEPS_FRONTEND_COMMIT_COUNT=$(git rev-list --count "$DEPS_FRONTEND_COMMIT_HASH")
-          
+
           DEPS_BACKEND_TAG="deps-${{ env.DEPS_STAMP }}-${DEPS_BACKEND_COMMIT_COUNT}-${DEPS_BACKEND_COMMIT_HASH}-${{ github.ref_name }}"
           DEPS_TEST_TAG="deps-${{ env.DEPS_STAMP }}-${DEPS_TEST_COMMIT_COUNT}-${DEPS_TEST_COMMIT_HASH}-${{ github.ref_name }}"
           DEPS_FRONTEND_TAG="deps-${{ env.DEPS_STAMP }}-${DEPS_FRONTEND_COMMIT_COUNT}-${DEPS_FRONTEND_COMMIT_HASH}-${{ github.ref_name }}"
-          
+
           echo "tag=$TAG" >> $GITHUB_OUTPUT
           echo "deps_backend_tag=$DEPS_BACKEND_TAG" >> $GITHUB_OUTPUT
           echo "deps_test_tag=$DEPS_TEST_TAG" >> $GITHUB_OUTPUT
