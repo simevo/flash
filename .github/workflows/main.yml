@@ -1,0 +1,305 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: ['**']
+
+env:
+  DEPS_STAMP: "0" # Increment this to force rebuild of dependency images
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Cache pre-commit
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pre-commit
+          key: ${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
+
+      - name: Run pre-commit
+        run: |
+          pip install -q pre-commit
+          pre-commit run --show-diff-on-failure --color=always --all-files
+
+  lint-dockerfile:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Run hadolint
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: compose/local/readability/Dockerfile
+          ignore: DL3008,DL3006
+          
+      - name: Run hadolint (production django)
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: compose/production/django/Dockerfile
+          ignore: DL3008,DL3006
+          
+      - name: Run hadolint (local django)
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: compose/local/django/Dockerfile
+          ignore: DL3008,DL3006
+          
+      - name: Run hadolint (nginx)
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: compose/production/nginx/Dockerfile
+          ignore: DL3008,DL3006
+          
+      - name: Run hadolint (frontend)
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: frontend/Dockerfile
+          ignore: DL3008,DL3006
+
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.set-tags.outputs.tag }}
+      deps_backend_tag: ${{ steps.set-tags.outputs.deps_backend_tag }}
+      deps_test_tag: ${{ steps.set-tags.outputs.deps_test_tag }}
+      deps_frontend_tag: ${{ steps.set-tags.outputs.deps_frontend_tag }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # fetch all history for proper commit counting
+
+      - name: Set tags
+        id: set-tags
+        run: |
+          GIT_VERSION=$(git log -n1 --pretty='%h')
+          TAG=${GIT_VERSION}-${{ github.run_id }}
+          DEPS_BACKEND_COMMIT_HASH=$(git rev-list -1 HEAD -- compose/production/django requirements/)
+          DEPS_BACKEND_COMMIT_COUNT=$(git rev-list --count "$DEPS_BACKEND_COMMIT_HASH")
+          DEPS_TEST_COMMIT_HASH=$(git rev-list -1 HEAD -- compose/local/django requirements/)
+          DEPS_TEST_COMMIT_COUNT=$(git rev-list --count "$DEPS_TEST_COMMIT_HASH")
+          DEPS_FRONTEND_COMMIT_HASH=$(git rev-list -1 HEAD -- frontend/Dockerfile frontend/package.json frontend/yarn.lock)
+          DEPS_FRONTEND_COMMIT_COUNT=$(git rev-list --count "$DEPS_FRONTEND_COMMIT_HASH")
+          
+          DEPS_BACKEND_TAG="deps-${{ env.DEPS_STAMP }}-${DEPS_BACKEND_COMMIT_COUNT}-${DEPS_BACKEND_COMMIT_HASH}-${{ github.ref_name }}"
+          DEPS_TEST_TAG="deps-${{ env.DEPS_STAMP }}-${DEPS_TEST_COMMIT_COUNT}-${DEPS_TEST_COMMIT_HASH}-${{ github.ref_name }}"
+          DEPS_FRONTEND_TAG="deps-${{ env.DEPS_STAMP }}-${DEPS_FRONTEND_COMMIT_COUNT}-${DEPS_FRONTEND_COMMIT_HASH}-${{ github.ref_name }}"
+          
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "deps_backend_tag=$DEPS_BACKEND_TAG" >> $GITHUB_OUTPUT
+          echo "deps_test_tag=$DEPS_TEST_TAG" >> $GITHUB_OUTPUT
+          echo "deps_frontend_tag=$DEPS_FRONTEND_TAG" >> $GITHUB_OUTPUT
+
+  build-deps-images:
+    needs: prepare
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - name: deps-backend
+            dockerfile: ./compose/production/django/Dockerfile
+            target: deps-backend-base
+            tag: ${{ needs.prepare.outputs.deps_backend_tag }}
+          - name: deps-test
+            dockerfile: ./compose/local/django/Dockerfile
+            target: deps-backend-base
+            tag: ${{ needs.prepare.outputs.deps_test_tag }}
+          - name: deps-frontend
+            dockerfile: ./frontend/Dockerfile
+            target: deps-frontend-base
+            tag: ${{ needs.prepare.outputs.deps_frontend_tag }}
+            context: ./frontend
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check if image exists
+        id: check_image
+        run: |
+          if docker manifest inspect ghcr.io/${{ github.repository }}/${{ matrix.name }}:${{ matrix.tag }} > /dev/null 2>&1; then
+            echo "Image already exists, skipping build"
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "Image does not exist, will build"
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build and push
+        uses: docker/build-push-action@v4
+        if: steps.check_image.outputs.exists != 'true'
+        with:
+          context: ${{ matrix.context || '.' }}
+          file: ${{ matrix.dockerfile }}
+          push: true
+          tags: ghcr.io/${{ github.repository }}/${{ matrix.name }}:${{ matrix.tag }}
+          target: ${{ matrix.target }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  lint-javascript:
+    needs: [prepare, build-deps-images]
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/${{ github.repository }}/deps-frontend:${{ needs.prepare.outputs.deps_frontend_tag }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Run lint and type checks
+        working-directory: frontend
+        run: |
+          yarn
+          yarn type-check
+          yarn lint
+          yarn format-check
+
+  build-final-images:
+    needs: [prepare, build-deps-images]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - name: backend
+            dockerfile: ./compose/production/django/Dockerfile
+            target: backend
+            tag: ${{ needs.prepare.outputs.tag }}
+            build_args: |
+              APP_BASE_IMAGE=ghcr.io/${{ github.repository }}/deps-backend:${{ needs.prepare.outputs.deps_backend_tag }}
+          - name: backend-test
+            dockerfile: ./compose/local/django/Dockerfile
+            target: backend
+            tag: ${{ needs.prepare.outputs.tag }}
+            build_args: |
+              APP_BASE_IMAGE=ghcr.io/${{ github.repository }}/deps-test:${{ needs.prepare.outputs.deps_test_tag }}
+          - name: frontend
+            dockerfile: ./frontend/Dockerfile
+            target: frontend
+            tag: ${{ needs.prepare.outputs.tag }}
+            context: ./frontend
+            build_args: |
+              FRONTEND_BASE_IMAGE=ghcr.io/${{ github.repository }}/deps-frontend:${{ needs.prepare.outputs.deps_frontend_tag }}
+          - name: readability
+            dockerfile: ./compose/local/readability/Dockerfile
+            tag: ${{ needs.prepare.outputs.tag }}
+            context: ./compose/local/readability
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v4
+        with:
+          context: ${{ matrix.context || '.' }}
+          file: ${{ matrix.dockerfile }}
+          push: true
+          tags: ghcr.io/${{ github.repository }}/${{ matrix.name }}:${{ matrix.tag }}
+          target: ${{ matrix.target }}
+          build-args: ${{ matrix.build_args }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  lint-python:
+    needs: [prepare, build-final-images]
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/${{ github.repository }}/backend-test:${{ needs.prepare.outputs.tag }}
+      options: --entrypoint=""
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Run pre-commit
+        run: pre-commit run --show-diff-on-failure --color=always --all-files
+
+  pytest:
+    needs: [prepare, build-final-images]
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/${{ github.repository }}/backend-test:${{ needs.prepare.outputs.tag }}
+    services:
+      db:
+        image: pgvector/pgvector:pg15
+        env:
+          POSTGRES_DB: test_flash
+          POSTGRES_USER: flash
+          POSTGRES_PASSWORD: flash
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      POSTGRES_USER: flash
+      POSTGRES_PASSWORD: flash
+      POSTGRES_HOST: db
+      POSTGRES_DB: flash
+      POSTGRES_PORT: 5432
+      USE_DOCKER: 'yes'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup PostgreSQL
+        run: |
+          ls -l sql/
+          wait-for-it "${POSTGRES_HOST}:${POSTGRES_PORT}" -t 30
+          PGPASSWORD=${POSTGRES_PASSWORD} psql -h ${POSTGRES_HOST} -U ${POSTGRES_USER} test_${POSTGRES_DB} -f sql/00_tables.sql
+          PGPASSWORD=${POSTGRES_PASSWORD} psql -h ${POSTGRES_HOST} -U ${POSTGRES_USER} test_${POSTGRES_DB} -f sql/01_feeds.sql
+          PGPASSWORD=${POSTGRES_PASSWORD} psql -h ${POSTGRES_HOST} -U ${POSTGRES_USER} test_${POSTGRES_DB} -f sql/02_pgvector.sql
+
+      - name: Run pytest
+        run: /usr/local/bin/pytest
+
+  tag-latest:
+    if: github.ref == 'refs/heads/main'
+    needs: [prepare, build-final-images, pytest, lint-python]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Tag latest images
+        run: |
+          for I in backend frontend readability
+          do
+            IMAGE="ghcr.io/${{ github.repository }}/${I}"
+            echo "Tagging ${IMAGE}:${{ needs.prepare.outputs.tag }}"
+            docker buildx imagetools create --tag "${IMAGE}:latest" "${IMAGE}:${{ needs.prepare.outputs.tag }}"
+            echo "🏷️ Tagged ${IMAGE}:latest"
+          done
