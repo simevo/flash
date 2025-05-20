@@ -175,6 +175,21 @@ jobs:
           yarn lint
           yarn format-check
 
+  frontend-test:
+    needs: [prepare, build-deps-images]
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/${{ github.repository }}/deps-frontend:${{ needs.prepare.outputs.deps_frontend_tag }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Run frontend unit tests
+        working-directory: frontend
+        run: |
+          yarn install
+          yarn test:unit
+
   build-final-images:
     needs: [prepare, build-deps-images]
     runs-on: ubuntu-latest
@@ -284,7 +299,7 @@ jobs:
 
   tag-latest:
     if: github.ref == 'refs/heads/main'
-    needs: [prepare, build-final-images, pytest, lint-python]
+    needs: [prepare, build-final-images, pytest, lint-python, frontend-test]
     runs-on: ubuntu-latest
     steps:
       - name: Login to GitHub Container Registry
