@@ -298,6 +298,7 @@ jobs:
       POSTGRES_HOST: db
       POSTGRES_DB: flash
       POSTGRES_PORT: 5432
+      DATABASE_URL: postgres://flash:flash@db:5432/flash
       USE_DOCKER: "yes"
     steps:
       - name: Checkout repository
