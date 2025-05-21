@@ -9,7 +9,7 @@ RUN yarn && yarn cache clean
 
 FROM ${FRONTEND_BASE_IMAGE} AS frontend-builder
 WORKDIR /app
-COPY index.html vite.config.mts tsconfig*.json env.d.ts eslint.config.ts .gitignore .prettierrc.json ./
+COPY index.html vite.config.mts vitest.config.mts tsconfig*.json env.d.ts eslint.config.ts .gitignore .prettierrc.json ./
 COPY public ./public
 COPY src ./src
 

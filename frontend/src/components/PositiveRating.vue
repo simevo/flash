@@ -66,7 +66,7 @@ function set(item: PatchedFeed, rating: number, endpoint: string) {
   })
     .then((response) => {
       if (response.status == 403) {
-        if (typeof window !== 'undefined' && window.location) {
+        if (typeof window !== "undefined" && window.location) {
           window.location.href = "/accounts/"
         }
       } else if (response.status == 200) {

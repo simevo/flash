@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject } from 'vue'
+import { inject } from "vue"
 import type { components } from "../generated/schema.d.ts"
 import { secondsToString, secondsToString1 } from "./sts"
 import { fetch_wrapper } from "../utils"
@@ -23,7 +23,7 @@ const emit = defineEmits<{
   (e: "removeArticleFromList", article_id: number): void
 }>()
 
-const base_language = inject<string>('base_language')
+const base_language = inject<string>("base_language")
 
 async function removeArticleFromList(list_id: string): Promise<void> {
   if (
