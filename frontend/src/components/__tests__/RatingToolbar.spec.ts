@@ -119,7 +119,7 @@ describe('RatingToolbar.vue', () => {
       await negativeRatings[0].vm.$emit('updating', true)
       negativeRatings.forEach((stubWrapper) => expect(stubWrapper.props('readonly')).toBe(true))
       positiveRatings.forEach((stubWrapper) => expect(stubWrapper.props('readonly')).toBe(true))
-      
+
       // Then, set back to false
       await negativeRatings[0].vm.$emit('updating', false)
 

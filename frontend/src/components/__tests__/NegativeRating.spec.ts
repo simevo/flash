@@ -53,7 +53,7 @@ describe('NegativeRating.vue', () => {
       wrapper.unmount()
     }
   })
-  
+
   // Helper function to create the component
   const createComponent = (props?: any) => {
     return mount(NegativeRating, {
@@ -99,7 +99,7 @@ describe('NegativeRating.vue', () => {
       expect(wrapper.find('button').classes()).toContain('icon-light')
       expect(wrapper.find('button').classes()).not.toContain('icon-danger')
     })
-    
+
     it('applies icon-light when my_rating is greater than threshold', () => {
       wrapper = createComponent({ item: { ...mockItem, my_rating: 1 }, threshold: 0 })
       expect(wrapper.find('button').classes()).toContain('icon-light')
@@ -117,9 +117,9 @@ describe('NegativeRating.vue', () => {
     it('does not call set method or emit events when readonly is true', async () => {
       const itemCopy = { ...mockItem, my_rating: 0 }
       wrapper = createComponent({ readonly: true, item: itemCopy })
-      
+
       await wrapper.find('button').trigger('click')
-      
+
       expect(fetch_wrapper).not.toHaveBeenCalled()
       expect(wrapper.emitted('updating')).toBeUndefined()
       expect(itemCopy.my_rating).toBe(0) // Prop should not be mutated
@@ -138,7 +138,7 @@ describe('NegativeRating.vue', () => {
 
       // 2. Emits 'updating' events
       expect(wrapper.emitted('updating')).toEqual([[true], [false]])
-      
+
       // 3. Calls fetch_wrapper
       expect(fetch_wrapper).toHaveBeenCalledTimes(1)
       expect(fetch_wrapper).toHaveBeenCalledWith(mockEndpoint, {
@@ -149,7 +149,7 @@ describe('NegativeRating.vue', () => {
 
       // 4. Shows alert for 201 status
       expect(global.alert).toHaveBeenCalledWith('Rating inserito con successo')
-      
+
       // 5. Dynamic classes
       expect(wrapper.find('button').classes()).toContain('icon-danger')
     })
@@ -157,7 +157,7 @@ describe('NegativeRating.vue', () => {
     it('toggles rating to 0, emits, calls API, and shows update alert on second click', async () => {
       const localItem = { ...mockItem, my_rating: -1 } // Start with rating already set
       wrapper = createComponent({ item: localItem, threshold: 0 })
-      
+
       ;(fetch_wrapper as vi.Mock).mockResolvedValueOnce({ status: 200, json: async () => ({}) }) // Mock for this specific call
 
       await wrapper.find('button').trigger('click')
@@ -179,7 +179,7 @@ describe('NegativeRating.vue', () => {
       ;(fetch_wrapper as vi.Mock).mockResolvedValueOnce({ status: 403 })
 
       await wrapper.find('button').trigger('click')
-      
+
       // document.location = '/accounts/' is called in the component.
       // In JSDOM, this throws a "Not implemented: navigation (except hash changes)" error,
       // which is visible in the test output's stderr.
@@ -221,7 +221,7 @@ describe('NegativeRating.vue', () => {
       expect(wrapper.emitted('updating')).toEqual([[true], [false]])
     })
   })
-  
+
   // Restore original window.location after all tests in this describe block
   afterEach(() => {
     if (wrapper) {
@@ -229,6 +229,6 @@ describe('NegativeRating.vue', () => {
     }
     vi.unstubAllGlobals(); // Important to clean up global stubs
   })
-  
+
   // No afterAll needed for location mock if using unstubAllGlobals in afterEach
 })

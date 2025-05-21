@@ -46,7 +46,7 @@ describe('PositiveRating.vue', () => { // Changed describe name
       json: async () => ({}),
     })
   })
-  
+
   afterEach(() => {
     if (wrapper) {
       wrapper.unmount()
@@ -97,7 +97,7 @@ describe('PositiveRating.vue', () => { // Changed describe name
       expect(wrapper.find('button').classes()).toContain('icon-light')
       expect(wrapper.find('button').classes()).not.toContain('icon-success')
     })
-    
+
     it('applies icon-light when my_rating is less than threshold', () => {
       wrapper = createComponent({ item: { ...mockItem, my_rating: -1 }, threshold: 0 })
       expect(wrapper.find('button').classes()).toContain('icon-light')
@@ -115,9 +115,9 @@ describe('PositiveRating.vue', () => { // Changed describe name
     it('does not call set method or emit events when readonly is true', async () => {
       const itemCopy = { ...mockItem, my_rating: 0 }
       wrapper = createComponent({ readonly: true, item: itemCopy })
-      
+
       await wrapper.find('button').trigger('click')
-      
+
       expect(fetch_wrapper).not.toHaveBeenCalled()
       expect(wrapper.emitted('updating')).toBeUndefined()
       expect(itemCopy.my_rating).toBe(0)
@@ -136,7 +136,7 @@ describe('PositiveRating.vue', () => { // Changed describe name
 
       // 2. Emits 'updating' events
       expect(wrapper.emitted('updating')).toEqual([[true], [false]])
-      
+
       // 3. Calls fetch_wrapper
       expect(fetch_wrapper).toHaveBeenCalledTimes(1)
       expect(fetch_wrapper).toHaveBeenCalledWith(mockEndpoint, {
@@ -147,7 +147,7 @@ describe('PositiveRating.vue', () => { // Changed describe name
 
       // 4. Shows alert for 201 status
       expect(global.alert).toHaveBeenCalledWith('Rating inserito con successo')
-      
+
       // 5. Dynamic classes
       expect(wrapper.find('button').classes()).toContain('icon-success')
     })
@@ -155,7 +155,7 @@ describe('PositiveRating.vue', () => { // Changed describe name
     it('toggles rating to 0, emits, calls API, and shows update alert on second click', async () => {
       const localItem = { ...mockItem, my_rating: 1 } // Start with rating already set (threshold + 1)
       wrapper = createComponent({ item: localItem, threshold: 0 })
-      
+
       ;(fetch_wrapper as vi.Mock).mockResolvedValueOnce({ status: 200, json: async () => ({}) })
 
       await wrapper.find('button').trigger('click')
@@ -177,7 +177,7 @@ describe('PositiveRating.vue', () => { // Changed describe name
       ;(fetch_wrapper as vi.Mock).mockResolvedValueOnce({ status: 403 })
 
       await wrapper.find('button').trigger('click')
-      
+
       // document.location = '/accounts/' is called in the component.
       // In JSDOM, this throws a "Not implemented: navigation (except hash changes)" error,
       // which is visible in the test output's stderr.
