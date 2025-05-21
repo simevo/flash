@@ -217,6 +217,58 @@ pytest:
   script:
     - /usr/local/bin/pytest
 
+frontend:e2e_test:
+  stage: test
+  image: $CI_REGISTRY_IMAGE/deps-frontend:$DEPS_FRONTEND_TAG
+  variables:
+    PLAYWRIGHT_BROWSERS_PATH: '0'
+    API_BASE_URL: http://backend:8000
+    # Variables for Django backend service & this job
+    DATABASE_URL: postgresql://flash_e2e:flash_e2e@db:5432/test_flash_e2e
+    DJANGO_SETTINGS_MODULE: config.settings.test
+    PYTHONUNBUFFERED: "1"
+    CELERY_BROKER_URL: redis://redis:6379/0 # Dummy, add actual redis service if needed
+    DJANGO_SECRET_KEY: 'dummy-secret-key-for-ci-e2e-tests'
+    DJANGO_ALLOWED_HOSTS: '.localhost,backend,localhost'
+    DJANGO_SUPERUSER_USERNAME: admin
+    DJANGO_SUPERUSER_PASSWORD: admin
+    DJANGO_SUPERUSER_EMAIL: admin@example.com
+    POSTGRES_DB: test_flash_e2e # For db service
+    POSTGRES_USER: flash_e2e    # For db service
+    POSTGRES_PASSWORD: flash_e2e # For db service
+    # PLAYWRIGHT_TEST_BASE_URL is handled by playwright.config.ts using CI env var
+  services:
+    - name: pgvector/pgvector:pg15
+      alias: db
+      variables:
+        POSTGRES_DB: $POSTGRES_DB # Use from job's variables
+        POSTGRES_USER: $POSTGRES_USER
+        POSTGRES_PASSWORD: $POSTGRES_PASSWORD
+    - name: $CI_REGISTRY_IMAGE/backend:$TAG
+      alias: backend
+      variables: # Pass necessary env vars to the backend service
+        DATABASE_URL: $DATABASE_URL
+        DJANGO_SETTINGS_MODULE: $DJANGO_SETTINGS_MODULE
+        PYTHONUNBUFFERED: $PYTHONUNBUFFERED
+        CELERY_BROKER_URL: $CELERY_BROKER_URL
+        DJANGO_SECRET_KEY: $DJANGO_SECRET_KEY
+        DJANGO_ALLOWED_HOSTS: $DJANGO_ALLOWED_HOSTS
+        DJANGO_SUPERUSER_USERNAME: $DJANGO_SUPERUSER_USERNAME
+        DJANGO_SUPERUSER_PASSWORD: $DJANGO_SUPERUSER_PASSWORD
+        DJANGO_SUPERUSER_EMAIL: $DJANGO_SUPERUSER_EMAIL
+        # PORT: "8000" # If backend image requires PORT to be set explicitly
+  before_script:
+    - echo "Primary image: $CI_REGISTRY_IMAGE/deps-frontend:$DEPS_FRONTEND_TAG"
+    - echo "Backend service image: $CI_REGISTRY_IMAGE/backend:$TAG"
+    - apt-get update -y && apt-get install -y --no-install-recommends wait-for-it postgresql-client
+    - wait-for-it -h db -p 5432 -t 60 --strict
+    - wait-for-it -h backend -p 8000 -t 60 --strict
+    # Assuming backend entrypoint handles migrations
+  script:
+    - cd frontend
+    - yarn install
+    - yarn test:e2e
+
 tag-latest-docker-images:
   stage: tag
   image: debian:bookworm-slim

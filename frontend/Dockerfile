@@ -6,6 +6,7 @@ FROM node:22 AS deps-frontend-base
 WORKDIR /app
 COPY ./package.json ./yarn.lock ./
 RUN yarn && yarn cache clean
+RUN yarn playwright install --with-deps
 
 FROM ${FRONTEND_BASE_IMAGE} AS frontend-builder
 WORKDIR /app

@@ -168,9 +168,58 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/${{ github.repository }}/deps-frontend:${{ needs.prepare.outputs.deps_frontend_tag }}
+    env:
+      PLAYWRIGHT_BROWSERS_PATH: '0'
+      API_BASE_URL: http://backend:8000
+      # For Django backend service
+      DATABASE_URL: postgresql://flash_e2e:flash_e2e@db:5432/test_flash_e2e
+      DJANGO_SETTINGS_MODULE: config.settings.test
+      PYTHONUNBUFFERED: "1"
+      CELERY_BROKER_URL: redis://redis:6379/0 # Assuming Redis is not strictly needed for E2E or will be added later
+      DJANGO_SECRET_KEY: 'dummy-secret-key-for-ci-e2e'
+      DJANGO_ALLOWED_HOSTS: '.localhost,backend'
+      DJANGO_SUPERUSER_USERNAME: admin
+      DJANGO_SUPERUSER_PASSWORD: admin
+      DJANGO_SUPERUSER_EMAIL: admin@example.com
+    services:
+      db:
+        image: pgvector/pgvector:pg15
+        env:
+          POSTGRES_DB: test_flash_e2e
+          POSTGRES_USER: flash_e2e
+          POSTGRES_PASSWORD: flash_e2e
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      backend:
+        image: ghcr.io/${{ github.repository }}/backend:${{ needs.prepare.outputs.tag }}
+        env: # These are passed to the backend service container
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+          DJANGO_SETTINGS_MODULE: ${{ env.DJANGO_SETTINGS_MODULE }}
+          PYTHONUNBUFFERED: ${{ env.PYTHONUNBUFFERED }}
+          CELERY_BROKER_URL: ${{ env.CELERY_BROKER_URL }}
+          DJANGO_SECRET_KEY: ${{ env.DJANGO_SECRET_KEY }}
+          DJANGO_ALLOWED_HOSTS: ${{ env.DJANGO_ALLOWED_HOSTS }}
+          DJANGO_SUPERUSER_USERNAME: ${{ env.DJANGO_SUPERUSER_USERNAME }}
+          DJANGO_SUPERUSER_PASSWORD: ${{ env.DJANGO_SUPERUSER_PASSWORD }}
+          DJANGO_SUPERUSER_EMAIL: ${{ env.DJANGO_SUPERUSER_EMAIL }}
+        # ports: # Not strictly needed for service-to-service communication within the job
+        #   - 8000:8000
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+
+      - name: Install dependencies for waiting
+        run: |
+          sudo apt-get update && sudo apt-get install -y wait-for-it postgresql-client
+
+      - name: Wait for PostgreSQL
+        run: wait-for-it db:5432 -t 60
+
+      - name: Wait for Backend
+        run: wait-for-it backend:8000 -t 60
 
       - name: Run lint and type checks
         working-directory: frontend
@@ -194,6 +243,74 @@ jobs:
         run: |
           yarn install
           yarn test:unit
+
+  frontend_e2e_test:
+    needs: [frontend-test, build-final-images]
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/${{ github.repository }}/deps-frontend:${{ needs.prepare.outputs.deps_frontend_tag }}
+    env:
+      PLAYWRIGHT_BROWSERS_PATH: '0' # Restoring this, and adding new vars
+      API_BASE_URL: http://backend:8000 # For frontend app to call backend
+      # Variables for Django backend service container & this job container
+      DATABASE_URL: postgresql://flash_e2e:flash_e2e@db:5432/test_flash_e2e
+      DJANGO_SETTINGS_MODULE: config.settings.test
+      PYTHONUNBUFFERED: "1"
+      CELERY_BROKER_URL: redis://redis:6379/0 # Dummy, add actual redis service if needed
+      DJANGO_SECRET_KEY: 'dummy-secret-key-for-ci-e2e-tests' # slightly different from lint-js error
+      DJANGO_ALLOWED_HOSTS: '.localhost,backend,localhost'
+      DJANGO_SUPERUSER_USERNAME: admin
+      DJANGO_SUPERUSER_PASSWORD: admin
+      DJANGO_SUPERUSER_EMAIL: admin@example.com
+      # PLAYWRIGHT_TEST_BASE_URL is handled by playwright.config.ts using CI env var
+    services:
+      db:
+        image: pgvector/pgvector:pg15
+        env:
+          POSTGRES_DB: test_flash_e2e
+          POSTGRES_USER: flash_e2e
+          POSTGRES_PASSWORD: flash_e2e
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      backend:
+        image: ghcr.io/${{ github.repository }}/backend:${{ needs.prepare.outputs.tag }}
+        env: # These are passed to the backend service container
+          DATABASE_URL: ${{ env.DATABASE_URL }} # Use from job's env
+          DJANGO_SETTINGS_MODULE: ${{ env.DJANGO_SETTINGS_MODULE }}
+          PYTHONUNBUFFERED: ${{ env.PYTHONUNBUFFERED }}
+          CELERY_BROKER_URL: ${{ env.CELERY_BROKER_URL }}
+          DJANGO_SECRET_KEY: ${{ env.DJANGO_SECRET_KEY }}
+          DJANGO_ALLOWED_HOSTS: ${{ env.DJANGO_ALLOWED_HOSTS }}
+          DJANGO_SUPERUSER_USERNAME: ${{ env.DJANGO_SUPERUSER_USERNAME }}
+          DJANGO_SUPERUSER_PASSWORD: ${{ env.DJANGO_SUPERUSER_PASSWORD }}
+          DJANGO_SUPERUSER_EMAIL: ${{ env.DJANGO_SUPERUSER_EMAIL }}
+        ports: # Primarily for host access if needed; service-to-service uses Docker network
+          - 8000:8000
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install wait-for-it and psql client
+        run: |
+          sudo apt-get update -y && sudo apt-get install -y --no-install-recommends wait-for-it postgresql-client
+
+      - name: Wait for PostgreSQL
+        run: wait-for-it -h db -p 5432 -t 60 --strict
+
+      - name: Wait for Backend service
+        run: wait-for-it -h backend -p 8000 -t 60 --strict
+        # Assuming backend entrypoint handles migrations. If not, a step to run migrations would be needed.
+        # Example: PGPASSWORD=${{ env.POSTGRES_PASSWORD }} psql -h db -U ${{ env.POSTGRES_USER }} -d ${{ env.POSTGRES_DB }} -f path/to/schema.sql
+        # Or a manage.py migrate command if backend image allows remote execution or has a specific entrypoint.
+
+      - name: Run frontend e2e tests
+        working-directory: frontend
+        run: |
+          yarn install
+          yarn test:e2e
 
   build-final-images:
     needs: [prepare, build-deps-images]
@@ -317,7 +434,7 @@ jobs:
 
   tag-latest:
     if: github.ref == 'refs/heads/main'
-    needs: [prepare, build-final-images, pytest, lint-python, frontend-test]
+    needs: [prepare, build-final-images, pytest, lint-python, frontend-test, frontend_e2e_test]
     runs-on: ubuntu-latest
     permissions:
       packages: write
