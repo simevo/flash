@@ -93,9 +93,12 @@ jobs:
           DEPS_FRONTEND_COMMIT_HASH=$(git rev-list -1 HEAD -- frontend/Dockerfile frontend/package.json frontend/yarn.lock)
           DEPS_FRONTEND_COMMIT_COUNT=$(git rev-list --count "$DEPS_FRONTEND_COMMIT_HASH")
 
-          DEPS_BACKEND_TAG="deps-${{ env.DEPS_STAMP }}-${DEPS_BACKEND_COMMIT_COUNT}-${DEPS_BACKEND_COMMIT_HASH}-${{ github.ref_name }}"
-          DEPS_TEST_TAG="deps-${{ env.DEPS_STAMP }}-${DEPS_TEST_COMMIT_COUNT}-${DEPS_TEST_COMMIT_HASH}-${{ github.ref_name }}"
-          DEPS_FRONTEND_TAG="deps-${{ env.DEPS_STAMP }}-${DEPS_FRONTEND_COMMIT_COUNT}-${DEPS_FRONTEND_COMMIT_HASH}-${{ github.ref_name }}"
+          # Sanitize branch name by replacing slashes with dashes to make valid Docker tags
+          SANITIZED_REF_NAME=$(echo "${{ github.ref_name }}" | sed 's/\//-/g')
+
+          DEPS_BACKEND_TAG="deps-${{ env.DEPS_STAMP }}-${DEPS_BACKEND_COMMIT_COUNT}-${DEPS_BACKEND_COMMIT_HASH}-${SANITIZED_REF_NAME}"
+          DEPS_TEST_TAG="deps-${{ env.DEPS_STAMP }}-${DEPS_TEST_COMMIT_COUNT}-${DEPS_TEST_COMMIT_HASH}-${SANITIZED_REF_NAME}"
+          DEPS_FRONTEND_TAG="deps-${{ env.DEPS_STAMP }}-${DEPS_FRONTEND_COMMIT_COUNT}-${DEPS_FRONTEND_COMMIT_HASH}-${SANITIZED_REF_NAME}"
 
           echo "tag=$TAG" >> $GITHUB_OUTPUT
           echo "deps_backend_tag=$DEPS_BACKEND_TAG" >> $GITHUB_OUTPUT
