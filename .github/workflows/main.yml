@@ -105,6 +105,8 @@ jobs:
   build-deps-images:
     needs: prepare
     runs-on: ubuntu-latest
+    permissions:
+      packages: write
     strategy:
       matrix:
         include:
