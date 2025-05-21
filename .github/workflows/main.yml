@@ -319,6 +319,8 @@ jobs:
     if: github.ref == 'refs/heads/main'
     needs: [prepare, build-final-images, pytest, lint-python, frontend-test]
     runs-on: ubuntu-latest
+    permissions:
+      packages: write
     steps:
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v2
