@@ -66,7 +66,9 @@ function set(item: PatchedFeed, rating: number, endpoint: string) {
   })
     .then((response) => {
       if (response.status == 403) {
-        document.location = "/accounts/"
+        if (typeof window !== "undefined" && window.location) {
+          window.location.href = "/accounts/"
+        }
       } else if (response.status == 200) {
         alert("Rating aggiornato con successo")
       } else if (response.status == 201) {

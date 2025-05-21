@@ -2,9 +2,9 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: ['**']
+    branches: ["**"]
   pull_request:
-    branches: ['**']
+    branches: ["**"]
 
 env:
   DEPS_STAMP: "0" # Increment this to force rebuild of dependency images
@@ -19,7 +19,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.12'
+          python-version: "3.12"
 
       - name: Cache pre-commit
         uses: actions/cache@v3
@@ -93,9 +93,12 @@ jobs:
           DEPS_FRONTEND_COMMIT_HASH=$(git rev-list -1 HEAD -- frontend/Dockerfile frontend/package.json frontend/yarn.lock)
           DEPS_FRONTEND_COMMIT_COUNT=$(git rev-list --count "$DEPS_FRONTEND_COMMIT_HASH")
 
-          DEPS_BACKEND_TAG="deps-${{ env.DEPS_STAMP }}-${DEPS_BACKEND_COMMIT_COUNT}-${DEPS_BACKEND_COMMIT_HASH}-${{ github.ref_name }}"
-          DEPS_TEST_TAG="deps-${{ env.DEPS_STAMP }}-${DEPS_TEST_COMMIT_COUNT}-${DEPS_TEST_COMMIT_HASH}-${{ github.ref_name }}"
-          DEPS_FRONTEND_TAG="deps-${{ env.DEPS_STAMP }}-${DEPS_FRONTEND_COMMIT_COUNT}-${DEPS_FRONTEND_COMMIT_HASH}-${{ github.ref_name }}"
+          # Sanitize branch name by replacing slashes with dashes to make valid Docker tags
+          SANITIZED_REF_NAME=$(echo "${{ github.ref_name }}" | sed 's/\//-/g')
+
+          DEPS_BACKEND_TAG="deps-${{ env.DEPS_STAMP }}-${DEPS_BACKEND_COMMIT_COUNT}-${DEPS_BACKEND_COMMIT_HASH}-${SANITIZED_REF_NAME}"
+          DEPS_TEST_TAG="deps-${{ env.DEPS_STAMP }}-${DEPS_TEST_COMMIT_COUNT}-${DEPS_TEST_COMMIT_HASH}-${SANITIZED_REF_NAME}"
+          DEPS_FRONTEND_TAG="deps-${{ env.DEPS_STAMP }}-${DEPS_FRONTEND_COMMIT_COUNT}-${DEPS_FRONTEND_COMMIT_HASH}-${SANITIZED_REF_NAME}"
 
           echo "tag=$TAG" >> $GITHUB_OUTPUT
           echo "deps_backend_tag=$DEPS_BACKEND_TAG" >> $GITHUB_OUTPUT
@@ -105,6 +108,8 @@ jobs:
   build-deps-images:
     needs: prepare
     runs-on: ubuntu-latest
+    permissions:
+      packages: write
     strategy:
       matrix:
         include:
@@ -193,6 +198,8 @@ jobs:
   build-final-images:
     needs: [prepare, build-deps-images]
     runs-on: ubuntu-latest
+    permissions:
+      packages: write
     strategy:
       matrix:
         include:
@@ -255,8 +262,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      - name: Add an exception for the current working directory
+        run: git config --global --add safe.directory /__w/flash/flash
+
       - name: Run pre-commit
         run: pre-commit run --show-diff-on-failure --color=always --all-files
+
+      - name: Upload pre-commit log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pre-commit-log
+          path: /github/home/.cache/pre-commit/pre-commit.log
 
   pytest:
     needs: [prepare, build-final-images]
@@ -281,7 +298,8 @@ jobs:
       POSTGRES_HOST: db
       POSTGRES_DB: flash
       POSTGRES_PORT: 5432
-      USE_DOCKER: 'yes'
+      DATABASE_URL: postgres://flash:flash@db:5432/flash
+      USE_DOCKER: "yes"
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3

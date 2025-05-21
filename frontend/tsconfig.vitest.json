@@ -1,6 +1,16 @@
 {
   "extends": "./tsconfig.app.json",
-  "include": ["src/**/__tests__/*", "env.d.ts"],
+  "include": [
+    "src/**/__tests__/*",
+    "env.d.ts",
+    "src/components/RatingToolbar.vue",
+    "src/components/PositiveRating.vue",
+    "src/components/NegativeRating.vue",
+    "src/components/ThreeStateCheckBox.vue",
+    "src/components/ThreeStateCheckBox.vue",
+    "src/types/CheckBoxValue.ts",
+    "src/utils.ts"
+  ],
   "exclude": [],
   "compilerOptions": {
     "composite": true,
