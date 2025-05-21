@@ -12,6 +12,9 @@ Welcome to flash's documentation!
 
    howto
    users
+   USING.md
+   DEVELOPING.md
+   ARCHITECTURE.md
 
 
 

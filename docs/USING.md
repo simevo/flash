@@ -54,24 +54,30 @@ Additional features:
 
 9. Article **similarity** and similarity-based search: the title and content of each article are converted to a vector embedding using the [`use-cmlm-multilingual` sentence transformer](https://huggingface.co/sentence-transformers/use-cmlm-multilingual). This 2020 model is based on LaBSE (Google Language-agnostic BERT sentence embedding model supporting 109 languages), has 472M params, embedding dimension: 768 and size 1.89G (single-precision floating point FP32).
 
-## Documentation
+## Deployment
 
-For detailed information, please refer to the following documents:
-- [User Guide](docs/USING.md)
-- [Developer Guide](docs/DEVELOPING.md)
-- [Architecture Overview](docs/ARCHITECTURE.md)
+The following details how to deploy this application.
 
-The full documentation, built with Sphinx, can be accessed [here](docs/_build/html/index.html) (requires building the docs locally).
+### Docker
 
-## Project Structure
+See detailed [cookiecutter-django Docker documentation](https://cookiecutter-django.readthedocs.io/en/latest/3-deployment/deployment-with-docker.html).
 
-- `compose/`: Contains Docker Compose configurations for local development and production environments.
-- `config/`: Holds project-level Django configurations, such as settings (`settings.py`), root URL patterns (`urls.py`), and WSGI application (`wsgi.py`).
-- `docs/`: Contains project documentation source files (Sphinx and Markdown).
-- `flash/`: Main Django application directory. It includes:
-    - `static/`: Project-wide static assets (CSS, JavaScript, images).
-    - `templates/`: Project-wide Django HTML templates.
-    - `users/`: Django app for user management, authentication, and profiles.
-- `frontend/`: Houses the Vue.js frontend application code.
-- `news/`: Django app responsible for news aggregation, articles, feeds, and related models and views.
-- `requirements/`: Stores Python dependency files for different environments (e.g., `base.txt`, `local.txt`, `production.txt`).
+## License
+
+**flash** an open-source news platform with aggregation and ranking
+
+Copyright (C) 2017-2025 Paolo Greppi
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program (file [LICENSE](/LICENSE)).
+If not, see <https://www.gnu.org/licenses/>.
