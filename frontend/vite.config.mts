@@ -21,8 +21,4 @@ export default defineConfig({
       "@": fileURLToPath(new URL("./src", import.meta.url)),
     },
   },
-  test: {
-    environment: "jsdom",
-    exclude: ["**/node_modules/**", "**/dist/**", "**/e2e/**"],
-  },
 })
