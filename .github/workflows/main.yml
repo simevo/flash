@@ -204,7 +204,6 @@ jobs:
       PLAYWRIGHT_BROWSERS_PATH: "0" # Restoring this, and adding new vars
       API_BASE_URL: http://backend:8000 # For frontend app to call backend
       # Variables for Django backend service container & this job container
-      DATABASE_URL: postgresql://flash_e2e:flash_e2e@db:5432/test_flash_e2e
       DJANGO_SETTINGS_MODULE: config.settings.test
       PYTHONUNBUFFERED: "1"
       CELERY_BROKER_URL: redis://redis:6379/0 # Dummy, add actual redis service if needed
@@ -234,7 +233,7 @@ jobs:
       backend:
         image: ghcr.io/${{ github.repository }}/backend:${{ needs.prepare.outputs.tag }}
         env: # These are passed to the backend service container
-          DATABASE_URL: ${{ env.DATABASE_URL }} # Use from job's env
+          DATABASE_URL: postgresql://${{ env.POSTGRES_USER }}:${{ env.POSTGRES_PASSWORD }}@${{ env.POSTGRES_HOST }}:${{ env.POSTGRES_PORT }}/${{ env.POSTGRES_DB }}
           DJANGO_SETTINGS_MODULE: ${{ env.DJANGO_SETTINGS_MODULE }}
           PYTHONUNBUFFERED: ${{ env.PYTHONUNBUFFERED }}
           CELERY_BROKER_URL: ${{ env.CELERY_BROKER_URL }}
