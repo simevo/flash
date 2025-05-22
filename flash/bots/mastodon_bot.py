@@ -31,6 +31,7 @@ logging.basicConfig(
 MAX_ARTICLES_PER_RUN = 5  # Maximum number of articles to post in a single run
 POST_DELAY_SECONDS = 2  # Delay between posts to avoid flooding
 MAX_POST_LENGTH = 500  # Maximum length for a Mastodon post
+DRY_RUN = False  # When True, don't actually post to Mastodon, just simulate it
 
 
 def get_user_and_profile(user_id):
@@ -192,11 +193,16 @@ def post_article_to_mastodon(user, article, mastodon_client, delay_seconds=None)
     post_content = create_post_content(article)
 
     try:
-        mastodon_client.status_post(post_content)
-        msg = f"Posted article [{article.title}] for user {user.username}"
-        logging.info(msg)
+        if DRY_RUN:
+            msg = f"DRY RUN: post article [{article.title}] for user {user.username}"
+            logging.info(msg)
+            logging.info(f"DRY RUN: Post content would be: {post_content}")
+        else:
+            mastodon_client.status_post(post_content)
+            msg = f"Posted article [{article.title}] for user {user.username}"
+            logging.info(msg)
 
-        # Mark as read
+        # Mark as read (even in dry run mode)
         user_article_status, _ = UserArticles.objects.get_or_create(
             user=user,
             article=article,
@@ -260,9 +266,11 @@ def main(user_id, max_articles=None, delay_seconds=None):
             time.sleep(post_delay)
 
     # Log summary
+    dry_run_prefix = "DRY RUN: " if DRY_RUN else ""
+    action_verb = "would be" if DRY_RUN else "were"
     logging.info(
-        f"Summary for user {user.username}: "
-        f"{successfully_posted} new articles posted successfully, "
+        f"{dry_run_prefix}Summary for user {user.username}: "
+        f"{successfully_posted} new articles {action_verb} posted successfully, "
         f"{failed_posts} failed posts, "
         f"{len(unread_articles) - len(articles_to_post)} new articles queued.",
     )
@@ -271,12 +279,23 @@ def main(user_id, max_articles=None, delay_seconds=None):
 if __name__ == "__main__":
     min_args = 2
     if len(sys.argv) < min_args:
-        print("Usage: python mastodon_bot.py <user_id> [max_articles] [delay_seconds]")  # noqa: T201
+        print(  # noqa: T201
+            "Usage: python mastodon_bot.py <user_id> \
+            [max_articles] [delay_seconds] [--dry-run]",
+        )
         print("  max_articles: Maximum number of articles to post (default: 5)")  # noqa: T201
         print("  delay_seconds: Delay between posts in seconds (default: 2)")  # noqa: T201
+        print("  --dry-run: Run in dry run mode (no actual posting)")  # noqa: T201
         sys.exit(1)
 
     try:
+        # Check for dry run flag
+        if "--dry-run" in sys.argv:
+            DRY_RUN = True
+            # Remove the flag from argv for easier argument processing
+            sys.argv.remove("--dry-run")
+            print("Running in DRY RUN mode - no posts will be sent to Mastodon")  # noqa: T201
+
         user_id_arg = int(sys.argv[1])
 
         # Parse optional arguments
