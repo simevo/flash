@@ -38,4 +38,4 @@ numpy==2.2.5  # https://github.com/numpy/numpy
 sentence-transformers==4.1.0  # https://github.com/UKPLab/sentence-transformers/
 torch @ https://download.pytorch.org/whl/cpu/torch-2.7.0%2Bcpu-cp312-cp312-manylinux_2_28_x86_64.whl  # https://github.com/pytorch/pytorch
 protobuf==6.31.0  # https://github.com/protocolbuffers/protobuf
-Mastodon.py>=1.8.0  # https://github.com/halcy/Mastodon.py
+Mastodon.py==2.0.1  # https://github.com/halcy/Mastodon.py
