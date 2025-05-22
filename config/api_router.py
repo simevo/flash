@@ -23,6 +23,7 @@ router.register("lists", UserArticleListsView, basename="lists")
 
 app_name = "api"
 urlpatterns = [
+    path("feeds/opml/", OPMLExportView.as_view(), name="opml-export"),
     *router.urls,
     path("upload/", ImageUploadView.as_view(), name="image-upload"),
 ]

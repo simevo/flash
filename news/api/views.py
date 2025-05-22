@@ -666,9 +666,9 @@ class OPMLExportView(APIView):
             ET.SubElement(
                 body_element,
                 "outline",
-                text=feed.title, # Use direct keyword argument for text
-                type="rss",      # Use direct keyword argument for type
-                xmlUrl=feed.url  # Use direct keyword argument for xmlUrl
+                text=feed.title,  # Use direct keyword argument for text
+                type="rss",  # Use direct keyword argument for type
+                xmlUrl=feed.url,  # Use direct keyword argument for xmlUrl
             )
 
         xml_string = ET.tostring(

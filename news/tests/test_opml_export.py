@@ -28,7 +28,9 @@ class OPMLExportTests(APITestCase):
 
     def test_opml_export_returns_200_ok(self):
         # Test that the endpoint returns a 200 OK status code
-        url = reverse("api:opml-export") # Ensure 'opml-export' is the name given in urls.py
+        url = reverse(
+            "api:opml-export",
+        )  # Ensure 'opml-export' is the name given in urls.py
         response = self.client.get(url)
         assert response.status_code == status.HTTP_200_OK
 
@@ -46,7 +48,7 @@ class OPMLExportTests(APITestCase):
 
         # Parse the XML content
         try:
-            root = ET.fromstring(content) # noqa: S314
+            root = ET.fromstring(content)  # noqa: S314
         except ET.ParseError as e:
             msg = f"Failed to parse XML: {e}\nXML content was:\n{content}"
             raise AssertionError(msg) from e
@@ -106,7 +108,7 @@ class OPMLExportTests(APITestCase):
         assert response["Content-Type"] == "application/xml; charset=utf-8"
 
         try:
-            root = ET.fromstring(response.content.decode("utf-8")) # noqa: S314
+            root = ET.fromstring(response.content.decode("utf-8"))  # noqa: S314
         except ET.ParseError as e:
             msg = f"Failed to parse XML: {e}\nXML content was:\n\
                 {response.content.decode('utf-8')}"
@@ -130,7 +132,7 @@ class OPMLExportTests(APITestCase):
         assert response.status_code == status.HTTP_200_OK
 
         try:
-            root = ET.fromstring(response.content.decode("utf-8")) # noqa: S314
+            root = ET.fromstring(response.content.decode("utf-8"))  # noqa: S314
         except ET.ParseError as e:
             msg = f"Failed to parse XML: {e}\nXML content was:\n\
                 {response.content.decode('utf-8')}"
