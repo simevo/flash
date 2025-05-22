@@ -185,7 +185,7 @@ lint-python:
   script:
     - pre-commit run --show-diff-on-failure --color=always --all-files
 
-pytest:
+backend-test:
   stage: test
   image:
     name: $CI_REGISTRY_IMAGE/backend-test:$TAG

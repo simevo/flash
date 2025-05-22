@@ -343,7 +343,7 @@ jobs:
           name: pre-commit-log
           path: /github/home/.cache/pre-commit/pre-commit.log
 
-  pytest:
+  backend-test:
     needs: [prepare, build-final-images]
     runs-on: ubuntu-latest
     container:
@@ -389,7 +389,7 @@ jobs:
       [
         prepare,
         build-final-images,
-        pytest,
+        backend-test,
         lint-python,
         frontend-test,
         e2e-test,
