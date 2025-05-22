@@ -5,6 +5,7 @@ import re
 import time
 import uuid
 from io import BytesIO
+from xml.etree import ElementTree as ET
 
 from bs4 import BeautifulSoup
 from django.conf import settings
@@ -29,7 +30,6 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from xhtml2pdf import pisa
-from xml.etree import ElementTree as ET
 
 import news.translate
 import poller
@@ -672,7 +672,9 @@ class OPMLExportView(APIView):
             )
 
         xml_string = ET.tostring(
-            opml_element, encoding="utf-8", xml_declaration=True
+            opml_element,
+            encoding="utf-8",
+            xml_declaration=True,
         )
         return HttpResponse(xml_string, content_type="application/xml; charset=utf-8")
 
