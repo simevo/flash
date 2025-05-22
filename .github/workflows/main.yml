@@ -361,9 +361,9 @@ jobs:
       db:
         image: pgvector/pgvector:pg15
         env:
-          POSTGRES_DB: test_flash
-          POSTGRES_USER: flash
-          POSTGRES_PASSWORD: flash
+          POSTGRES_DB: test_${{ env.POSTGRES_DB }}
+          POSTGRES_USER: ${{ env.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
