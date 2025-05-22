@@ -210,7 +210,7 @@ pytest:
   script:
     - /usr/local/bin/pytest
 
-frontend:e2e_test:
+e2e-test:
   stage: test
   image: $CI_REGISTRY_IMAGE/deps-frontend:$DEPS_FRONTEND_TAG
   variables:

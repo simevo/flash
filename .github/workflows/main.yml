@@ -195,7 +195,7 @@ jobs:
           yarn install
           yarn test:unit
 
-  frontend_e2e_test:
+  e2e-test:
     needs: [prepare, frontend-test, build-final-images]
     runs-on: ubuntu-latest
     container:
@@ -392,7 +392,7 @@ jobs:
         pytest,
         lint-python,
         frontend-test,
-        frontend_e2e_test,
+        e2e-test,
       ]
     runs-on: ubuntu-latest
     permissions:
