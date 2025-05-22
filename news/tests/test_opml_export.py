@@ -28,10 +28,7 @@ class OPMLExportTests(APITestCase):
 
     def test_opml_export_returns_200_ok(self):
         # Test that the endpoint returns a 200 OK status code
-        url = reverse("api:opml-export")
-        url = reverse(
-            "api:opml-export",
-        )  # Ensure 'opml-export' is the name given in urls.py
+        url = reverse("api:opml-export") # Ensure 'opml-export' is the name given in urls.py
         response = self.client.get(url)
         assert response.status_code == status.HTTP_200_OK
 
