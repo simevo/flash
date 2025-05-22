@@ -195,6 +195,85 @@ jobs:
           yarn install
           yarn test:unit
 
+  e2e-test:
+    needs: [prepare, frontend-test, build-final-images]
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/${{ github.repository }}/deps-frontend:${{ needs.prepare.outputs.deps_frontend_tag }}
+    env:
+      PLAYWRIGHT_BROWSERS_PATH: "0" # Restoring this, and adding new vars
+      API_BASE_URL: http://backend:5000 # For frontend app to call backend
+      # Variables for Django backend service container & this job container
+      DJANGO_SETTINGS_MODULE: config.settings.test
+      PYTHONUNBUFFERED: "1"
+      CELERY_BROKER_URL: redis://redis:6379/0 # Dummy, add actual redis service if needed
+      DJANGO_SECRET_KEY: "dummy-secret-key-for-ci-e2e-tests" # slightly different from lint-js error
+      DJANGO_ALLOWED_HOSTS: ".localhost,backend,localhost"
+      DJANGO_SUPERUSER_USERNAME: admin
+      DJANGO_SUPERUSER_PASSWORD: admin
+      DJANGO_SUPERUSER_EMAIL: admin@example.com
+      POSTGRES_DB: test_flash_e2e
+      POSTGRES_HOST: db
+      POSTGRES_PASSWORD: flash_e2e
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: flash_e2e
+      # PLAYWRIGHT_TEST_BASE_URL is handled by playwright.config.ts using CI env var
+    services:
+      db:
+        image: pgvector/pgvector:pg15
+        env:
+          POSTGRES_DB: ${{ env.POSTGRES_DB }}
+          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+          POSTGRES_USER: ${{ env.POSTGRES_USER }}
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      backend:
+        image: ghcr.io/${{ github.repository }}/backend:${{ needs.prepare.outputs.tag }}
+        env: # These are passed to the backend service container
+          DATABASE_URL: postgresql://${{ env.POSTGRES_USER }}:${{ env.POSTGRES_PASSWORD }}@${{ env.POSTGRES_HOST }}:${{ env.POSTGRES_PORT }}/${{ env.POSTGRES_DB }}
+          DJANGO_SETTINGS_MODULE: ${{ env.DJANGO_SETTINGS_MODULE }}
+          PYTHONUNBUFFERED: ${{ env.PYTHONUNBUFFERED }}
+          CELERY_BROKER_URL: ${{ env.CELERY_BROKER_URL }}
+          DJANGO_SECRET_KEY: ${{ env.DJANGO_SECRET_KEY }}
+          DJANGO_ALLOWED_HOSTS: ${{ env.DJANGO_ALLOWED_HOSTS }}
+          DJANGO_SUPERUSER_USERNAME: ${{ env.DJANGO_SUPERUSER_USERNAME }}
+          DJANGO_SUPERUSER_PASSWORD: ${{ env.DJANGO_SUPERUSER_PASSWORD }}
+          DJANGO_SUPERUSER_EMAIL: ${{ env.DJANGO_SUPERUSER_EMAIL }}
+          POSTGRES_DB: ${{ env.POSTGRES_DB }}
+          POSTGRES_HOST: ${{ env.POSTGRES_HOST }}
+          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+          POSTGRES_PORT: ${{ env.POSTGRES_PORT }}
+          POSTGRES_USER: ${{ env.POSTGRES_USER }}
+        ports: # Primarily for host access if needed; service-to-service uses Docker network
+          - 5000:5000
+        options: >-
+          --health-cmd "python manage.py migrate"
+          --health-start-period 30s
+          --health-interval 30s
+          --health-retries 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install wait-for-it and psql client
+        run: |
+          apt-get update -y && apt-get install -y --no-install-recommends wait-for-it postgresql-client
+
+      - name: Wait for PostgreSQL
+        run: wait-for-it -h db -p 5432 -t 60 --strict
+
+      - name: Wait for Backend service
+        run: wait-for-it -h backend -p 5000 -t 60 --strict
+
+      - name: Run frontend e2e tests
+        working-directory: frontend
+        run: |
+          yarn install
+          yarn test:e2e
+
   build-final-images:
     needs: [prepare, build-deps-images]
     runs-on: ubuntu-latest
@@ -275,7 +354,7 @@ jobs:
           name: pre-commit-log
           path: /github/home/.cache/pre-commit/pre-commit.log
 
-  pytest:
+  backend-test:
     needs: [prepare, build-final-images]
     runs-on: ubuntu-latest
     container:
@@ -284,9 +363,9 @@ jobs:
       db:
         image: pgvector/pgvector:pg15
         env:
-          POSTGRES_DB: test_flash
-          POSTGRES_USER: flash
-          POSTGRES_PASSWORD: flash
+          POSTGRES_DB: test_${{ env.POSTGRES_DB }}
+          POSTGRES_USER: ${{ env.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -317,7 +396,15 @@ jobs:
 
   tag-latest:
     if: github.ref == 'refs/heads/main'
-    needs: [prepare, build-final-images, pytest, lint-python, frontend-test]
+    needs:
+      [
+        prepare,
+        build-final-images,
+        backend-test,
+        lint-python,
+        frontend-test,
+        e2e-test,
+      ]
     runs-on: ubuntu-latest
     permissions:
       packages: write
