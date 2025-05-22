@@ -9,7 +9,7 @@ from news.models import Feeds  # Assuming Feeds model is in news.models
 
 class OPMLExportTests(APITestCase):
     # Define constants for better clarity
-    SETUP_FEED_COUNT = 2
+    SETUP_FEED_COUNT = 7
 
     def setUp(self):
         # Create some sample Feeds objects for testing
@@ -75,6 +75,20 @@ class OPMLExportTests(APITestCase):
         expected_feeds_data = [
             {"title": "Feed 1", "xmlUrl": "http://example.com/feed1"},
             {"title": "Feed 2", "xmlUrl": "http://example.com/feed2"},
+            {
+                "title": "AAA - articoli segnalati",
+                "xmlUrl": "https://notizie.calomelano.it/api/feeds/0/rss",
+            },
+            {
+                "title": "Ultim'ora Televideo",
+                "xmlUrl": "http://www.servizitelevideo.rai.it/televideo/pub/rss101.xml",
+            },
+            {"title": "Il Post", "xmlUrl": "https://www.ilpost.it/feed"},
+            {"title": "UNICORN RIOT", "xmlUrl": "https://www.unicornriot.ninja/feed/"},
+            {
+                "title": "Al Jazeera",
+                "xmlUrl": "http://www.aljazeera.com/xml/rss/all.xml",
+            },
         ]
 
         actual_feeds_data = [
