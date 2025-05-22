@@ -1,11 +1,14 @@
 import argparse
+import html
 import logging
 import os
+import re
 import sys
 import time
 from pathlib import Path
 
 import django
+from django.contrib.auth import get_user_model
 from mastodon import Mastodon
 
 # Configure Django settings
@@ -18,6 +21,8 @@ django.setup()
 
 from django.contrib.auth.models import User  # noqa: E402
 
+from news.models import Articles  # noqa: E402
+from news.models import ArticlesCombined  # noqa: E402
 from news.models import Profile  # noqa: E402
 from news.models import UserArticleLists  # noqa: E402
 from news.models import UserArticles  # noqa: E402
@@ -46,7 +51,7 @@ def get_user_and_profile(user_id):
         tuple: (user, profile) if successful, (None, None) if not
     """
     try:
-        user = User.objects.get(id=user_id)
+        user = get_user_model().objects.get(id=user_id)
         profile = Profile.objects.get(user=user)
     except User.DoesNotExist:
         logging.exception(f"User with ID {user_id} not found.")
@@ -124,12 +129,13 @@ def get_unread_articles(user):
 
     unread_articles = []
     for article in all_articles_in_list:
-        user_article_status, created = UserArticles.objects.get_or_create(
+        user_article = UserArticles.objects.filter(
             user=user,
             article=article,
-        )
-        if not user_article_status.read:
-            unread_articles.append(article)
+        ).first()
+        if user_article is None or not user_article.read:
+            article_combined = ArticlesCombined.objects.get(pk=article.id)
+            unread_articles.append(article_combined)
 
     if not unread_articles:
         logging.info(f"No unread articles found for user {user.username}.")
@@ -151,29 +157,37 @@ def create_post_content(article):
     Returns:
         str: Formatted post content
     """
-    # Create a richer post content with date if available
-    post_date = ""
-    if hasattr(article, "stamp") and article.stamp:
-        post_date = f"[{article.stamp.strftime('%Y-%m-%d')}] "
-
     # Create the post content
-    post_content = f"NEW: {post_date}{article.title}\n\n"
+    title = article.title_original if article.title_original else article.title
+    excerpt = article.excerpt
+    # remove html tags
+    excerpt = re.sub(r"<[^>]*>", "", excerpt)
+    # convert html entities to unicode
+    excerpt = html.unescape(excerpt)
+    # remove multiple whitespaces
+    excerpt = re.sub(r"[\s]+", " ", excerpt)
+    # remove newlines
+    excerpt = excerpt.replace("\n", "")
+    # trim
+    excerpt = excerpt.strip()[:300]
 
-    # Add source if available
-    if hasattr(article, "feed") and article.feed and hasattr(article.feed, "name"):
-        post_content += f"Source: {article.feed.name}\n\n"
+    link = f"https://notizie.calomelano.it/article/{article.id}"
+    post_content = f"{title}\n\n{excerpt} ...\n\n{link}"
 
-    # Add URL and hashtags
-    post_content += f"{article.url}"
+    if len(post_content) > MAX_POST_LENGTH:
+        post_content = f"{title}\n\n{link}"
 
-    # Ensure the post doesn't exceed Mastodon's character limit
     if len(post_content) > MAX_POST_LENGTH:
         # Truncate the title if needed
         overflow = len(post_content) - MAX_POST_LENGTH + 3  # +3 for ellipsis
-        title_length = len(article.title)
-        if overflow < title_length:
-            truncated_title = article.title[: (title_length - overflow)] + "..."
-            post_content = post_content.replace(article.title, truncated_title)
+        title_length = len(title)
+        link_length = 23  # links are counted as 23 characters regardless of length
+        available_length = title_length + link_length - overflow
+        if available_length > 0:
+            truncated_title = article.title[:available_length]
+            post_content = f"{truncated_title}\n\n{link}"
+        else:
+            post_content = f"{link}"
 
     return post_content
 
@@ -195,26 +209,27 @@ def post_article_to_mastodon(user, article, mastodon_client, delay_seconds=None)
 
     try:
         if DRY_RUN:
-            msg = f"DRY RUN: post article [{article.title}] for user {user.username}"
+            msg = f"DRY RUN: post article {article.id} for user {user.username}"
             logging.info(msg)
             logging.info(f"DRY RUN: Post content would be: {post_content}")
         else:
-            mastodon_client.status_post(post_content)
-            msg = f"Posted article [{article.title}] for user {user.username}"
+            mastodon_client.status_post(status=post_content, language=article.language)
+            msg = f"Posted article {article.id} for user {user.username}"
             logging.info(msg)
 
         # Mark as read (even in dry run mode)
+        article_simple = Articles.objects.get(pk=article.id)
         user_article_status, _ = UserArticles.objects.get_or_create(
             user=user,
-            article=article,
+            article=article_simple,
         )
         user_article_status.read = True
         user_article_status.save()
         logging.info(
-            f"Marked article [{article.title}] as read for user {user.username}",
+            f"Marked article {article.id} as read for user {user.username}",
         )
     except Exception:
-        msg = f"Error posting article [{article.title}] for user {user.username}"
+        msg = f"Error posting article {article.id} for user {user.username}"
         logging.exception(msg)
         return False
     return True
