@@ -202,7 +202,7 @@ jobs:
       image: ghcr.io/${{ github.repository }}/deps-frontend:${{ needs.prepare.outputs.deps_frontend_tag }}
     env:
       PLAYWRIGHT_BROWSERS_PATH: "0" # Restoring this, and adding new vars
-      API_BASE_URL: http://backend:8000 # For frontend app to call backend
+      API_BASE_URL: http://backend:5000 # For frontend app to call backend
       # Variables for Django backend service container & this job container
       DJANGO_SETTINGS_MODULE: config.settings.test
       PYTHONUNBUFFERED: "1"
@@ -248,7 +248,7 @@ jobs:
           POSTGRES_PORT: ${{ env.POSTGRES_PORT }}
           POSTGRES_USER: ${{ env.POSTGRES_USER }}
         ports: # Primarily for host access if needed; service-to-service uses Docker network
-          - 8000:8000
+          - 5000:5000
         options: >-
           --health-cmd "python manage.py migrate"
           --health-start-period 30s
@@ -266,7 +266,7 @@ jobs:
         run: wait-for-it -h db -p 5432 -t 60 --strict
 
       - name: Wait for Backend service
-        run: wait-for-it -h backend -p 8000 -t 60 --strict
+        run: wait-for-it -h backend -p 5000 -t 60 --strict
 
       - name: Run frontend e2e tests
         working-directory: frontend
