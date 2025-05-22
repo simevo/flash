@@ -1,5 +1,4 @@
 ---
-
 stages:
   - lint
   - prepare
@@ -74,7 +73,7 @@ prepare:
     entrypoint: [""]
   variables:
     CONTEXT: .
-    ARGS: ''
+    ARGS: ""
   script:
     - TAG="${JOB_TAG:-${TAG}}"
     - mkdir -p /kaniko/.docker/
@@ -95,11 +94,11 @@ prepare:
       fi
     - set -x;
       /kaniko/executor
-        --context "$CONTEXT"
-        --dockerfile "$DOCKERFILE"
-        --destination "$REPO:$TAG"
-        $ARGS
-        --skip-unused-stages;
+      --context "$CONTEXT"
+      --dockerfile "$DOCKERFILE"
+      --destination "$REPO:$TAG"
+      $ARGS
+      --skip-unused-stages;
       set +x
     - echo "✅ Pushed $REPO:$TAG"
 
@@ -110,8 +109,7 @@ build-docker-image-deps-backend:
     DOCKERFILE: ./compose/production/django/Dockerfile
     REPO: $CI_REGISTRY_IMAGE/deps-backend
     JOB_TAG: $DEPS_BACKEND_TAG
-    ARGS:
-      --target deps-backend-base
+    ARGS: --target deps-backend-base
 
 build-docker-image-deps-test:
   extends: .build-docker-image
@@ -120,8 +118,7 @@ build-docker-image-deps-test:
     DOCKERFILE: ./compose/local/django/Dockerfile
     REPO: $CI_REGISTRY_IMAGE/deps-test
     JOB_TAG: $DEPS_TEST_TAG
-    ARGS:
-      --target deps-backend-base
+    ARGS: --target deps-backend-base
 
 build-docker-image-deps-frontend:
   extends: .build-docker-image
@@ -131,8 +128,7 @@ build-docker-image-deps-frontend:
     REPO: $CI_REGISTRY_IMAGE/deps-frontend
     JOB_TAG: $DEPS_FRONTEND_TAG
     CONTEXT: ./frontend
-    ARGS:
-      --target deps-frontend-base
+    ARGS: --target deps-frontend-base
 
 lint-javascript:
   stage: lint javascript
@@ -151,8 +147,7 @@ build-docker-image-backend:
   variables:
     DOCKERFILE: ./compose/production/django/Dockerfile
     REPO: $CI_REGISTRY_IMAGE/backend
-    ARGS:
-      --target backend
+    ARGS: --target backend
       --build-arg APP_BASE_IMAGE=$CI_REGISTRY_IMAGE/deps-backend:$DEPS_BACKEND_TAG
 
 build-docker-image-backend-test:
@@ -161,8 +156,7 @@ build-docker-image-backend-test:
   variables:
     DOCKERFILE: ./compose/local/django/Dockerfile
     REPO: $CI_REGISTRY_IMAGE/backend-test
-    ARGS:
-      --target backend
+    ARGS: --target backend
       --build-arg APP_BASE_IMAGE=$CI_REGISTRY_IMAGE/deps-test:$DEPS_TEST_TAG
 
 build-docker-image-frontend:
@@ -172,8 +166,7 @@ build-docker-image-frontend:
     DOCKERFILE: ./frontend/Dockerfile
     REPO: $CI_REGISTRY_IMAGE/frontend
     CONTEXT: ./frontend
-    ARGS:
-      --target frontend
+    ARGS: --target frontend
       --build-arg FRONTEND_BASE_IMAGE=$CI_REGISTRY_IMAGE/deps-frontend:$DEPS_FRONTEND_TAG
 
 build-docker-image-readability:
@@ -202,7 +195,7 @@ pytest:
     POSTGRES_HOST: db
     POSTGRES_DB: flash
     POSTGRES_PORT: 5432
-    USE_DOCKER: 'yes'
+    USE_DOCKER: "yes"
   services:
     - name: pgvector/pgvector:pg15
       alias: db
@@ -221,20 +214,20 @@ frontend:e2e_test:
   stage: test
   image: $CI_REGISTRY_IMAGE/deps-frontend:$DEPS_FRONTEND_TAG
   variables:
-    PLAYWRIGHT_BROWSERS_PATH: '0'
+    PLAYWRIGHT_BROWSERS_PATH: "0"
     API_BASE_URL: http://backend:8000
     # Variables for Django backend service & this job
     DATABASE_URL: postgresql://flash_e2e:flash_e2e@db:5432/test_flash_e2e
     DJANGO_SETTINGS_MODULE: config.settings.test
     PYTHONUNBUFFERED: "1"
     CELERY_BROKER_URL: redis://redis:6379/0 # Dummy, add actual redis service if needed
-    DJANGO_SECRET_KEY: 'dummy-secret-key-for-ci-e2e-tests'
-    DJANGO_ALLOWED_HOSTS: '.localhost,backend,localhost'
+    DJANGO_SECRET_KEY: "dummy-secret-key-for-ci-e2e-tests"
+    DJANGO_ALLOWED_HOSTS: ".localhost,backend,localhost"
     DJANGO_SUPERUSER_USERNAME: admin
     DJANGO_SUPERUSER_PASSWORD: admin
     DJANGO_SUPERUSER_EMAIL: admin@example.com
     POSTGRES_DB: test_flash_e2e # For db service
-    POSTGRES_USER: flash_e2e    # For db service
+    POSTGRES_USER: flash_e2e # For db service
     POSTGRES_PASSWORD: flash_e2e # For db service
     # PLAYWRIGHT_TEST_BASE_URL is handled by playwright.config.ts using CI env var
   services:
@@ -274,9 +267,9 @@ tag-latest-docker-images:
   image: debian:bookworm-slim
   before_script:
     - apt update && apt install -y --no-install-recommends
-        skopeo
-        openssh-client
-        ca-certificates
+      skopeo
+      openssh-client
+      ca-certificates
   variables:
     AUTH: $CI_REGISTRY_USER:$CI_REGISTRY_PASSWORD
     TAG_NEW: latest
@@ -291,8 +284,8 @@ tag-latest-docker-images:
         echo 🏷️ Tagged "${IMAGE}:${TAG_NEW}"
       done
   rules:
-    - if: '$CI_MERGE_REQUEST_ID'
+    - if: "$CI_MERGE_REQUEST_ID"
       when: never
-    - if: '$CI_DEFAULT_BRANCH == $CI_COMMIT_BRANCH'
+    - if: "$CI_DEFAULT_BRANCH == $CI_COMMIT_BRANCH"
       when: on_success
     - when: never
