@@ -210,6 +210,14 @@ backend-test:
   script:
     - /usr/local/bin/pytest
 
+frontend-test:
+  stage: test
+  image: $CI_REGISTRY_IMAGE/deps-frontend:$DEPS_FRONTEND_TAG
+  script:
+    - cd frontend/
+    - yarn install
+    - yarn test:unit
+
 e2e-test:
   stage: test
   image: $CI_REGISTRY_IMAGE/deps-frontend:$DEPS_FRONTEND_TAG
