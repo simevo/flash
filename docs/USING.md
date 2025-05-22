@@ -43,6 +43,8 @@ flash - User Guide
     *   After successfully posting an article, it is marked as 'read' for that user in `UserArticles` to prevent reposting.
     *   To avoid spamming, the bot will post a maximum of 5 articles per hour.
 
+11. **OPML export**: Export the [OPML (Outline Processor Markup Language)](https://en.wikipedia.org/wiki/OPML) file containing the list of aggregated feeds from the public URL `/api/feeds/opml/`. This file can be imported into other RSS readers or aggregators.
+
 ## Basic usage
 
 The aggregator presents to the anonymous visitor a restricted list of news items (only articles which some logged-in user has already read):

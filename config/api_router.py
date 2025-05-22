@@ -7,6 +7,7 @@ from flash.users.api.views import UserViewSet
 from news.api.views import ArticlesView
 from news.api.views import FeedsView
 from news.api.views import ImageUploadView
+from news.api.views import OPMLExportView
 from news.api.views import ProfileView
 from news.api.views import UserArticleListsView
 from news.api.views import UserFeedsView
@@ -22,6 +23,7 @@ router.register("lists", UserArticleListsView, basename="lists")
 
 app_name = "api"
 urlpatterns = [
+    path("feeds/opml/", OPMLExportView.as_view(), name="opml-export"),
     *router.urls,
     path("upload/", ImageUploadView.as_view(), name="image-upload"),
 ]
