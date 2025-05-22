@@ -213,14 +213,19 @@ jobs:
       DJANGO_SUPERUSER_USERNAME: admin
       DJANGO_SUPERUSER_PASSWORD: admin
       DJANGO_SUPERUSER_EMAIL: admin@example.com
+      POSTGRES_DB: test_flash_e2e
+      POSTGRES_HOST: db
+      POSTGRES_PASSWORD: flash_e2e
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: flash_e2e
       # PLAYWRIGHT_TEST_BASE_URL is handled by playwright.config.ts using CI env var
     services:
       db:
         image: pgvector/pgvector:pg15
         env:
-          POSTGRES_DB: test_flash_e2e
-          POSTGRES_USER: flash_e2e
-          POSTGRES_PASSWORD: flash_e2e
+          POSTGRES_DB: ${{ env.POSTGRES_DB }}
+          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+          POSTGRES_USER: ${{ env.POSTGRES_USER }}
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -238,6 +243,11 @@ jobs:
           DJANGO_SUPERUSER_USERNAME: ${{ env.DJANGO_SUPERUSER_USERNAME }}
           DJANGO_SUPERUSER_PASSWORD: ${{ env.DJANGO_SUPERUSER_PASSWORD }}
           DJANGO_SUPERUSER_EMAIL: ${{ env.DJANGO_SUPERUSER_EMAIL }}
+          POSTGRES_DB: ${{ env.POSTGRES_DB }}
+          POSTGRES_HOST: ${{ env.POSTGRES_HOST }}
+          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+          POSTGRES_PORT: ${{ env.POSTGRES_PORT }}
+          POSTGRES_USER: ${{ env.POSTGRES_USER }}
         ports: # Primarily for host access if needed; service-to-service uses Docker network
           - 8000:8000
     steps:
