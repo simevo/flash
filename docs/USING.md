@@ -30,7 +30,7 @@ flash - User Guide
     To enable this feature for a user:
     *   Navigate to the user's Profile in the Django admin interface.
     *   Check the `Is bot user` flag.
-    *   Fill in the Mastodon API credentials:
+    *   Fill in the Mastodon API credentials (go to your Account Preferences -> Development -> New Application, create a new application, fill in Name and Website, with `read`, `profile` and `write:statuses` scopes):
         *   `Mastodon client id`
         *   `Mastodon client secret`
         *   `Mastodon access token`
