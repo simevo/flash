@@ -289,6 +289,50 @@ watch(
   },
 )
 
+watch(
+  () => article.value?.language,
+  (newLanguage, oldLanguage) => {
+    if (oldLanguage === base_language && newLanguage !== base_language) {
+      if (article.value && quill && quill_original) {
+        let currentContent = quill.root.innerHTML
+        if (currentContent === "<p><br></p>") {
+          currentContent = ""
+        }
+        setHtml(quill_original, currentContent)
+        quill.setText("") // Clear the main editor
+        article.value.content_original = currentContent
+        article.value.content = ""
+      }
+    } else if (oldLanguage !== base_language && newLanguage === base_language) {
+      if (article.value && quill && quill_original) {
+        let originalContent = quill_original.root.innerHTML
+        if (originalContent === "<p><br></p>") {
+          originalContent = ""
+        }
+
+        const currentMainContent = quill.root.innerHTML
+        const isMainContentEmpty = currentMainContent === "" || currentMainContent === "<p><br></p>"
+
+        if (!isMainContentEmpty) {
+          if (
+            !window.confirm(
+              "There is already a translation in the main content field. Do you want to overwrite it with the content from the original language?",
+            )
+          ) {
+            article.value.language = oldLanguage // Revert language change
+            return // Stop processing
+          }
+        }
+
+        setHtml(quill, originalContent)
+        quill_original.setText("")
+        article.value.content = originalContent
+        article.value.content_original = ""
+      }
+    }
+  },
+)
+
 const base_language: string = inject("base_language", "it")
 
 async function save() {
