@@ -10,6 +10,7 @@ from bs4 import BeautifulSoup
 from celery import shared_task
 from django.contrib.auth import get_user_model
 from django.contrib.postgres.search import SearchQuery
+from django.core.cache import cache
 from pgvector.django import CosineDistance
 from pgvector.psycopg import register_vector
 from psycopg.rows import dict_row
@@ -34,6 +35,7 @@ def poll():
         p = poller.Poller(feed)
         p.poll()
     logger.info("Polling finished")
+    cache.clear()
 
 
 def precompute_user(user, start_timestamp, embedding_service):
