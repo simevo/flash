@@ -10,6 +10,7 @@ from news.api.views import ImageUploadView
 from news.api.views import ProfileView
 from news.api.views import UserArticleListsView
 from news.api.views import UserFeedsView
+from news.api.views import OPMLExportView
 
 router = DefaultRouter() if settings.DEBUG else SimpleRouter()
 

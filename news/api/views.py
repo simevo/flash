@@ -29,6 +29,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from xhtml2pdf import pisa
+from xml.etree import ElementTree as ET
 
 import news.translate
 import poller
@@ -643,6 +644,37 @@ class UserArticleListsView(viewsets.ModelViewSet):
         )
         epub.write_epub(response, book, {})
         return response
+
+
+class OPMLExportView(APIView):
+    """
+    Exports all feeds as an OPML file using ElementTree.
+    """
+
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, *args, **kwargs):
+        feeds = Feeds.objects.all()
+
+        opml_element = ET.Element("opml", version="2.0")
+        head_element = ET.SubElement(opml_element, "head")
+        title_element = ET.SubElement(head_element, "title")
+        title_element.text = "Flash Feeds"
+        body_element = ET.SubElement(opml_element, "body")
+
+        for feed in feeds:
+            ET.SubElement(
+                body_element,
+                "outline",
+                text=feed.title, # Use direct keyword argument for text
+                type="rss",      # Use direct keyword argument for type
+                xmlUrl=feed.url  # Use direct keyword argument for xmlUrl
+            )
+
+        xml_string = ET.tostring(
+            opml_element, encoding="utf-8", xml_declaration=True
+        )
+        return HttpResponse(xml_string, content_type="application/xml; charset=utf-8")
 
 
 class ImageUploadView(APIView):
