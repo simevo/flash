@@ -1,3 +1,4 @@
+import argparse
 import logging
 import os
 import sys
@@ -277,37 +278,43 @@ def main(user_id, max_articles=None, delay_seconds=None):
 
 
 if __name__ == "__main__":
-    min_args = 2
-    if len(sys.argv) < min_args:
-        print(  # noqa: T201
-            "Usage: python mastodon_bot.py <user_id> \
-            [max_articles] [delay_seconds] [--dry-run]",
-        )
-        print("  max_articles: Maximum number of articles to post (default: 5)")  # noqa: T201
-        print("  delay_seconds: Delay between posts in seconds (default: 2)")  # noqa: T201
-        print("  --dry-run: Run in dry run mode (no actual posting)")  # noqa: T201
-        sys.exit(1)
+    # Set up argument parser
+    parser = argparse.ArgumentParser(
+        description="Mastodon bot for posting unread articles to Mastodon",
+    )
 
-    try:
-        # Check for dry run flag
-        if "--dry-run" in sys.argv:
-            DRY_RUN = True
-            # Remove the flag from argv for easier argument processing
-            sys.argv.remove("--dry-run")
-            print("Running in DRY RUN mode - no posts will be sent to Mastodon")  # noqa: T201
+    # Add arguments
+    parser.add_argument(
+        "user_id",
+        type=int,
+        help="ID of the user to process articles for",
+    )
+    parser.add_argument(
+        "--max-articles",
+        type=int,
+        default=None,
+        help=f"Maximum number of articles to post (default: {MAX_ARTICLES_PER_RUN})",
+    )
+    parser.add_argument(
+        "--delay",
+        type=int,
+        default=None,
+        dest="delay_seconds",
+        help=f"Delay between posts in seconds (default: {POST_DELAY_SECONDS})",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Run in dry run mode (no actual posting)",
+    )
 
-        user_id_arg = int(sys.argv[1])
+    # Parse arguments
+    args = parser.parse_args()
 
-        # Parse optional arguments
-        max_articles_arg = None
-        if len(sys.argv) > min_args:
-            max_articles_arg = int(sys.argv[min_args])
+    # Set dry run flag if specified
+    if args.dry_run:
+        DRY_RUN = True
+        print("Running in DRY RUN mode - no posts will be sent to Mastodon")  # noqa: T201
 
-        delay_seconds_arg = None
-        if len(sys.argv) > min_args + 1:
-            delay_seconds_arg = int(sys.argv[min_args + 1])
-
-        main(user_id_arg, max_articles_arg, delay_seconds_arg)
-    except ValueError:
-        print("Error: Arguments must be integers.")  # noqa: T201
-        sys.exit(1)
+    # Run main function with parsed arguments
+    main(args.user_id, args.max_articles, args.delay_seconds)
