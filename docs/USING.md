@@ -25,6 +25,24 @@ flash - User Guide
 
 9. Article **similarity** and similarity-based search: the title and content of each article are converted to a vector embedding using the [`use-cmlm-multilingual` sentence transformer](https://huggingface.co/sentence-transformers/use-cmlm-multilingual). This 2020 model is based on LaBSE (Google Language-agnostic BERT sentence embedding model supporting 109 languages), has 472M params, embedding dimension: 768 and size 1.89G (single-precision floating point FP32).
 
+10. **Mastodon Bot** – Flash can automatically post new articles from a user's newsfeed to a specified Mastodon account.
+
+    To enable this feature for a user:
+    *   Navigate to the user's Profile in the Django admin interface.
+    *   Check the `Is bot user` flag.
+    *   Fill in the Mastodon API credentials:
+        *   `Mastodon client id`
+        *   `Mastodon client secret`
+        *   `Mastodon access token`
+        *   `Mastodon api base url` (e.g., `https://mastodon.social` or your instance's URL)
+
+    Bot Functionality:
+    *   The bot runs automatically every hour via a Celery Beat schedule.
+    *   It scans the 'newsfeed' list (`UserArticleLists` named 'newsfeed') of the configured bot user for new (unread) articles.
+    *   New articles found are posted to the Mastodon account associated with the provided credentials. The post format is: "New article: {article.title} - {article.url}".
+    *   After successfully posting an article, it is marked as 'read' for that user in `UserArticles` to prevent reposting.
+    *   To avoid spamming, the bot will post a maximum of 5 articles per hour.
+
 ## Basic usage
 
 The aggregator presents to the anonymous visitor a restricted list of news items (only articles which some logged-in user has already read):
