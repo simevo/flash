@@ -195,12 +195,15 @@ backend-test:
     POSTGRES_HOST: db
     POSTGRES_DB: flash
     POSTGRES_PORT: 5432
+    CELERY_BROKER_URL: redis://redis:6379/0
     USE_DOCKER: "yes"
   services:
     - name: pgvector/pgvector:pg15
       alias: db
       variables:
         POSTGRES_DB: test_flash
+    - name: docker.io/redis:6
+      alias: redis
   before_script:
     - ls -l sql/
     - wait-for-it "${POSTGRES_HOST}:${POSTGRES_PORT}" -t 30
@@ -228,7 +231,7 @@ e2e-test:
     DATABASE_URL: postgresql://flash_e2e:flash_e2e@db:5432/test_flash_e2e
     DJANGO_SETTINGS_MODULE: config.settings.test
     PYTHONUNBUFFERED: "1"
-    CELERY_BROKER_URL: redis://redis:6379/0 # Dummy, add actual redis service if needed
+    CELERY_BROKER_URL: redis://redis:6379/0
     DJANGO_SECRET_KEY: "dummy-secret-key-for-ci-e2e-tests"
     DJANGO_ALLOWED_HOSTS: ".localhost,backend,localhost"
     DJANGO_SUPERUSER_USERNAME: admin
@@ -245,6 +248,8 @@ e2e-test:
         POSTGRES_DB: $POSTGRES_DB # Use from job's variables
         POSTGRES_USER: $POSTGRES_USER
         POSTGRES_PASSWORD: $POSTGRES_PASSWORD
+    - name: docker.io/redis:6
+      alias: redis
     - name: $CI_REGISTRY_IMAGE/backend:$TAG
       alias: backend
       variables: # Pass necessary env vars to the backend service
@@ -259,8 +264,6 @@ e2e-test:
         DJANGO_SUPERUSER_EMAIL: $DJANGO_SUPERUSER_EMAIL
         # PORT: "8000" # If backend image requires PORT to be set explicitly
   before_script:
-    - echo "Primary image: $CI_REGISTRY_IMAGE/deps-frontend:$DEPS_FRONTEND_TAG"
-    - echo "Backend service image: $CI_REGISTRY_IMAGE/backend:$TAG"
     - apt-get update -y && apt-get install -y --no-install-recommends wait-for-it postgresql-client
     - wait-for-it -h db -p 5432 -t 60 --strict
     - wait-for-it -h backend -p 8000 -t 60 --strict
