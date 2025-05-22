@@ -249,6 +249,11 @@ jobs:
           POSTGRES_USER: ${{ env.POSTGRES_USER }}
         ports: # Primarily for host access if needed; service-to-service uses Docker network
           - 8000:8000
+        options: >-
+          --health-cmd "python manage.py migrate"
+          --health-start-period 30s
+          --health-interval 30s
+          --health-retries 5
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -262,9 +267,6 @@ jobs:
 
       - name: Wait for Backend service
         run: wait-for-it -h backend -p 8000 -t 60 --strict
-        # Assuming backend entrypoint handles migrations. If not, a step to run migrations would be needed.
-        # Example: PGPASSWORD=${{ env.POSTGRES_PASSWORD }} psql -h db -U ${{ env.POSTGRES_USER }} -d ${{ env.POSTGRES_DB }} -f path/to/schema.sql
-        # Or a manage.py migrate command if backend image allows remote execution or has a specific entrypoint.
 
       - name: Run frontend e2e tests
         working-directory: frontend
