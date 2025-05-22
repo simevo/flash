@@ -276,19 +276,21 @@ def run_mastodon_bots():
     from django.contrib.auth.models import User
 
     from flash.bots.mastodon_bot import main as run_bot_for_user
-    from flash.news.models import Profile
 
     # Filter users who are bot users and have all Mastodon credentials configured
-    eligible_users = User.objects.filter(
-        profile__is_bot_user=True,
-        profile__mastodon_client_id__isnull=False,
-        profile__mastodon_client_secret__isnull=False,
-        profile__mastodon_access_token__isnull=False,
-        profile__mastodon_api_base_url__isnull=False,
-    ).exclude(profile__mastodon_client_id__exact='').exclude(
-        profile__mastodon_client_secret__exact='').exclude(
-        profile__mastodon_access_token__exact='').exclude(
-        profile__mastodon_api_base_url__exact='')
+    eligible_users = (
+        User.objects.filter(
+            profile__is_bot_user=True,
+            profile__mastodon_client_id__isnull=False,
+            profile__mastodon_client_secret__isnull=False,
+            profile__mastodon_access_token__isnull=False,
+            profile__mastodon_api_base_url__isnull=False,
+        )
+        .exclude(profile__mastodon_client_id__exact="")
+        .exclude(profile__mastodon_client_secret__exact="")
+        .exclude(profile__mastodon_access_token__exact="")
+        .exclude(profile__mastodon_api_base_url__exact="")
+    )
 
     if not eligible_users.exists():
         logger.info("No users configured for Mastodon bot. Exiting.")
@@ -301,7 +303,8 @@ def run_mastodon_bots():
         try:
             run_bot_for_user(user.id)
             logger.info(f"Successfully ran Mastodon bot for user: {user.username}")
-        except Exception as e:
-            logger.error(f"Error running Mastodon bot for user {user.username}: {e}", exc_info=True)
+        except Exception:
+            msg = f"Error running Mastodon bot for user {user.username}"
+            logger.exception(msg)
 
     logger.info("Finished Mastodon bots run.")
