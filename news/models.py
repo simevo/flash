@@ -223,6 +223,11 @@ class Profile(models.Model):
     languages = ArrayField(models.TextField(), default=list, blank=True)
     list_hour = models.IntegerField(default=7)
     list_fulltext = models.BooleanField(default=False)
+    is_bot_user = models.BooleanField(default=False)
+    mastodon_client_id = models.TextField(blank=True)
+    mastodon_client_secret = models.TextField(blank=True)
+    mastodon_access_token = models.TextField(blank=True)
+    mastodon_api_base_url = models.TextField(blank=True)
 
     def __str__(self):
         return f"{self.id}"
