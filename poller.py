@@ -24,7 +24,8 @@ from bs4 import Comment
 from bs4 import NavigableString
 from bs4 import Tag
 
-from news.models import Articles
+from news.models import Articles, FeedPolling # Added FeedPolling
+# datetime is already imported at the top of the file
 
 logger = logging.getLogger(__name__)
 time_format = "%Y-%m-%dT%H:%M:%SZ"
@@ -541,34 +542,57 @@ def generate_rss(json_data):
 
 def _poll_feed(feed):
     verbose = True
+    status_code = 0  # Initialize status_code
+    retrieved = 0
+    failed = 0
+    stored = 0
+    response = None # Initialize response to None
+
     try:
         response = requests.get(
             feed.url,
             timeout=60,
             headers={"User-Agent": USER_AGENT},
         )
-    except requests.exceptions.HTTPError:
+        status_code = response.status_code # Capture status_code after successful request
+    except requests.exceptions.HTTPError as e:
         logger.exception(f"== http error when reading RSS {feed.url}:")
-        response = None
+        if e.response is not None: # HTTPError usually has a response
+            status_code = e.response.status_code
+        else: # Fallback if for some reason response is not available on HTTPError
+            status_code = 0 # Or a specific code like -5 for unextractable HTTP error status
+        response = None # Keep response as None as per original logic for error state
     except requests.exceptions.ConnectionError:
         logger.exception(f"== connection error when reading RSS {feed.url}")
+        status_code = -20
         response = None
     except requests.exceptions.Timeout:
         logger.exception(f"== timeout when reading RSS {feed.url}")
+        status_code = -10
         response = None
     except requests.exceptions.RequestException:
         logger.exception(
             f"== generic request exception when reading RSS {feed.url}",
         )
+        status_code = -30
         response = None
-    except Exception:
+    except Exception: # Catching broader exceptions
         logger.exception(f"== generic exception when reading RSS {feed.url}")
+        status_code = -40
         response = None
-    if not response:
-        return (0, 0, 0)
+
+    if not response: # Covers cases where response is None due to exceptions or initial failure
+        return (retrieved, failed, stored, status_code) # (0,0,0, specific_error_code)
+
+    # If response exists, status_code was set from response.status_code
+    # If it's not HTTP_SUCCESS_CODE, we return 0 counts and the actual status_code
     if response.status_code != HTTP_SUCCESS_CODE:
         logger.error(f"== url {feed.url} returned error status {response.status_code}")
-        return (0, 0, 0)
+        # status_code is already response.status_code from above
+        return (retrieved, failed, stored, status_code) # (0,0,0, actual_http_error_code)
+
+    # At this point, response is valid and response.status_code is HTTP_SUCCESS_CODE
+    # status_code is already 200 (or the actual success code)
 
     if feed.url[-29:] == "/api/v1/trends/links?limit=20":
         json_data = json.loads(response.text)
@@ -602,13 +626,13 @@ def _poll_feed(feed):
     results = loop.run_until_complete(
         main(loop, sorted_entries, feed, verbose=verbose),
     )
-    retrieved = failed = stored = 0
-    for r in results:
-        retrieved += r[0]
-        failed += r[1]
-        stored += r[2]
+    # retrieved, failed, stored were initialized to 0 at the start
+    for r_item in results: # renamed r to r_item to avoid conflict if any
+        retrieved += r_item[0]
+        failed += r_item[1]
+        stored += r_item[2]
 
-    return (retrieved, failed, stored)
+    return (retrieved, failed, stored, status_code) # status_code is HTTP_SUCCESS_CODE here
 
 
 class Poller:
@@ -617,53 +641,112 @@ class Poller:
         self.retrieved = 0
         self.failed = 0
         self.feed = feed
+        self.p = None # Initialize p to None
 
     def invoke(self, script):
-        p = subprocess.Popen(
+        self.p = subprocess.Popen(
             script,
             stderr=subprocess.STDOUT,
             stdout=subprocess.PIPE,
             stdin=subprocess.PIPE,
         )
         try:
-            output = p.communicate(timeout=200)
+            output = self.p.communicate(timeout=200)
         except subprocess.TimeoutExpired:
-            p.kill()
+            self.p.kill()
             logger.exception(f"== timeout while invoking script {script}")
-            return (0, 0, 0)
-        if p.returncode != 0:
-            logger.error(f"== code {p.returncode} returned by script {script}")
-            return (0, 0, 0)
+            return (None, "timeout")
+        if self.p.returncode != 0:
+            logger.error(f"== code {self.p.returncode} returned by script {script}")
+            return (None, "error")
         lines = output[0].decode().split("\n")
         last_line = lines[-1] if lines[-1] else lines[-2]
-        return last_line.split(" ")
+        return (last_line.split(" "), None) # Success, no specific status indicator needed here
 
     def poll(self):
+        poll_start_time = datetime.datetime.now(datetime.UTC)
+        http_status_code = 0  # Default status code
+        # Using new names for counts for this specific poll run
+        feed_polling_retrieved_count = 0
+        feed_polling_failed_count = 0
+        feed_polling_stored_count = 0
+
         if not self.feed.active:
-            logger.info("== skipping feed {feed.id} because non-active")
+            logger.info(f"== skipping feed {self.feed.id} because non-active")
+            # Potentially record a FeedPolling entry here if skipped polls should be logged
+            # For now, just returning as per original logic and instructions for active check
             return
 
         if self.feed.frequency:
             skip_reason = frequency_skip(self.feed.frequency, self.feed.id)
             if skip_reason:
                 logger.info(skip_reason)
+                # Potentially record a FeedPolling entry here for frequency skips
                 return
 
         logger.info(f"== polling feed {self.feed.id}")
 
         if self.feed.script:
-            script = self.feed.script.replace("/srv/calo.news/py/", "/app/news/")
-            logger.info(f"== using script {script}")
-            results = self.invoke(script)
-            if results and len(results) == 3:  # noqa: PLR2004
-                self.retrieved += int(results[0])
-                self.failed += int(results[1])
-                self.stored += int(results[2])
-        else:
-            results = _poll_feed(self.feed)
-            self.retrieved += results[0]
-            self.failed += results[1]
-            self.stored += results[2]
+            script_path = self.feed.script.replace("/srv/calo.news/py/", "/app/news/")
+            logger.info(f"== using script {script_path}")
+            results, script_status_indicator = self.invoke(script_path)
 
-        self.feed.last_polled = datetime.datetime.now(datetime.UTC)
+            if script_status_indicator == "timeout":
+                http_status_code = -1  # Script timeout
+                # counts remain 0
+            elif script_status_indicator == "error":
+                # self.p should have been set in invoke
+                http_status_code = self.p.returncode if self.p and self.p.returncode is not None else -2
+                # counts remain 0
+            elif results and len(results) == 3:
+                try:
+                    feed_polling_retrieved_count = int(results[0])
+                    feed_polling_failed_count = int(results[1])
+                    feed_polling_stored_count = int(results[2])
+                    if self.p and self.p.returncode == 0:
+                        http_status_code = 200  # Script success
+                    # If self.p.returncode !=0, it would have been caught by "error" indicator
+                    # but as a fallback, if somehow not caught:
+                    elif self.p and self.p.returncode is not None:
+                         http_status_code = self.p.returncode
+                    else: # Should not happen if invoke logic is correct
+                        http_status_code = -2 # Generic script error
+                except ValueError:
+                    logger.error(f"== script {script_path} output not in expected integer format: {results}")
+                    http_status_code = -3 # Script output format error
+                    # counts remain 0 or partially set if error in later int()
+                    feed_polling_retrieved_count = 0 # Reset to be safe
+                    feed_polling_failed_count = 0
+                    feed_polling_stored_count = 0
+            else: # results is None or not len 3, and not a timeout/error identified by invoke
+                logger.error(f"== script {script_path} did not return expected output. Results: {results}")
+                http_status_code = self.p.returncode if self.p and self.p.returncode is not None else -2 # Generic script error or actual code
+        else:
+            # Assuming _poll_feed will be modified to return four values as per subtask instructions
+            # This is a forward-looking change based on the subtask description.
+            # If _poll_feed is not yet updated, this will cause an error.
+            retrieved, failed, stored, status_from_poll = _poll_feed(self.feed)
+            feed_polling_retrieved_count = retrieved
+            feed_polling_failed_count = failed
+            feed_polling_stored_count = stored
+            http_status_code = status_from_poll
+
+        # Update the main Poller instance cumulative counts
+        self.retrieved += feed_polling_retrieved_count
+        self.failed += feed_polling_failed_count
+        self.stored += feed_polling_stored_count
+
+        poll_end_time = datetime.datetime.now(datetime.UTC)
+
+        FeedPolling.objects.create(
+            feed=self.feed,
+            poll_start_time=poll_start_time,
+            poll_end_time=poll_end_time,
+            http_status_code=http_status_code,
+            articles_retrieved=feed_polling_retrieved_count,
+            articles_failed=feed_polling_failed_count,
+            articles_stored=feed_polling_stored_count,
+        )
+
+        self.feed.last_polled = poll_end_time # Use poll_end_time for consistency
         self.feed.save()

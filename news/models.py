@@ -138,6 +138,24 @@ class Feeds(models.Model):
         return f"{self.id} - {self.title}"
 
 
+class FeedPolling(models.Model):
+    feed = models.ForeignKey(
+        Feeds, on_delete=models.CASCADE, related_name="polling_stats"
+    )
+    poll_start_time = models.DateTimeField()
+    poll_end_time = models.DateTimeField()
+    http_status_code = models.IntegerField()
+    articles_retrieved = models.IntegerField()
+    articles_failed = models.IntegerField()
+    articles_stored = models.IntegerField()
+
+    class Meta:
+        managed = True
+
+    def __str__(self):
+        return f"{self.feed.title} - {self.poll_start_time}"
+
+
 class FeedIcons(models.Model):
     id = models.AutoField(primary_key=True)
     feed = models.OneToOneField(Feeds, models.CASCADE)
