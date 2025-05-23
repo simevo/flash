@@ -195,6 +195,7 @@ backend-test:
     POSTGRES_HOST: db
     POSTGRES_DB: flash
     POSTGRES_PORT: 5432
+    DATABASE_URL: postgres://flash:flash@db:5432/flash
     CELERY_BROKER_URL: redis://redis:6379/0
     USE_DOCKER: "yes"
   services:
@@ -226,7 +227,7 @@ e2e-test:
   image: $CI_REGISTRY_IMAGE/deps-frontend:$DEPS_FRONTEND_TAG
   variables:
     PLAYWRIGHT_BROWSERS_PATH: "0"
-    API_BASE_URL: http://backend:8000
+    API_BASE_URL: http://backend:5000
     # Variables for Django backend service & this job
     DATABASE_URL: postgresql://flash_e2e:flash_e2e@db:5432/test_flash_e2e
     DJANGO_SETTINGS_MODULE: config.settings.test
@@ -237,22 +238,24 @@ e2e-test:
     DJANGO_SUPERUSER_USERNAME: admin
     DJANGO_SUPERUSER_PASSWORD: admin
     DJANGO_SUPERUSER_EMAIL: admin@example.com
-    POSTGRES_DB: test_flash_e2e # For db service
-    POSTGRES_USER: flash_e2e # For db service
-    POSTGRES_PASSWORD: flash_e2e # For db service
+    POSTGRES_DB: test_flash_e2e
+    POSTGRES_HOST: db
+    POSTGRES_PASSWORD: flash_e2e
+    POSTGRES_PORT: 5432
+    POSTGRES_USER: flash_e2e
     # PLAYWRIGHT_TEST_BASE_URL is handled by playwright.config.ts using CI env var
   services:
     - name: pgvector/pgvector:pg15
       alias: db
       variables:
-        POSTGRES_DB: $POSTGRES_DB # Use from job's variables
+        POSTGRES_DB: $POSTGRES_DB
         POSTGRES_USER: $POSTGRES_USER
         POSTGRES_PASSWORD: $POSTGRES_PASSWORD
     - name: docker.io/redis:6
       alias: redis
     - name: $CI_REGISTRY_IMAGE/backend:$TAG
       alias: backend
-      variables: # Pass necessary env vars to the backend service
+      variables:
         DATABASE_URL: $DATABASE_URL
         DJANGO_SETTINGS_MODULE: $DJANGO_SETTINGS_MODULE
         PYTHONUNBUFFERED: $PYTHONUNBUFFERED
@@ -262,11 +265,15 @@ e2e-test:
         DJANGO_SUPERUSER_USERNAME: $DJANGO_SUPERUSER_USERNAME
         DJANGO_SUPERUSER_PASSWORD: $DJANGO_SUPERUSER_PASSWORD
         DJANGO_SUPERUSER_EMAIL: $DJANGO_SUPERUSER_EMAIL
-        # PORT: "8000" # If backend image requires PORT to be set explicitly
+        POSTGRES_DB: $POSTGRES_DB
+        POSTGRES_HOST: $POSTGRES_HOST
+        POSTGRES_PASSWORD: $POSTGRES_PASSWORD
+        POSTGRES_PORT: $POSTGRES_PORT
+        POSTGRES_USER: $POSTGRES_USER
   before_script:
     - apt-get update -y && apt-get install -y --no-install-recommends wait-for-it postgresql-client
     - wait-for-it -h db -p 5432 -t 60 --strict
-    - wait-for-it -h backend -p 8000 -t 60 --strict
+    - wait-for-it -h backend -p 5000 -t 60 --strict
     # Assuming backend entrypoint handles migrations
   script:
     - cd frontend
