@@ -8,6 +8,9 @@ stages:
   - test
   - tag
 
+variables:
+  CI_DEBUG_SERVICES: "true"
+
 precommit:
   stage: lint
   image: python:3.12
