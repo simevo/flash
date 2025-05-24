@@ -10,9 +10,20 @@ RUN yarn playwright install --with-deps
 
 FROM ${FRONTEND_BASE_IMAGE} AS frontend-builder
 WORKDIR /app
-COPY index.html vite.config.mts vitest.config.mts tsconfig*.json env.d.ts eslint.config.ts .gitignore .prettierrc.json ./
-COPY public ./public
+COPY \
+    .gitignore \
+    .prettierrc.json \
+    env.d.ts \
+    eslint.config.ts \
+    index.html \
+    playwright.config.ts \
+    tsconfig*.json \
+    vite.config.mts \
+    vitest.config.mts \
+    ./
+COPY e2e ./e2e
 COPY src ./src
+COPY public ./public
 
 FROM frontend-builder AS frontend-built
 RUN yarn build

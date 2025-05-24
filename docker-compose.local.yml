@@ -69,8 +69,9 @@ services:
     image: flash_local_frontend
     command: yarn dev --port 80 --host 0
     volumes:
-      - ./frontend/public:/app/public
+      - ./frontend/e2e:/app/e2e
       - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
 
   readability:
     container_name: flash_local_readability

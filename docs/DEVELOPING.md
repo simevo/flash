@@ -62,9 +62,20 @@ To run the tests, check your test coverage, and generate an HTML coverage report
     $ coverage html
     $ open htmlcov/index.html
 
-#### Running tests with pytest
+### Running tests with pytest
 
     $ pytest
+
+### Running e2e tests with Playwright
+
+```sh
+docker-compose -f docker-compose.local.yml run --rm -p 9323:9323 frontend bash
+# execute a single test:
+CI=1 yarn test:e2e vue.spec.ts
+yarn playwright show-report --host 0
+```
+
+then open: http://localhost:9323/
 
 ### Live reloading and Sass CSS compilation
 
