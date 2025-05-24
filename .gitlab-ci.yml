@@ -32,6 +32,7 @@ lint-dockerfile:
     - hadolint --ignore DL3008 --ignore DL3006 compose/production/django/Dockerfile
     - hadolint --ignore DL3008 --ignore DL3006 compose/local/django/Dockerfile
     - hadolint --ignore DL3008 --ignore DL3006 compose/production/nginx/Dockerfile
+    - hadolint --ignore DL3008 --ignore DL3006 compose/production/postgres/Dockerfile
     - hadolint --ignore DL3008 --ignore DL3006 frontend/Dockerfile
 
 prepare:
@@ -180,6 +181,14 @@ build-docker-image-readability:
     REPO: $CI_REGISTRY_IMAGE/readability
     CONTEXT: ./compose/local/readability
 
+build-docker-image-postgres:
+  extends: .build-docker-image
+  stage: build final images
+  variables:
+    DOCKERFILE: ./compose/production/postgres/Dockerfile
+    REPO: $CI_REGISTRY_IMAGE/postgres
+    CONTEXT: .
+
 lint-python:
   stage: test
   image:
@@ -202,18 +211,14 @@ backend-test:
     CELERY_BROKER_URL: redis://redis:6379/0
     USE_DOCKER: "yes"
   services:
-    - name: pgvector/pgvector:pg15
+    - name: $CI_REGISTRY_IMAGE/postgres:$TAG
       alias: db
       variables:
         POSTGRES_DB: test_flash
     - name: docker.io/redis:6
       alias: redis
   before_script:
-    - ls -l sql/
     - wait-for-it "${POSTGRES_HOST}:${POSTGRES_PORT}" -t 30
-    - PGPASSWORD=${POSTGRES_PASSWORD} psql -h ${POSTGRES_HOST} -U ${POSTGRES_USER} test_${POSTGRES_DB} -f sql/00_tables.sql
-    - PGPASSWORD=${POSTGRES_PASSWORD} psql -h ${POSTGRES_HOST} -U ${POSTGRES_USER} test_${POSTGRES_DB} -f sql/01_feeds.sql
-    - PGPASSWORD=${POSTGRES_PASSWORD} psql -h ${POSTGRES_HOST} -U ${POSTGRES_USER} test_${POSTGRES_DB} -f sql/02_pgvector.sql
   script:
     - /usr/local/bin/pytest
 
@@ -251,7 +256,7 @@ e2e-test:
     POSTGRES_USER: flash_e2e
     # PLAYWRIGHT_TEST_BASE_URL is handled by playwright.config.ts using CI env var
   services:
-    - name: pgvector/pgvector:pg15
+    - name: $CI_REGISTRY_IMAGE/postgres:$TAG
       alias: db
     - name: docker.io/redis:6
       alias: redis
@@ -260,7 +265,7 @@ e2e-test:
     - name: $CI_REGISTRY_IMAGE/frontend:$TAG
       alias: flash
   before_script:
-    - apt-get update -y && apt-get install -y --no-install-recommends wait-for-it postgresql-client
+    - apt-get update -y && apt-get install -y --no-install-recommends wait-for-it
     - wait-for-it "${POSTGRES_HOST}:${POSTGRES_PORT}" -t 30
     - wait-for-it -h django -p 5000 -t 60 --strict
     - wait-for-it -h flash -p 80 -t 60 --strict
