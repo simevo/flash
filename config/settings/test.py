@@ -13,8 +13,8 @@ SECRET_KEY = env(
     "DJANGO_SECRET_KEY",
     default="VWqXEIuwWEY8qxFlKdEN2GWbSpKIxcBCsdG2zH0bG72vUaboQ6gosV3WlKlk46L9",
 )
-# https://docs.djangoproject.com/en/dev/ref/settings/#test-runner
-TEST_RUNNER = "django.test.runner.DiscoverRunner"
+# https://docs.djangoproject.com/en/dev/ref/settings/#allowed-hosts
+ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=["notizie.calomelano.it"])
 
 # PASSWORDS
 # ------------------------------------------------------------------------------
@@ -33,6 +33,7 @@ TEMPLATES[0]["OPTIONS"]["debug"] = True  # type: ignore[index]
 # MEDIA
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#media-url
-MEDIA_URL = "http://media.testserver"
+MEDIA_URL = "http://media.testserver/"
+
 # Your stuff...
 # ------------------------------------------------------------------------------

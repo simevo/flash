@@ -1,11 +1,12 @@
 import { test, expect } from "@playwright/test"
 
-// See here how to get started:
-// https://playwright.dev/docs/intro
-test("visits the app root url", async ({ page }) => {
+test("visits the app root url", async ({ page }, testInfo) => {
   await page.goto("/")
-  // Wait for 3 seconds
-  await page.waitForTimeout(5000)
-  await page.screenshot({ path: "screenshot.png" })
-  await expect(page.locator("h1")).toHaveText("o")
+  const metadata = testInfo.project.metadata
+  const browserName = metadata.browser.toLowerCase()
+  await expect(page.getByRole("link", { name: "view icon Sign In" })).toBeVisible()
+  await page.screenshot({
+    path: `screenshots/${browserName}.png`,
+    fullPage: true,
+  })
 })

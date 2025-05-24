@@ -235,14 +235,12 @@ e2e-test:
   image: $CI_REGISTRY_IMAGE/deps-frontend:$DEPS_FRONTEND_TAG
   variables:
     PLAYWRIGHT_BROWSERS_PATH: "0"
-    API_BASE_URL: http://backend:5000
-    # Variables for Django backend service & this job
     DATABASE_URL: postgresql://flash_e2e:flash_e2e@db:5432/test_flash_e2e
     DJANGO_SETTINGS_MODULE: config.settings.test
     PYTHONUNBUFFERED: "1"
     CELERY_BROKER_URL: redis://redis:6379/0
     DJANGO_SECRET_KEY: "dummy-secret-key-for-ci-e2e-tests"
-    DJANGO_ALLOWED_HOSTS: ".localhost,backend,localhost"
+    DJANGO_ALLOWED_HOSTS: "django,flash"
     DJANGO_SUPERUSER_USERNAME: admin
     DJANGO_SUPERUSER_PASSWORD: admin
     DJANGO_SUPERUSER_EMAIL: admin@example.com
@@ -255,38 +253,34 @@ e2e-test:
   services:
     - name: pgvector/pgvector:pg15
       alias: db
-      variables:
-        POSTGRES_DB: $POSTGRES_DB
-        POSTGRES_USER: $POSTGRES_USER
-        POSTGRES_PASSWORD: $POSTGRES_PASSWORD
     - name: docker.io/redis:6
       alias: redis
     - name: $CI_REGISTRY_IMAGE/backend:$TAG
-      alias: backend
-      variables:
-        DATABASE_URL: $DATABASE_URL
-        DJANGO_SETTINGS_MODULE: $DJANGO_SETTINGS_MODULE
-        PYTHONUNBUFFERED: $PYTHONUNBUFFERED
-        CELERY_BROKER_URL: $CELERY_BROKER_URL
-        DJANGO_SECRET_KEY: $DJANGO_SECRET_KEY
-        DJANGO_ALLOWED_HOSTS: $DJANGO_ALLOWED_HOSTS
-        DJANGO_SUPERUSER_USERNAME: $DJANGO_SUPERUSER_USERNAME
-        DJANGO_SUPERUSER_PASSWORD: $DJANGO_SUPERUSER_PASSWORD
-        DJANGO_SUPERUSER_EMAIL: $DJANGO_SUPERUSER_EMAIL
-        POSTGRES_DB: $POSTGRES_DB
-        POSTGRES_HOST: $POSTGRES_HOST
-        POSTGRES_PASSWORD: $POSTGRES_PASSWORD
-        POSTGRES_PORT: $POSTGRES_PORT
-        POSTGRES_USER: $POSTGRES_USER
+      alias: django
+    - name: $CI_REGISTRY_IMAGE/frontend:$TAG
+      alias: flash
   before_script:
     - apt-get update -y && apt-get install -y --no-install-recommends wait-for-it postgresql-client
-    - wait-for-it -h db -p 5432 -t 60 --strict
-    - wait-for-it -h backend -p 5000 -t 60 --strict
-    # Assuming backend entrypoint handles migrations
+    - wait-for-it "${POSTGRES_HOST}:${POSTGRES_PORT}" -t 30
+    - wait-for-it -h django -p 5000 -t 60 --strict
+    - wait-for-it -h flash -p 80 -t 60 --strict
+    - mkdir screenshots
   script:
     - cd frontend
-    - yarn install
+    - pwd
+    - whoami
+    - ls -l /root/.cache/ms-playwright
+    - du -sh /root/.cache/ms-playwright
+    - ln -s /app/node_modules/ node_modules
+    - yarn playwright install
     - yarn test:e2e
+  artifacts:
+    paths:
+      - frontend/playwright-report/
+      - frontend/screenshots/
+      - frontend/test-results/
+    when: always
+    expire_in: 1 week
 
 tag-latest-docker-images:
   stage: tag
