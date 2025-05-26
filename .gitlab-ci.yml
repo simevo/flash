@@ -240,7 +240,7 @@ e2e-test:
   stage: test
   image: $CI_REGISTRY_IMAGE/deps-frontend:$DEPS_FRONTEND_TAG
   variables:
-    PLAYWRIGHT_BROWSERS_PATH: "0"
+    PLAYWRIGHT_BROWSERS_PATH: /root/.cache/ms-playwright/
     DATABASE_URL: postgresql://flash_e2e:flash_e2e@db:5432/test_flash_e2e
     DJANGO_SETTINGS_MODULE: config.settings.test
     PYTHONUNBUFFERED: "1"
