@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { RouterLink } from "vue-router"
-import RatingToolbar from "./RatingToolbar.vue"
+import { computed } from "vue";
 import { secondsToString } from "./sts"
 import { useAuthStore } from "../stores/auth.store"
+import ThreeStateCheckBox from "./ThreeStateCheckBox.vue";
+import type { CheckBoxValue } from "../types/CheckBoxValue";
+import { fetch_wrapper } from "../utils";
 
 const auth = useAuthStore()
 
@@ -17,7 +20,70 @@ defineProps<{
 
 const emit = defineEmits<{
   (e: "refresh_feed", feed_id: number): void
+  (e: "updating", value: boolean): void
 }>()
+
+const showHideState = computed<CheckBoxValue>(() => {
+  const rating = props.feed.my_rating;
+  if (rating === undefined || rating === null) {
+    return null; // Indeterminate
+  }
+  if (rating >= -4 && rating <= 5) {
+    return true; // Checked (Show)
+  }
+  if (rating === -5) {
+    return false; // Unchecked (Don't show)
+  }
+  return null; // Default to indeterminate for any other unexpected values
+});
+
+async function handleShowHideChange(newState: CheckBoxValue) {
+  let newRating: number;
+  if (newState === true) {
+    newRating = 0; // Default "show" rating
+  } else if (newState === false) {
+    newRating = -5; // "Don't show" rating
+  } else { // newState === null (cycled from false to null)
+    newRating = 0; // Treat as "show"
+  }
+
+  // Optimistically update local state for immediate UI feedback
+  const originalRating = props.feed.my_rating; // Store original rating for potential revert
+  (props.feed as any).my_rating = newRating;
+
+
+  const payload = {
+    feed: props.feed.id, 
+    rating: newRating,
+  };
+
+  emit('updating', true);
+
+  try {
+    const response = await fetch_wrapper("/api/user-feeds/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (response.ok) {
+      console.log("Visibility updated successfully.");
+    } else {
+      // Revert optimistic update on failure
+      (props.feed as any).my_rating = originalRating;
+      const errorData = await response.text();
+      alert(`Error updating visibility: ${response.statusText} - ${errorData}`);
+    }
+  } catch (error) {
+    // Revert optimistic update on failure
+    (props.feed as any).my_rating = originalRating;
+    alert(`Network error: ${error}`);
+  } finally {
+    emit('updating', false); 
+  }
+}
 </script>
 
 <template>
@@ -99,12 +165,12 @@ const emit = defineEmits<{
               Ultimo aggiornamento
               {{ secondsToString(new Date().getTime() / 1000 - feed.last_polled_epoch) }}
             </small>
-            <RatingToolbar
+            <ThreeStateCheckBox
               class="float-end mb-2"
-              :id="feed.id"
-              endpoint="/api/user-feeds/"
-              v-bind:item="feed"
-            ></RatingToolbar>
+              :value="showHideState"
+              @change="handleShowHideChange"
+              title="Toggle visibility"
+            />
           </p>
         </div>
       </div>
