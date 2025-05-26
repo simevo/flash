@@ -11,6 +11,7 @@ from bs4 import BeautifulSoup
 from django.conf import settings
 from django.contrib.postgres.aggregates import ArrayAgg
 from django.contrib.postgres.search import SearchVector
+from django.core.cache import cache
 from django.core.files.storage import FileSystemStorage
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
@@ -462,6 +463,7 @@ class FeedsView(
             "failed": p.failed,
             "stored": p.stored,
         }
+        cache.clear()
         return Response(
             data,
             status=status.HTTP_201_CREATED,
