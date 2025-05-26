@@ -18,6 +18,8 @@ from django.shortcuts import get_object_or_404
 from django.shortcuts import render
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
+from django.db.models import Case, When # Added Case, When
+import random # Added random
 from django_filters import rest_framework as filters
 from drf_spectacular.utils import extend_schema
 from ebooklib import epub
@@ -229,14 +231,84 @@ class ArticlesView(
     mixins.CreateModelMixin,
     mixins.UpdateModelMixin,
 ):
-    queryset = ArticlesCombined.objects.all().order_by("-id")
+    queryset = ArticlesCombined.objects.all()
     permission_classes = [ArticlePermissions]
     filterset_class = ArticlesFilter
     pagination_class = StandardResultsSetPagination
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        
+        # Apply filters
+        # The filterset is applied by the GenericViewSet's list method, 
+        # but we need to apply it here to get the filtered IDs before pagination.
+        # This is a bit tricky as the view's filter_queryset method is called after get_queryset.
+        # We might need to adjust this if direct filter application here is problematic.
+        # For now, let's assume self.filterset_class can be instantiated and used.
+        
+        # Instead of manually applying filters here, we will override filter_queryset
+        # to ensure that randomization happens after filtering but before pagination.
+        # For now, let's just remove the default ordering from the class attribute.
+        # The actual randomization logic will go into the list method or a custom filter_queryset.
+
+        # Let's reconsider. The most straightforward way is to override filter_queryset.
+        # However, the prompt asked to modify get_queryset or list.
+        # Let's try to do it in get_queryset first, then fallback to list/filter_queryset if needed.
+
+        # The issue with get_queryset is that filtering hasn't happened yet.
+        # The view's `filter_queryset` method is called after `get_queryset`.
+        # So, if we randomize in get_queryset, we randomize *before* filtering, which is not ideal.
+
+        # Let's adjust the plan:
+        # 1. Remove order_by("-id") from queryset class attribute (done).
+        # 2. Override the `list` method to perform filtering, then randomization, then pagination.
+        # This ensures filters are applied before randomization.
+        # The cache decorator will apply to this overridden list method.
+
+        return queryset
+
     @method_decorator(cache_page(60 * 5))
     def list(self, request, *args, **kwargs):
-        return super().list(request, *args, **kwargs)
+        # Default implementation from mixins.ListModelMixin:
+        # queryset = self.filter_queryset(self.get_queryset())
+        # page = self.paginate_queryset(queryset)
+        # if page is not None:
+        #     serializer = self.get_serializer(page, many=True)
+        #     return self.get_paginated_response(serializer.data)
+        # serializer = self.get_serializer(queryset, many=True)
+        # return Response(serializer.data)
+
+        # 1. Get the filtered queryset
+        queryset = self.filter_queryset(self.get_queryset()) # This applies ArticlesFilter
+
+        # 2. Get all IDs from the filtered queryset
+        article_ids = list(queryset.values_list('id', flat=True))
+
+        # 3. Shuffle the IDs
+        random.shuffle(article_ids)
+
+        # 4. Create a new queryset preserving the shuffled order
+        # This uses Case/When to order by the shuffled list of IDs.
+        preserved_order = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(article_ids)])
+        # We fetch the actual objects based on the shuffled IDs
+        # Note: We are fetching from the *original* model manager, not the already filtered queryset,
+        # to ensure we get full objects if queryset was deferred etc.
+        # However, it's better to re-filter the *original* queryset source with the shuffled IDs.
+        
+        # We need to be careful not to re-apply default ordering from the model or view's queryset attribute.
+        # ArticlesCombined.objects.all() was used in the original queryset attribute.
+        randomized_queryset = ArticlesCombined.objects.filter(pk__in=article_ids).order_by(preserved_order)
+
+        # 5. Paginate the randomized queryset
+        page = self.paginate_queryset(randomized_queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        # This case should ideally not be hit if pagination is always active,
+        # but as a fallback, serialize the whole randomized queryset.
+        serializer = self.get_serializer(randomized_queryset, many=True)
+        return Response(serializer.data)
 
     def get_serializer_class(self):
         if self.request.method in ["GET"]:
