@@ -14,6 +14,7 @@ Second iteration born from the ashes of [**calo.news** ("An open-source news pla
 For detailed information, please refer to the following documents:
 
 - [User Guide](docs/USING.md)
+- [Admin Guide](docs/ADMIN.md)
 - [Developer Guide](docs/DEVELOPING.md)
 - [Architecture Overview](docs/ARCHITECTURE.md)
 
