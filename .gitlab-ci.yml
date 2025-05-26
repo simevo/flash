@@ -78,6 +78,7 @@ prepare:
   variables:
     CONTEXT: .
     ARGS: ""
+    GODEBUG: "http2client=0"
   script:
     - TAG="${JOB_TAG:-${TAG}}"
     - mkdir -p /kaniko/.docker/
