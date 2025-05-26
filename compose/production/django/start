@@ -4,8 +4,6 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
-echo "========== Environment Variables:"
-printenv
 echo "========== Migrate:"
 python /app/manage.py migrate --noinput
 echo "========== Collect static files:"
