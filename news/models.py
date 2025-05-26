@@ -140,7 +140,9 @@ class Feeds(models.Model):
 
 class FeedPolling(models.Model):
     feed = models.ForeignKey(
-        Feeds, on_delete=models.CASCADE, related_name="polling_stats"
+        Feeds,
+        on_delete=models.CASCADE,
+        related_name="polling_stats",
     )
     poll_start_time = models.DateTimeField()
     poll_end_time = models.DateTimeField()

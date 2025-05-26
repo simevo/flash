@@ -24,8 +24,8 @@ from bs4 import Comment
 from bs4 import NavigableString
 from bs4 import Tag
 
-from news.models import Articles, FeedPolling # Added FeedPolling
-# datetime is already imported at the top of the file
+from news.models import Articles
+from news.models import FeedPolling
 
 logger = logging.getLogger(__name__)
 time_format = "%Y-%m-%dT%H:%M:%SZ"
@@ -542,26 +542,33 @@ def generate_rss(json_data):
 
 def _poll_feed(feed):
     verbose = True
-    status_code = 0  # Initialize status_code
+    response = None
+
+    # Initialize variables that will be saved in FeedPoller
+    status_code = 0
     retrieved = 0
     failed = 0
     stored = 0
-    response = None # Initialize response to None
 
+    # -100: unextractable HTTP error status
+    # -40: generic exception
+    # -30: generic request exception
+    # -20: connection error
+    # -10: timeout
+    # -5: invalid feed
+    # 0: default status code
+    # 200-5xx: HTTP status code
     try:
         response = requests.get(
             feed.url,
             timeout=60,
             headers={"User-Agent": USER_AGENT},
         )
-        status_code = response.status_code # Capture status_code after successful request
+        status_code = response.status_code
     except requests.exceptions.HTTPError as e:
         logger.exception(f"== http error when reading RSS {feed.url}:")
-        if e.response is not None: # HTTPError usually has a response
-            status_code = e.response.status_code
-        else: # Fallback if for some reason response is not available on HTTPError
-            status_code = 0 # Or a specific code like -5 for unextractable HTTP error status
-        response = None # Keep response as None as per original logic for error state
+        status_code = e.response.status_code if e.response is not None else -100
+        response = None
     except requests.exceptions.ConnectionError:
         logger.exception(f"== connection error when reading RSS {feed.url}")
         status_code = -20
@@ -576,23 +583,27 @@ def _poll_feed(feed):
         )
         status_code = -30
         response = None
-    except Exception: # Catching broader exceptions
+    except Exception:  # Catching broader exceptions
         logger.exception(f"== generic exception when reading RSS {feed.url}")
         status_code = -40
         response = None
 
-    if not response: # Covers cases where response is None due to exceptions or initial failure
-        return (retrieved, failed, stored, status_code) # (0,0,0, specific_error_code)
+    if (
+        not response
+    ):  # Covers cases where response is None due to exceptions or initial failure
+        return (retrieved, failed, stored, status_code)
 
-    # If response exists, status_code was set from response.status_code
-    # If it's not HTTP_SUCCESS_CODE, we return 0 counts and the actual status_code
     if response.status_code != HTTP_SUCCESS_CODE:
         logger.error(f"== url {feed.url} returned error status {response.status_code}")
         # status_code is already response.status_code from above
-        return (retrieved, failed, stored, status_code) # (0,0,0, actual_http_error_code)
+        return (
+            retrieved,
+            failed,
+            stored,
+            status_code,
+        )
 
-    # At this point, response is valid and response.status_code is HTTP_SUCCESS_CODE
-    # status_code is already 200 (or the actual success code)
+    # response is valid and response.status_code is HTTP_SUCCESS_CODE
 
     if feed.url[-29:] == "/api/v1/trends/links?limit=20":
         json_data = json.loads(response.text)
@@ -626,13 +637,17 @@ def _poll_feed(feed):
     results = loop.run_until_complete(
         main(loop, sorted_entries, feed, verbose=verbose),
     )
-    # retrieved, failed, stored were initialized to 0 at the start
-    for r_item in results: # renamed r to r_item to avoid conflict if any
+    for r_item in results:
         retrieved += r_item[0]
         failed += r_item[1]
         stored += r_item[2]
 
-    return (retrieved, failed, stored, status_code) # status_code is HTTP_SUCCESS_CODE here
+    return (
+        retrieved,
+        failed,
+        stored,
+        status_code,
+    )
 
 
 class Poller:
@@ -641,7 +656,7 @@ class Poller:
         self.retrieved = 0
         self.failed = 0
         self.feed = feed
-        self.p = None # Initialize p to None
+        self.p = None
 
     def invoke(self, script):
         self.p = subprocess.Popen(
@@ -661,11 +676,14 @@ class Poller:
             return (None, "error")
         lines = output[0].decode().split("\n")
         last_line = lines[-1] if lines[-1] else lines[-2]
-        return (last_line.split(" "), None) # Success, no specific status indicator needed here
+        return (
+            last_line.split(" "),
+            None,
+        )
 
     def poll(self):
         poll_start_time = datetime.datetime.now(datetime.UTC)
-        http_status_code = 0  # Default status code
+        http_status_code = 0
         # Using new names for counts for this specific poll run
         feed_polling_retrieved_count = 0
         feed_polling_failed_count = 0
@@ -673,15 +691,12 @@ class Poller:
 
         if not self.feed.active:
             logger.info(f"== skipping feed {self.feed.id} because non-active")
-            # Potentially record a FeedPolling entry here if skipped polls should be logged
-            # For now, just returning as per original logic and instructions for active check
             return
 
         if self.feed.frequency:
             skip_reason = frequency_skip(self.feed.frequency, self.feed.id)
             if skip_reason:
                 logger.info(skip_reason)
-                # Potentially record a FeedPolling entry here for frequency skips
                 return
 
         logger.info(f"== polling feed {self.feed.id}")
@@ -696,35 +711,42 @@ class Poller:
                 # counts remain 0
             elif script_status_indicator == "error":
                 # self.p should have been set in invoke
-                http_status_code = self.p.returncode if self.p and self.p.returncode is not None else -2
+                http_status_code = (
+                    self.p.returncode
+                    if self.p and self.p.returncode is not None
+                    else -2
+                )
                 # counts remain 0
-            elif results and len(results) == 3:
+            elif results and len(results) == 3:  # noqa: PLR2004
                 try:
                     feed_polling_retrieved_count = int(results[0])
                     feed_polling_failed_count = int(results[1])
                     feed_polling_stored_count = int(results[2])
                     if self.p and self.p.returncode == 0:
-                        http_status_code = 200  # Script success
-                    # If self.p.returncode !=0, it would have been caught by "error" indicator
-                    # but as a fallback, if somehow not caught:
+                        http_status_code = 200
                     elif self.p and self.p.returncode is not None:
-                         http_status_code = self.p.returncode
-                    else: # Should not happen if invoke logic is correct
-                        http_status_code = -2 # Generic script error
+                        http_status_code = self.p.returncode
+                    else:  # Should not happen if invoke logic is correct
+                        http_status_code = -2  # Generic script error
                 except ValueError:
-                    logger.error(f"== script {script_path} output not in expected integer format: {results}")
-                    http_status_code = -3 # Script output format error
+                    logger.exception(
+                        f"== [{script_path}] output not in integer format: {results}",
+                    )
+                    http_status_code = -3  # Script output format error
                     # counts remain 0 or partially set if error in later int()
-                    feed_polling_retrieved_count = 0 # Reset to be safe
+                    feed_polling_retrieved_count = 0  # Reset to be safe
                     feed_polling_failed_count = 0
                     feed_polling_stored_count = 0
-            else: # results is None or not len 3, and not a timeout/error identified by invoke
-                logger.error(f"== script {script_path} did not return expected output. Results: {results}")
-                http_status_code = self.p.returncode if self.p and self.p.returncode is not None else -2 # Generic script error or actual code
+            else:
+                logger.error(
+                    f"== [{script_path}] did not return expected output: {results}",
+                )
+                http_status_code = (
+                    self.p.returncode
+                    if self.p and self.p.returncode is not None
+                    else -2
+                )  # Generic script error or actual code
         else:
-            # Assuming _poll_feed will be modified to return four values as per subtask instructions
-            # This is a forward-looking change based on the subtask description.
-            # If _poll_feed is not yet updated, this will cause an error.
             retrieved, failed, stored, status_from_poll = _poll_feed(self.feed)
             feed_polling_retrieved_count = retrieved
             feed_polling_failed_count = failed
@@ -748,5 +770,5 @@ class Poller:
             articles_stored=feed_polling_stored_count,
         )
 
-        self.feed.last_polled = poll_end_time # Use poll_end_time for consistency
+        self.feed.last_polled = poll_end_time  # Use poll_end_time for consistency
         self.feed.save()
