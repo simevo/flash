@@ -347,16 +347,19 @@ class ArticlesView(
     def related(self, request, pk=None):
         queryset = ArticlesCombined.objects
         article = get_object_or_404(queryset, pk=pk)
-        serializer = self.get_serializer(
-            queryset.order_by(
-                CosineDistance(
-                    "use_cmlm_multilingual",
-                    article.use_cmlm_multilingual,
-                ),
-            )[1:100],
-            many=True,
-        )
-        results = sorted(serializer.data, key=lambda x: x["id"], reverse=True)[:10]
+        if article.use_cmlm_multilingual is None:
+            results = []
+        else:
+            serializer = self.get_serializer(
+                queryset.order_by(
+                    CosineDistance(
+                        "use_cmlm_multilingual",
+                        article.use_cmlm_multilingual,
+                    ),
+                )[1:100],
+                many=True,
+            )
+            results = sorted(serializer.data, key=lambda x: x["id"], reverse=True)[:10]
         return Response(results)
 
     @action(detail=True, methods=["get"])
