@@ -69,9 +69,10 @@ To run the tests, check your test coverage, and generate an HTML coverage report
 ### Running e2e tests with Playwright
 
 ```sh
-docker-compose -f docker-compose.local.yml run --rm -p 9323:9323 frontend bash
-# execute a single test:
+docker-compose -f docker-compose.local.yml up -d postgres django frontend flash
+docker-compose -f docker-compose.local.yml exec frontend bash
 CI=1 yarn test:e2e vue.spec.ts
+^C
 yarn playwright show-report --host 0
 ```
 

@@ -68,6 +68,8 @@ services:
       target: frontend-builder
     image: flash_local_frontend
     command: yarn dev --port 80 --host 0
+    ports:
+      - '9323:9323'
     volumes:
       - ./frontend/e2e:/app/e2e
       - ./frontend/src:/app/src
