@@ -18,8 +18,7 @@ from django.shortcuts import get_object_or_404
 from django.shortcuts import render
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
-from django.db.models import Case, When # Added Case, When
-import random # Added random
+from django.db.models import F, Value, ExpressionWrapper, FloatField # Added F, Value, ExpressionWrapper, FloatField
 from django_filters import rest_framework as filters
 from drf_spectacular.utils import extend_schema
 from ebooklib import epub
@@ -281,33 +280,27 @@ class ArticlesView(
         # 1. Get the filtered queryset
         queryset = self.filter_queryset(self.get_queryset()) # This applies ArticlesFilter
 
-        # 2. Get all IDs from the filtered queryset
-        article_ids = list(queryset.values_list('id', flat=True))
+        # 2. Define the perturbation expression
+        # The goal is a deterministic perturbation of the chronological order (id).
+        # Expression: id - (feed_id % 5) * 200 + (length % 10) * 100
+        # This will make articles from different feeds, or with different lengths,
+        # shift slightly relative to each other around their base chronological position.
+        perturbation_expression = ExpressionWrapper(
+            F('id') - (F('feed_id') % Value(5)) * Value(200) + (F('length') % Value(10)) * Value(100),
+            output_field=FloatField() # Use FloatField to handle potential non-integer results from modulo/multiplication
+        )
 
-        # 3. Shuffle the IDs
-        random.shuffle(article_ids)
-
-        # 4. Create a new queryset preserving the shuffled order
-        # This uses Case/When to order by the shuffled list of IDs.
-        preserved_order = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(article_ids)])
-        # We fetch the actual objects based on the shuffled IDs
-        # Note: We are fetching from the *original* model manager, not the already filtered queryset,
-        # to ensure we get full objects if queryset was deferred etc.
-        # However, it's better to re-filter the *original* queryset source with the shuffled IDs.
+        # 3. Annotate the queryset with the perturbed order and apply ordering
+        queryset = queryset.annotate(perturbed_order=perturbation_expression).order_by('-perturbed_order')
         
-        # We need to be careful not to re-apply default ordering from the model or view's queryset attribute.
-        # ArticlesCombined.objects.all() was used in the original queryset attribute.
-        randomized_queryset = ArticlesCombined.objects.filter(pk__in=article_ids).order_by(preserved_order)
-
-        # 5. Paginate the randomized queryset
-        page = self.paginate_queryset(randomized_queryset)
+        # 4. Paginate the ordered queryset
+        page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
             return self.get_paginated_response(serializer.data)
 
-        # This case should ideally not be hit if pagination is always active,
-        # but as a fallback, serialize the whole randomized queryset.
-        serializer = self.get_serializer(randomized_queryset, many=True)
+        # Fallback: serialize the whole ordered queryset if pagination is not applicable
+        serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
     def get_serializer_class(self):

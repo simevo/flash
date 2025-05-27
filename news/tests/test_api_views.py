@@ -35,6 +35,9 @@ class ArticleAPITests(APITestCase):
 
         cls.articles_feed1 = []
         cls.articles_feed2 = []
+        
+        # Need to import ArticlesData
+        from news.models import ArticlesData
 
         # StandardResultsSetPagination.page_size is 200. Create 410 articles for feed1.
         for i in range(410):
@@ -44,6 +47,15 @@ class ArticleAPITests(APITestCase):
                 content_original=f"Content F1 {i+1}",
                 url=f"http://example.com/article_f1_{i+1}",
                 stamp=timezone.now() - timezone.timedelta(days=410 - i),
+            )
+            # Create corresponding ArticlesData with varied length
+            # Length values from 100 to 100 + 409*10 = 4190, varying by 10
+            ArticlesData.objects.create(
+                id=article,  # Link to the article instance
+                views=i * 10, # Dummy data
+                rating= (i % 5) + 1, # Dummy data
+                to_reads=0, # Dummy data
+                length=100 + (i * 10) # Varied length
             )
             cls.articles_feed1.append(article)
 
@@ -56,9 +68,23 @@ class ArticleAPITests(APITestCase):
                 url=f"http://example.com/article_f2_{i+1}",
                 stamp=timezone.now() - timezone.timedelta(days=10 - i),
             )
+            # Create corresponding ArticlesData with varied length
+            # Length values from 200 to 200 + 9*5 = 245, varying by 5
+            ArticlesData.objects.create(
+                id=article,
+                views=i * 5,
+                rating=(i % 3) + 1,
+                to_reads=0,
+                length=200 + (i * 5) # Varied length
+            )
             cls.articles_feed2.append(article)
         
         # Total articles = 410 + 10 = 420
+        # Ensure FeedsCombined and ArticlesCombined views are refreshed if they are materialized views
+        # For Django tests with in-memory DB or transaction rollback, this is usually not an issue.
+        # If they were true materialized views, we'd need a refresh mechanism.
+        # Given these are `managed = False` and `db_table = "..."`, they are likely SQL views,
+        # so they should reflect underlying data changes immediately.
 
     def setUp(self):
         self.client.login(username="testuser", password="testpassword")
@@ -163,9 +189,10 @@ class ArticleAPITests(APITestCase):
         ), "Response content should differ after new article and cache refresh, due to re-randomization."
 
 
-    def test_articles_list_randomization(self):
+    def test_articles_list_perturbed_chronological_order_stability(self):
         """
-        Test that the articles list endpoint returns articles in a random order.
+        Test that the articles list endpoint returns articles in a stable,
+        perturbed chronological order.
         """
         try:
             url = reverse("api:articles-list")
@@ -177,26 +204,54 @@ class ArticleAPITests(APITestCase):
         self.assertEqual(response1.status_code, 200)
         response1_ids = [article["id"] for article in response1.data["results"]]
 
-        # Clear cache to ensure a fresh, potentially different randomized order
+        # Clear cache to ensure the view re-queries the database
         cache.clear() 
         
         response2 = self.client.get(url)
         self.assertEqual(response2.status_code, 200)
         response2_ids = [article["id"] for article in response2.data["results"]]
 
-        # Ensure we have enough articles for the order to likely change
-        # setUpTestData creates 420 articles. Default page size is 200.
-        self.assertTrue(len(response1_ids) > 1, "Need multiple articles to test randomization.")
+        self.assertTrue(len(response1_ids) > 1, "Need multiple articles to test order stability.")
         self.assertEqual(len(response1_ids), len(response2_ids), "Responses should have the same number of articles (page_size).")
 
-        # This assertion has a small chance of failing if, by coincidence,
-        # the same order is produced twice. With 200 items, this is very unlikely.
-        self.assertNotEqual(response1_ids, response2_ids, 
-                            "Article IDs should be in a different order on subsequent requests (after cache clear).")
+        self.assertEqual(response1_ids, response2_ids, 
+                            "Article IDs should be in the SAME order on subsequent requests (after cache clear) due to deterministic perturbation.")
 
-    def test_articles_list_pagination_with_randomization(self):
+    def test_articles_list_is_actually_perturbed(self):
         """
-        Test pagination works correctly with randomized article order.
+        Test that the perturbed order is different from simple chronological order.
+        """
+        from news.models import ArticlesCombined # For direct model query
+        try:
+            url = reverse("api:articles-list")
+        except NoReverseMatch:
+            url = reverse("api:articlescombined-list")
+
+        response_perturbed = self.client.get(url)
+        self.assertEqual(response_perturbed.status_code, 200)
+        perturbed_ids_page1 = [article["id"] for article in response_perturbed.data["results"]]
+        
+        # Fetch all article IDs ordered chronologically directly from the model
+        # This assumes all test articles are relevant; if filters are applied by default
+        # by the view even without query params, this comparison needs to be more nuanced.
+        # The view's default queryset is ArticlesCombined.objects.all(), filters are applied later.
+        # So, we are comparing against the full unfiltered set.
+        page_size = 200 # StandardResultsSetPagination.page_size
+        chronological_articles = ArticlesCombined.objects.all().order_by('-id')[:page_size]
+        chronological_ids_page1 = [article.id for article in chronological_articles]
+
+        self.assertEqual(len(perturbed_ids_page1), page_size, "Perturbed list should have a full page.")
+        self.assertEqual(len(chronological_ids_page1), page_size, "Chronological list should have a full page for comparison.")
+
+        # This assertion depends on the perturbation being strong enough
+        # and data having enough variance in feed_id and length.
+        self.assertNotEqual(perturbed_ids_page1, chronological_ids_page1,
+                              "Perturbed order of article IDs on page 1 should be different from simple chronological (-id) order.")
+
+
+    def test_articles_list_pagination_with_perturbed_order(self):
+        """
+        Test pagination works correctly with perturbed chronological article order.
         """
         try:
             url_base = reverse("api:articles-list")
@@ -211,17 +266,17 @@ class ArticleAPITests(APITestCase):
         page1_ids = [article["id"] for article in response_page1.data["results"]]
         self.assertEqual(len(page1_ids), page_size, f"Page 1 should contain {page_size} articles.")
 
-        # Fetch page 1 again (after cache clear) to check if its order randomizes
+        # Fetch page 1 again (after cache clear) to check if its order is stable
         cache.clear()
         response_page1_again = self.client.get(url_base, {"page": 1})
         self.assertEqual(response_page1_again.status_code, 200)
         page1_again_ids = [article["id"] for article in response_page1_again.data["results"]]
         self.assertEqual(len(page1_again_ids), page_size)
-        self.assertNotEqual(page1_ids, page1_again_ids, 
-                            "Page 1 fetched twice (after cache clear) should have different order.")
+        self.assertEqual(page1_ids, page1_again_ids, 
+                            "Page 1 fetched twice (after cache clear) should have the SAME order.")
 
         # Fetch page 2
-        cache.clear() # Ensure page 2 isn't affected by previous page 1 caching if logic was different
+        cache.clear() 
         response_page2 = self.client.get(url_base, {"page": 2})
         self.assertEqual(response_page2.status_code, 200)
         page2_ids = [article["id"] for article in response_page2.data["results"]]
@@ -245,9 +300,9 @@ class ArticleAPITests(APITestCase):
         self.assertTrue(set(page2_ids).isdisjoint(set(page3_ids)))
 
 
-    def test_articles_list_filtering_with_randomization(self):
+    def test_articles_list_filtering_with_perturbed_order(self):
         """
-        Test filtering works correctly with randomized article order.
+        Test filtering works correctly with perturbed chronological article order.
         """
         try:
             url = reverse("api:articles-list")
@@ -265,9 +320,6 @@ class ArticleAPITests(APITestCase):
                          f"Should get all {num_feed2_articles} articles for feed_id {feed2_id}")
 
         for article_data in response1.data["results"]:
-            # Need to fetch the feed ID from the article data if it's there.
-            # The serializer is ArticleReadSerializer for ArticlesCombined.
-            # It includes `feed` which is a dict with `id` and `title`.
             self.assertEqual(article_data["feed"]["id"], feed2_id, "All articles should belong to the filtered feed.")
 
         cache.clear()
@@ -279,12 +331,8 @@ class ArticleAPITests(APITestCase):
         for article_data in response2.data["results"]:
             self.assertEqual(article_data["feed"]["id"], feed2_id)
         
-        # With only 10 articles, the order might be the same by chance more often.
-        # However, with shuffling, it should still be different if the shuffle is effective.
-        # If num_feed2_articles is small (e.g. < 4), this has a higher chance of coincidental same order.
-        # For 10 items, probability of same order after shuffle is 1/10! which is small.
-        if num_feed2_articles > 1: # Randomization only makes sense for >1 item
-            self.assertNotEqual(response1_ids, response2_ids,
-                                "Filtered article IDs should be in a different order on subsequent requests (after cache clear).")
+        if num_feed2_articles > 1:
+            self.assertEqual(response1_ids, response2_ids,
+                                "Filtered article IDs should be in the SAME order on subsequent requests (after cache clear).")
         else:
             self.assertEqual(response1_ids, response2_ids, "Order should be the same for a single filtered article.")

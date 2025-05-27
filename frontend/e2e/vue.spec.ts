@@ -80,7 +80,7 @@ test.describe("Authenticated Article View", () => {
     // });
   });
 
-  test("should display articles in random order on load and reload", async ({ page }) => {
+  test("should display articles in a stable perturbed order on load and reload", async ({ page }) => {
     await page.goto("/res/"); // Ensure we are on the page
 
     // Wait for articles to be loaded
@@ -88,7 +88,7 @@ test.describe("Authenticated Article View", () => {
 
     const initialArticleIdentifiers = await getArticleIdentifiers(page, 5);
     expect(initialArticleIdentifiers.length).toBeGreaterThan(0, "Should load some articles initially.");
-    console.log("Initial articles:", initialArticleIdentifiers);
+    console.log("Initial articles (perturbed order):", initialArticleIdentifiers);
 
 
     // Reload the page
@@ -97,15 +97,13 @@ test.describe("Authenticated Article View", () => {
 
     const reloadedArticleIdentifiers = await getArticleIdentifiers(page, 5);
     expect(reloadedArticleIdentifiers.length).toBeGreaterThan(0, "Should load some articles after reload.");
-    console.log("Reloaded articles:", reloadedArticleIdentifiers);
+    console.log("Reloaded articles (perturbed order):", reloadedArticleIdentifiers);
 
-    // Assert that the order is different
-    // This has a small chance of failing if the random order is the same,
-    // but with enough articles and a decent shuffle, it's unlikely for the top 5.
-    expect(initialArticleIdentifiers).not.toEqual(reloadedArticleIdentifiers, "Article order should be different after reload.");
+    // Assert that the order is the same due to deterministic perturbed ordering
+    expect(initialArticleIdentifiers).toEqual(reloadedArticleIdentifiers, "Article order should be the same (stable) after reload.");
   });
 
-  test("should load more articles and maintain randomization", async ({ page }) => {
+  test("should load more articles and maintain order of previously loaded articles", async ({ page }) => {
     await page.goto("/res/");
     await page.waitForSelector(".wrapper > div", { state: "visible", timeout: 15000 });
 
