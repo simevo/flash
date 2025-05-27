@@ -540,16 +540,14 @@ def generate_rss(json_data):
     return rss
 
 
-def _poll_feed(feed):
-    verbose = True
-    response = None
+def _fetch_feed_response(feed_url):
+    """
+    Fetch the feed response with error handling.
 
-    # Initialize variables that will be saved in FeedPoller
-    status_code = 0
-    retrieved = 0
-    failed = 0
-    stored = 0
-
+    Returns:
+        tuple: (response, status_code)
+        response will be None if an error occurred
+    """
     # -100: unextractable HTTP error status
     # -40: generic exception
     # -30: generic request exception
@@ -560,66 +558,55 @@ def _poll_feed(feed):
     # 200-5xx: HTTP status code
     try:
         response = requests.get(
-            feed.url,
+            feed_url,
             timeout=60,
             headers={"User-Agent": USER_AGENT},
         )
         status_code = response.status_code
     except requests.exceptions.HTTPError as e:
-        logger.exception(f"== http error when reading RSS {feed.url}:")
+        logger.exception(f"== http error when reading RSS {feed_url}:")
         status_code = e.response.status_code if e.response is not None else -100
-        response = None
+        return None, status_code
     except requests.exceptions.ConnectionError:
-        logger.exception(f"== connection error when reading RSS {feed.url}")
-        status_code = -20
-        response = None
+        logger.exception(f"== connection error when reading RSS {feed_url}")
+        return None, -20
     except requests.exceptions.Timeout:
-        logger.exception(f"== timeout when reading RSS {feed.url}")
-        status_code = -10
-        response = None
+        logger.exception(f"== timeout when reading RSS {feed_url}")
+        return None, -10
     except requests.exceptions.RequestException:
         logger.exception(
-            f"== generic request exception when reading RSS {feed.url}",
+            f"== generic request exception when reading RSS {feed_url}",
         )
-        status_code = -30
-        response = None
+        return None, -30
     except Exception:  # Catching broader exceptions
-        logger.exception(f"== generic exception when reading RSS {feed.url}")
-        status_code = -40
-        response = None
+        logger.exception(f"== generic exception when reading RSS {feed_url}")
+        return None, -40
+    else:
+        return response, status_code
 
-    if (
-        not response
-    ):  # Covers cases where response is None due to exceptions or initial failure
-        return (retrieved, failed, stored, status_code)
 
-    if response.status_code != HTTP_SUCCESS_CODE:
-        logger.error(f"== url {feed.url} returned error status {response.status_code}")
-        # status_code is already response.status_code from above
-        return (
-            retrieved,
-            failed,
-            stored,
-            status_code,
-        )
-
-    # response is valid and response.status_code is HTTP_SUCCESS_CODE
-
+def _parse_feed_content(feed, response):
+    """Parse feed content and handle special cases."""
     if feed.url[-29:] == "/api/v1/trends/links?limit=20":
         json_data = json.loads(response.text)
         rss = generate_rss(json_data)
     else:
         rss = response.text
 
-    rss_feed = feedparser.parse(rss)
+    return feedparser.parse(rss)
 
-    entries = prune_duplicates(rss_feed["entries"])
+
+def _process_feed_entries(entries, *, verbose=True):
+    """Process, filter and sort feed entries."""
+    # Prune duplicate and already retrieved entries
+    entries = prune_duplicates(entries)
     prune_already_retrieved(entries)
 
     if verbose:
         for entry in entries:
             logger.info(f"== to retrieve: {entry['link']}")
 
+    # Add timestamps to entries
     for entry in entries:
         if entry.get("published_parsed"):
             if entry["published_parsed"] > time.gmtime():
@@ -632,22 +619,58 @@ def _poll_feed(feed):
         else:
             entry["stamp"] = time.strftime(time_format, time.gmtime())
 
-    sorted_entries = sorted(entries, key=lambda entry: entry["stamp"])
+    # Sort entries by timestamp
+    return sorted(entries, key=lambda entry: entry["stamp"])
+
+
+def _retrieve_and_process_entries(sorted_entries, feed, *, verbose=True):
+    """Retrieve and process entries using async."""
     loop = asyncio.new_event_loop()
     results = loop.run_until_complete(
         main(loop, sorted_entries, feed, verbose=verbose),
     )
+
+    retrieved, failed, stored = 0, 0, 0
     for r_item in results:
         retrieved += r_item[0]
         failed += r_item[1]
         stored += r_item[2]
 
-    return (
-        retrieved,
-        failed,
-        stored,
-        status_code,
+    return retrieved, failed, stored
+
+
+def _poll_feed(feed):
+    verbose = True
+
+    # Initialize variables that will be saved in FeedPoller
+    retrieved, failed, stored = 0, 0, 0
+
+    # Fetch feed response with error handling
+    response, status_code = _fetch_feed_response(feed.url)
+
+    # If response is None, return early with error status
+    if not response:
+        return retrieved, failed, stored, status_code
+
+    # Check for HTTP error status code
+    if response.status_code != HTTP_SUCCESS_CODE:
+        logger.error(f"== url {feed.url} returned error status {response.status_code}")
+        return retrieved, failed, stored, status_code
+
+    # Parse feed content
+    rss_feed = _parse_feed_content(feed, response)
+
+    # Process feed entries
+    sorted_entries = _process_feed_entries(rss_feed["entries"], verbose=verbose)
+
+    # Retrieve and process entries
+    retrieved, failed, stored = _retrieve_and_process_entries(
+        sorted_entries,
+        feed,
+        verbose=verbose,
     )
+
+    return retrieved, failed, stored, status_code
 
 
 class Poller:
