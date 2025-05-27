@@ -3,7 +3,7 @@ import { test, expect, Page } from "@playwright/test";
 // Helper function to extract article identifiers (e.g., titles)
 async function getArticleIdentifiers(page: Page, count: number = 5): Promise<string[]> {
   await page.waitForSelector(".wrapper > div", { state: "attached", timeout: 10000 }); // Wait for ArticleCard elements to be potentially rendered
-  
+
   // More robust selector for ArticleCard instances within the .wrapper
   // Assuming ArticleCard renders a root div that gets placed into .wrapper
   const articleCardSelector = ".wrapper > div"; // This might need adjustment if ArticleCard has a specific class like .article-card
@@ -12,7 +12,7 @@ async function getArticleIdentifiers(page: Page, count: number = 5): Promise<str
   await page.waitForSelector(articleCardSelector, { state: "visible", timeout: 15000 });
 
   const articles = await page.locator(articleCardSelector).all();
-  
+
   if (articles.length === 0) {
     console.warn("No article cards found with selector:", articleCardSelector);
     return [];
@@ -144,7 +144,7 @@ test.describe("Authenticated Article View", () => {
 
     const page1ArticlesAfterLoadMore = await getArticleIdentifiers(page, 5);
     console.log("Page 1 articles after load more (first 5):", page1ArticlesAfterLoadMore);
-    
+
     // In the current backend implementation, the initial set of articles (page 1)
     // should NOT change just by loading more articles for page 2.
     // The randomization happens when the initial queryset for the view is prepared.

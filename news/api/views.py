@@ -13,12 +13,17 @@ from django.contrib.postgres.aggregates import ArrayAgg
 from django.contrib.postgres.search import SearchVector
 from django.core.cache import cache
 from django.core.files.storage import FileSystemStorage
+from django.db.models import (  # Added F, Value, ExpressionWrapper, FloatField
+    ExpressionWrapper,
+)
+from django.db.models import F  # Added F, Value, ExpressionWrapper, FloatField
+from django.db.models import FloatField  # Added F, Value, ExpressionWrapper, FloatField
+from django.db.models import Value  # Added F, Value, ExpressionWrapper, FloatField
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.shortcuts import render
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
-from django.db.models import F, Value, ExpressionWrapper, FloatField # Added F, Value, ExpressionWrapper, FloatField
 from django_filters import rest_framework as filters
 from drf_spectacular.utils import extend_schema
 from ebooklib import epub
@@ -235,64 +240,29 @@ class ArticlesView(
     filterset_class = ArticlesFilter
     pagination_class = StandardResultsSetPagination
 
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        
-        # Apply filters
-        # The filterset is applied by the GenericViewSet's list method, 
-        # but we need to apply it here to get the filtered IDs before pagination.
-        # This is a bit tricky as the view's filter_queryset method is called after get_queryset.
-        # We might need to adjust this if direct filter application here is problematic.
-        # For now, let's assume self.filterset_class can be instantiated and used.
-        
-        # Instead of manually applying filters here, we will override filter_queryset
-        # to ensure that randomization happens after filtering but before pagination.
-        # For now, let's just remove the default ordering from the class attribute.
-        # The actual randomization logic will go into the list method or a custom filter_queryset.
-
-        # Let's reconsider. The most straightforward way is to override filter_queryset.
-        # However, the prompt asked to modify get_queryset or list.
-        # Let's try to do it in get_queryset first, then fallback to list/filter_queryset if needed.
-
-        # The issue with get_queryset is that filtering hasn't happened yet.
-        # The view's `filter_queryset` method is called after `get_queryset`.
-        # So, if we randomize in get_queryset, we randomize *before* filtering, which is not ideal.
-
-        # Let's adjust the plan:
-        # 1. Remove order_by("-id") from queryset class attribute (done).
-        # 2. Override the `list` method to perform filtering, then randomization, then pagination.
-        # This ensures filters are applied before randomization.
-        # The cache decorator will apply to this overridden list method.
-
-        return queryset
-
     @method_decorator(cache_page(60 * 5))
     def list(self, request, *args, **kwargs):
-        # Default implementation from mixins.ListModelMixin:
-        # queryset = self.filter_queryset(self.get_queryset())
-        # page = self.paginate_queryset(queryset)
-        # if page is not None:
-        #     serializer = self.get_serializer(page, many=True)
-        #     return self.get_paginated_response(serializer.data)
-        # serializer = self.get_serializer(queryset, many=True)
-        # return Response(serializer.data)
-
         # 1. Get the filtered queryset
-        queryset = self.filter_queryset(self.get_queryset()) # This applies ArticlesFilter
+        queryset = self.filter_queryset(
+            self.get_queryset(),
+        )  # This applies ArticlesFilter
 
         # 2. Define the perturbation expression
         # The goal is a deterministic perturbation of the chronological order (id).
-        # Expression: id - (feed_id % 5) * 200 + (length % 10) * 100
-        # This will make articles from different feeds, or with different lengths,
-        # shift slightly relative to each other around their base chronological position.
+        # This will make articles from different feeds, shift slightly relative to
+        # each other around their base chronological position.
+        # Assuming 200 feeds and 2000 articles/day, on average 10 articles per feed.
         perturbation_expression = ExpressionWrapper(
-            F('id') - (F('feed_id') % Value(5)) * Value(200) + (F('length') % Value(10)) * Value(100),
-            output_field=FloatField() # Use FloatField to handle potential non-integer results from modulo/multiplication
+            F("id") - F("feed_id") * Value(20) + (F("length") % Value(10)) * Value(4),
+            output_field=FloatField(),  # Use FloatField to handle potential non-integer results from the expression
         )
 
         # 3. Annotate the queryset with the perturbed order and apply ordering
-        queryset = queryset.annotate(perturbed_order=perturbation_expression).order_by('-perturbed_order')
-        
+        queryset = queryset.annotate(perturbed_order=perturbation_expression).order_by(
+            "-perturbed_order",
+            "-id",
+        )
+
         # 4. Paginate the ordered queryset
         page = self.paginate_queryset(queryset)
         if page is not None:
