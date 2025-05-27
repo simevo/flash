@@ -64,7 +64,17 @@ To run the tests, check your test coverage, and generate an HTML coverage report
 
 ### Running tests with pytest
 
-    $ pytest
+```sh
+docker-compose -f docker-compose.pytest.yml down -v
+docker-compose -f docker-compose.pytest.yml up postgres
+# run specific test:
+docker-compose -f docker-compose.pytest.yml run --rm django /usr/local/bin/pytest --migrations news/tests/test_api_views.py::ArticleAPITests::test_articles_list_caching_and_content
+```
+
+Useful additional `pytest` options:
+
+- `-vvv`: maxes out averbosity
+- `--capture=no`: disables capturing of stdout/stderr
 
 ### Running e2e tests with Playwright
 

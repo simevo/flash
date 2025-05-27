@@ -10,8 +10,32 @@ from rest_framework.test import APITestCase
 
 from flash.users.models import User
 from news.models import Articles
+from news.models import ArticlesData
 from news.models import Feeds
 from news.tasks import poll as poll_task
+
+
+def create_articles(feed, n):
+    articles = []
+    for i in range(n):
+        article = Articles.objects.create(
+            feed=feed,
+            title=f"Article F1 {i+1}",
+            content_original=f"Content F1 {i+1}",
+            url=f"http://example.com/article_f1_{i+1}",
+            stamp=timezone.now() - timezone.timedelta(hours=410 - i),
+        )
+        article_data = ArticlesData.objects.get(id=article)
+        # ArticlesData is created by the trogger; tweak data:
+        # Length values from 100 to 1000 + 200*20 = 5000, varying by 20
+        article_data.views = i * 10  # Dummy data
+        article_data.rating = (i % 5) + 1  # Dummy data
+        article_data.to_reads = 0  # Dummy data
+        article_data.length = 1000 + (i * 20)  # Varied length
+        article_data.save()
+        articles.append(article)
+
+    return articles
 
 
 class ArticleAPITests(APITestCase):
@@ -22,62 +46,12 @@ class ArticleAPITests(APITestCase):
             password="testpassword",
             email="test@example.com",
         )
-        cls.feed1 = Feeds.objects.create(
-            title="Test Feed 1",
-            url="http://example.com/rss1",
-            active=True,
-        )
-        cls.feed2 = Feeds.objects.create(
-            title="Test Feed 2",
-            url="http://example.com/rss2",
-            active=True,
-        )
+        cls.feed1 = Feeds.objects.get(pk=1)
+        cls.feed2 = Feeds.objects.get(pk=2)
 
-        cls.articles_feed1 = []
-        cls.articles_feed2 = []
-
-        # Need to import ArticlesData
-        from news.models import ArticlesData
-
-        # StandardResultsSetPagination.page_size is 200. Create 410 articles for feed1.
-        for i in range(410):
-            article = Articles.objects.create(
-                feed=cls.feed1,
-                title=f"Article F1 {i+1}",
-                content_original=f"Content F1 {i+1}",
-                url=f"http://example.com/article_f1_{i+1}",
-                stamp=timezone.now() - timezone.timedelta(days=410 - i),
-            )
-            # Create corresponding ArticlesData with varied length
-            # Length values from 100 to 100 + 409*10 = 4190, varying by 10
-            ArticlesData.objects.create(
-                id=article,  # Link to the article instance
-                views=i * 10,  # Dummy data
-                rating=(i % 5) + 1,  # Dummy data
-                to_reads=0,  # Dummy data
-                length=100 + (i * 10),  # Varied length
-            )
-            cls.articles_feed1.append(article)
-
-        # Create 10 articles for feed2 for filtering tests
-        for i in range(10):
-            article = Articles.objects.create(
-                feed=cls.feed2,
-                title=f"Article F2 {i+1}",
-                content_original=f"Content F2 {i+1}",
-                url=f"http://example.com/article_f2_{i+1}",
-                stamp=timezone.now() - timezone.timedelta(days=10 - i),
-            )
-            # Create corresponding ArticlesData with varied length
-            # Length values from 200 to 200 + 9*5 = 245, varying by 5
-            ArticlesData.objects.create(
-                id=article,
-                views=i * 5,
-                rating=(i % 3) + 1,
-                to_reads=0,
-                length=200 + (i * 5),  # Varied length
-            )
-            cls.articles_feed2.append(article)
+        # Create 100 articles for each feed.
+        cls.articles_feed1 = create_articles(cls.feed1, 100)
+        cls.articles_feed2 = create_articles(cls.feed2, 100)
 
     def setUp(self):
         self.client.login(username="testuser", password="testpassword")
@@ -105,8 +79,8 @@ class ArticleAPITests(APITestCase):
             response1.content == response2.content
         ), "Content of first and second (cached) response should be identical."
         assert (
-            len(response1.data["results"]) == 2
-        ), "Initial number of articles should be 2."
+            len(response1.data["results"]) == 200
+        ), "Initial number of articles should be 200."
 
     @mock.patch(
         "news.tasks.poller.Poller",
@@ -116,10 +90,7 @@ class ArticleAPITests(APITestCase):
         Test cache invalidation: new articles appear in the list after polling.
         Assumes poll_task clears the cache and new data is available.
         """
-        try:
-            url = reverse("api:articles-list")
-        except NoReverseMatch:
-            url = reverse("api:articlescombined-list")
+        url = reverse("api:articles-list")
 
         # Mock the poller's behavior.
         mock_poller_instance = mock_poller_class.return_value
@@ -161,10 +132,7 @@ class ArticleAPITests(APITestCase):
         Test that the articles list endpoint returns articles in a stable,
         perturbed chronological order.
         """
-        try:
-            url = reverse("api:articles-list")
-        except NoReverseMatch:
-            url = reverse("api:articlescombined-list")
+        url = reverse("api:articles-list")
 
         # Fetch the article list twice
         response1 = self.client.get(url)
@@ -194,10 +162,7 @@ class ArticleAPITests(APITestCase):
         """
         from news.models import ArticlesCombined  # For direct model query
 
-        try:
-            url = reverse("api:articles-list")
-        except NoReverseMatch:
-            url = reverse("api:articlescombined-list")
+        url = reverse("api:articles-list")
 
         response_perturbed = self.client.get(url)
         assert response_perturbed.status_code == 200
@@ -263,14 +228,11 @@ class ArticleAPITests(APITestCase):
         """
         Test filtering works correctly with perturbed chronological article order.
         """
-        try:
-            url = reverse("api:articles-list")
-        except NoReverseMatch:
-            url = reverse("api:articlescombined-list")
+        url = reverse("api:articles-list")
 
-        # Filter by feed2, which has 10 articles
+        # Filter by feed2, which has 100 articles
         feed2_id = self.feed2.id
-        num_feed2_articles = len(self.articles_feed2)  # Should be 10
+        num_feed2_articles = len(self.articles_feed2)
 
         response1 = self.client.get(url, {"feed_id": feed2_id})
         assert response1.status_code == 200
@@ -280,4 +242,4 @@ class ArticleAPITests(APITestCase):
 
         for article_data in response1.data["results"]:
             # All articles should belong to the filtered feed
-            assert article_data["feed"]["id"] == feed2_id
+            assert article_data["feed"] == feed2_id

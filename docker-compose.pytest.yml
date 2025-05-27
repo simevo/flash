@@ -1,0 +1,60 @@
+---
+volumes:
+  flash_local_postgres_test_data: {}
+  flash_local_redis_data: {}
+  flash_local_django_media: {}
+
+services:
+  django: &django
+    build:
+      context: .
+      dockerfile: ./compose/local/django/Dockerfile
+    image: flash_local_django
+    container_name: flash_local_django
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - .:/app:z
+      - ./.cache/pre-commit:/root/.cache/pre-commit:z
+      - ./.cache/huggingface:/root/.cache/huggingface:z
+      - flash_local_django_media:/app/flash/media
+    env_file:
+      - ./.envs/.local/.django
+      - ./.envs/.local/.postgres
+    ports:
+      - "8000:8000"
+    command: /start
+
+  redis:
+    image: docker.io/redis:6
+    container_name: flash_local_redis
+    volumes:
+      - flash_local_redis_data:/data
+
+  postgres:
+    build:
+      context: .
+      dockerfile: ./compose/production/postgres/Dockerfile
+    container_name: flash_local_postgres
+    restart: unless-stopped
+    env_file:
+      - ./.envs/.local/.postgres
+    environment:
+      POSTGRES_DB: test_flash
+    volumes:
+      - flash_local_postgres_test_data:/var/lib/postgresql/data
+      - ./sql:/docker-entrypoint-initdb.d
+    ports:
+      - "5433:5432"
+
+  adminer:
+    image: adminer
+    container_name: flash_local_adminer
+    restart: always
+    ports:
+      - 8090:8080
+    links:
+      - postgres
+    depends_on:
+      - postgres
