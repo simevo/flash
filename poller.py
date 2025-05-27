@@ -704,6 +704,74 @@ class Poller:
             None,
         )
 
+    def _should_skip_polling(self):
+        """Check if polling should be skipped."""
+        if not self.feed.active:
+            logger.info(f"== skipping feed {self.feed.id} because non-active")
+            return True
+
+        if self.feed.frequency:
+            skip_reason = frequency_skip(self.feed.frequency, self.feed.id)
+            if skip_reason:
+                logger.info(skip_reason)
+                return True
+
+        return False
+
+    def _handle_script_polling(self, script_path):
+        """Handle script-based polling and return polling results."""
+        feed_polling_retrieved_count = 0
+        feed_polling_failed_count = 0
+        feed_polling_stored_count = 0
+        http_status_code = 0
+
+        logger.info(f"== using script {script_path}")
+        results, script_status_indicator = self.invoke(script_path)
+
+        if script_status_indicator == "timeout":
+            http_status_code = -1  # Script timeout
+            # counts remain 0
+        elif script_status_indicator == "error":
+            # self.p should have been set in invoke
+            http_status_code = (
+                self.p.returncode if self.p and self.p.returncode is not None else -2
+            )
+            # counts remain 0
+        elif results and len(results) == 3:  # noqa: PLR2004
+            try:
+                feed_polling_retrieved_count = int(results[0])
+                feed_polling_failed_count = int(results[1])
+                feed_polling_stored_count = int(results[2])
+                if self.p and self.p.returncode == 0:
+                    http_status_code = 200
+                elif self.p and self.p.returncode is not None:
+                    http_status_code = self.p.returncode
+                else:  # Should not happen if invoke logic is correct
+                    http_status_code = -2  # Generic script error
+            except ValueError:
+                logger.exception(
+                    f"== [{script_path}] output not in integer format: {results}",
+                )
+                http_status_code = -3  # Script output format error
+                # counts remain 0 or partially set if error in later int()
+                feed_polling_retrieved_count = 0  # Reset to be safe
+                feed_polling_failed_count = 0
+                feed_polling_stored_count = 0
+        else:
+            logger.error(
+                f"== [{script_path}] did not return expected output: {results}",
+            )
+            http_status_code = (
+                self.p.returncode if self.p and self.p.returncode is not None else -2
+            )  # Generic script error or actual code
+
+        return (
+            feed_polling_retrieved_count,
+            feed_polling_failed_count,
+            feed_polling_stored_count,
+            http_status_code,
+        )
+
     def poll(self):
         poll_start_time = datetime.datetime.now(datetime.UTC)
         http_status_code = 0
@@ -712,63 +780,21 @@ class Poller:
         feed_polling_failed_count = 0
         feed_polling_stored_count = 0
 
-        if not self.feed.active:
-            logger.info(f"== skipping feed {self.feed.id} because non-active")
+        # Check if polling should be skipped
+        if self._should_skip_polling():
             return
-
-        if self.feed.frequency:
-            skip_reason = frequency_skip(self.feed.frequency, self.feed.id)
-            if skip_reason:
-                logger.info(skip_reason)
-                return
 
         logger.info(f"== polling feed {self.feed.id}")
 
+        # Handle either script-based or direct feed polling
         if self.feed.script:
             script_path = self.feed.script.replace("/srv/calo.news/py/", "/app/news/")
-            logger.info(f"== using script {script_path}")
-            results, script_status_indicator = self.invoke(script_path)
-
-            if script_status_indicator == "timeout":
-                http_status_code = -1  # Script timeout
-                # counts remain 0
-            elif script_status_indicator == "error":
-                # self.p should have been set in invoke
-                http_status_code = (
-                    self.p.returncode
-                    if self.p and self.p.returncode is not None
-                    else -2
-                )
-                # counts remain 0
-            elif results and len(results) == 3:  # noqa: PLR2004
-                try:
-                    feed_polling_retrieved_count = int(results[0])
-                    feed_polling_failed_count = int(results[1])
-                    feed_polling_stored_count = int(results[2])
-                    if self.p and self.p.returncode == 0:
-                        http_status_code = 200
-                    elif self.p and self.p.returncode is not None:
-                        http_status_code = self.p.returncode
-                    else:  # Should not happen if invoke logic is correct
-                        http_status_code = -2  # Generic script error
-                except ValueError:
-                    logger.exception(
-                        f"== [{script_path}] output not in integer format: {results}",
-                    )
-                    http_status_code = -3  # Script output format error
-                    # counts remain 0 or partially set if error in later int()
-                    feed_polling_retrieved_count = 0  # Reset to be safe
-                    feed_polling_failed_count = 0
-                    feed_polling_stored_count = 0
-            else:
-                logger.error(
-                    f"== [{script_path}] did not return expected output: {results}",
-                )
-                http_status_code = (
-                    self.p.returncode
-                    if self.p and self.p.returncode is not None
-                    else -2
-                )  # Generic script error or actual code
+            (
+                feed_polling_retrieved_count,
+                feed_polling_failed_count,
+                feed_polling_stored_count,
+                http_status_code,
+            ) = self._handle_script_polling(script_path)
         else:
             retrieved, failed, stored, status_from_poll = _poll_feed(self.feed)
             feed_polling_retrieved_count = retrieved
@@ -776,12 +802,14 @@ class Poller:
             feed_polling_stored_count = stored
             http_status_code = status_from_poll
 
+        poll_end_time = datetime.datetime.now(datetime.UTC)
+
+        # Update database with polling results
+
         # Update the main Poller instance cumulative counts
         self.retrieved += feed_polling_retrieved_count
         self.failed += feed_polling_failed_count
         self.stored += feed_polling_stored_count
-
-        poll_end_time = datetime.datetime.now(datetime.UTC)
 
         FeedPolling.objects.create(
             feed=self.feed,
