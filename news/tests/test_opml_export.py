@@ -73,21 +73,33 @@ class OPMLExportTests(APITestCase):
         # Check attributes of each outline (order might not be guaranteed,
         # so check specific attributes)
         expected_feeds_data = [
-            {"title": "Feed 1", "xmlUrl": "http://example.com/feed1"},
-            {"title": "Feed 2", "xmlUrl": "http://example.com/feed2"},
             {
                 "title": "AAA - articoli segnalati",
                 "xmlUrl": "https://notizie.calomelano.it/api/feeds/0/rss",
             },
             {
+                "title": "calomelano",
+                "xmlUrl": "http://calomelano.it/?feed=rss2",
+            },
+            {
+                "title": "Ansa Ultima Ora",
+                "xmlUrl": "http://www.ansa.it/sito/notizie/topnews/topnews_rss.xml",
+            },
+            {
                 "title": "Ultim'ora Televideo",
                 "xmlUrl": "http://www.servizitelevideo.rai.it/televideo/pub/rss101.xml",
             },
-            {"title": "Il Post", "xmlUrl": "https://www.ilpost.it/feed"},
-            {"title": "UNICORN RIOT", "xmlUrl": "https://www.unicornriot.ninja/feed/"},
             {
-                "title": "Al Jazeera",
-                "xmlUrl": "http://www.aljazeera.com/xml/rss/all.xml",
+                "title": "Piemonte Parchi",
+                "xmlUrl": "https://www.piemonteparchi.it/cms/index.php/feed-rss-listcat?format=feed",
+            },
+            {
+                "title": "Feed 1",
+                "xmlUrl": "http://example.com/feed1",
+            },
+            {
+                "title": "Feed 2",
+                "xmlUrl": "http://example.com/feed2",
             },
         ]
 

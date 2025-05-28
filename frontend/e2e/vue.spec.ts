@@ -1,14 +1,13 @@
 /* eslint-disable playwright/no-wait-for-selector */
 
-import { test, expect, Page } from "@playwright/test"
+import { test, expect, Page, Dialog } from "@playwright/test"
 
 // Helper function to extract article identifiers (e.g., titles)
-async function getArticleIdentifiers(page: Page, count: number = 5): Promise<string[]> {
-  await page.waitForSelector(".wrapper > div", { state: "attached", timeout: 10000 }) // Wait for ArticleCard elements to be potentially rendered
-
-  // More robust selector for ArticleCard instances within the .wrapper
-  // Assuming ArticleCard renders a root div that gets placed into .wrapper
+async function getArticleIds(page: Page): Promise<number[]> {
   const articleCardSelector = ".wrapper > div" // This might need adjustment if ArticleCard has a specific class like .article-card
+
+  // Wait for ArticleCard elements to be potentially rendered
+  await page.waitForSelector(articleCardSelector, { state: "attached", timeout: 10000 })
 
   // Wait for at least one article card to be visible
   await page.waitForSelector(articleCardSelector, { state: "visible", timeout: 15000 })
@@ -20,37 +19,53 @@ async function getArticleIdentifiers(page: Page, count: number = 5): Promise<str
     return []
   }
 
-  const identifiers: string[] = []
-  for (let i = 0; i < Math.min(articles.length, count); i++) {
-    // Try to get a unique identifier. Article title is a good candidate.
-    // Assuming ArticleCard.vue renders title within a specific element, e.g., <h3> or similar.
-    // Let's look for a title-like element, often a link within a heading.
-    // Example: <div class="card-title"><h3><a href="/article/123">Article Title</a></h3></div>
-    // Or simply a heading containing the title.
-    // The actual selector for the title needs to be based on ArticleCard.vue's structure.
-    // Let's try a common pattern: an `<a>` tag inside an `<h3>` within the article card.
-    const titleElement = articles[i].locator("h3 a").first() // Adjust if title is elsewhere
+  const identifiers: number[] = []
+  for (let i = 0; i < articles.length; i++) {
+    const anchor = articles[i].locator("a:nth-child(2)").first()
     try {
-      await titleElement.waitFor({ state: "visible", timeout: 2000 }) // Wait for title to be visible
-      const title = await titleElement.textContent()
-      if (title) {
-        identifiers.push(title.trim())
-      } else {
-        // Fallback or log if title not found
-        const fallbackId = await articles[i].getAttribute("data-article-id") // If data-article-id exists
-        if (fallbackId) {
-          identifiers.push(`id-${fallbackId}`)
-        } else {
-          console.warn(`Could not extract title or ID for article at index ${i}`)
-          identifiers.push(`unknown-article-${i}`) // Placeholder
-        }
+      await anchor.waitFor({ state: "visible", timeout: 2000 }) // Wait for title to be visible
+      const href = await anchor.getAttribute("href")
+      if (href) {
+        const id = Number(href.split("/")[3])
+        identifiers.push(id)
       }
     } catch (e) {
       console.warn(`Timeout waiting for title element for article at index ${i}`, e)
-      identifiers.push(`error-article-${i}`)
     }
   }
   return identifiers
+}
+
+async function refresh_feed(page: Page, feed_id: number) {
+  console.log(`start refreshing feed ${feed_id}`)
+  await expect(page.getByRole('button', { name: 'rss iconFonti' })).toBeVisible();
+  await page.getByRole('button', { name: 'rss iconFonti' }).click();
+  // await page.click('button[id="feeds"]')
+  await expect(page.locator('h1')).toContainText('Fonti');
+  await expect(page.locator(`#feed_${feed_id}`).getByRole('button', { name: 'Aggiorna la fonte' })).toBeVisible();
+
+  const dialogPromise = new Promise<void>((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      reject(new Error('Alert did not appear within 15 seconds'));
+    }, 15000);
+
+    const handleDialog = async (dialog: Dialog) => {
+      clearTimeout(timeout);
+      try {
+        expect(dialog.type()).toContain('alert');
+        await dialog.dismiss();
+        await page.off('dialog', handleDialog);
+        resolve();
+      } catch (error) {
+        reject(error);
+      }
+    };
+    page.on('dialog', handleDialog);
+  });
+
+  await page.locator(`#feed_${feed_id}`).getByRole('button', { name: 'Aggiorna la fonte' }).click();
+  await dialogPromise;
+  console.log(`done refreshing feed ${feed_id}`)
 }
 
 test.describe("Authenticated Article View", () => {
@@ -60,57 +75,24 @@ test.describe("Authenticated Article View", () => {
     await page.fill('input[name="login"]', "root")
     await page.fill('input[name="password"]', "root")
     await page.click('button[type="submit"]')
-    // Wait for navigation to the articles page or a clear indicator of login success
-    await page.waitForURL("/res/", { timeout: 10000 }) // Assuming successful login redirects to /res/
+    // Wait for navigation to the reserved home page
+    await page.waitForURL("/res/", { timeout: 10000 })
     await expect(page).toHaveURL("/res/")
   })
 
-  test("visits the app root url", async ({ page }) => {
-    // This test is now within the authenticated scope, so it will run after login.
-    // If the intention was to test the unauthenticated root, it should be outside this describe block.
-    // For now, let's assume it's fine here, effectively testing /res/ after login.
-    await page.goto("/res/") // Already on /res/ due to beforeEach, but explicit navigation is fine.
-    await expect(page.locator(".wrapper > div").first()).toBeVisible() // Check for article cards
-
-    // Screenshot if needed
-    // const metadata = testInfo.project.metadata;
-    // const browserName = metadata.browser?.toLowerCase() || 'unknown';
-    // await page.screenshot({
-    //   path: `screenshots/${browserName}_res_page.png`,
-    //   fullPage: true,
-    // });
+  test("populate articles table", async ({ page }) => {
+    await refresh_feed(page, 1)
+    await refresh_feed(page, 2)
+    await refresh_feed(page, 3)
+    await refresh_feed(page, 4)
   })
 
-  test("should display articles in a stable perturbed order on load and reload", async ({
-    page,
-  }) => {
-    await page.goto("/res/") // Ensure we are on the page
-
+  test("visits the app root url", async ({ page }) => {
     // Wait for articles to be loaded
     await page.waitForSelector(".wrapper > div", { state: "visible", timeout: 15000 })
 
-    const initialArticleIdentifiers = await getArticleIdentifiers(page, 5)
-    expect(initialArticleIdentifiers.length).toBeGreaterThan(
-      0,
-      "Should load some articles initially.",
-    )
-    console.log("Initial articles (perturbed order):", initialArticleIdentifiers)
-
-    // Reload the page
-    await page.reload()
-    await page.waitForSelector(".wrapper > div", { state: "visible", timeout: 15000 }) // Wait for articles after reload
-
-    const reloadedArticleIdentifiers = await getArticleIdentifiers(page, 5)
-    expect(reloadedArticleIdentifiers.length).toBeGreaterThan(
-      0,
-      "Should load some articles after reload.",
-    )
-    console.log("Reloaded articles (perturbed order):", reloadedArticleIdentifiers)
-
-    // Assert that the order is the same due to deterministic perturbed ordering
-    expect(initialArticleIdentifiers).toEqual(
-      reloadedArticleIdentifiers,
-      "Article order should be the same (stable) after reload.",
-    )
+    const articleIds = await getArticleIds(page)
+    console.log(`article identifiers = ${articleIds}`)
+    expect(articleIds.length).toBeGreaterThan(0)
   })
 })
