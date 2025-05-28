@@ -28,28 +28,12 @@
     </h1>
     <p>
       Personalizza il tuo newsfeed! Queste impostazioni controllano quali articoli verranno mostrati
-      nel
-      <img
-        class="icon"
-        src="~bootstrap-icons/icons/robot.svg"
-        alt="rss icon"
-        width="18"
-        height="18"
-        title="Lista automatica"
-      />
-      <b> newsfeed</b> alla pagina
-      <RouterLink to="/lists"
-        ><img
-          class="icon me-2"
-          src="~bootstrap-icons/icons/heart-fill.svg"
-          alt="filled heart icon"
-          width="18"
-          height="18"
-        /><b>Salvati</b></RouterLink
-      >, in che ordine e per quanto tempo rimarranno visibili.
+      nel tab <b>per te</b> della <RouterLink to="/">homepage</RouterLink>, in che ordine e per
+      quanto tempo rimarranno visibili.
     </p>
     <p class="text-muted">
-      Nota: il newsfeed viene aggiornato ogni ora circa quindi c'è un ritardo nell'aggiornamento!
+      Nota: il tab "per te" viene aggiornato ogni ora circa quindi c'è un ritardo
+      nell'aggiornamento!
     </p>
     <ul class="nav nav-tabs" id="myTab" role="tablist">
       <li class="nav-item" role="presentation">

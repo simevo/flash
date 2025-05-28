@@ -70,23 +70,6 @@ function logout() {
           <li class="nav-item">
             <RouterLink
               class="btn btn-primary nav-link me-2"
-              title="Cronologia degli articoli già letti da altri e/o da te"
-              role="button"
-              type="button"
-              to="/read"
-            >
-              <img
-                class="inverted-icon icon me-2"
-                src="~bootstrap-icons/icons/eyeglasses.svg"
-                alt="eyeglasses icon"
-                width="18"
-                height="18"
-              />Letti
-            </RouterLink>
-          </li>
-          <li class="nav-item">
-            <RouterLink
-              class="btn btn-primary nav-link me-2"
               title="Segnala un articolo"
               role="button"
               type="button"

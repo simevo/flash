@@ -107,7 +107,7 @@ const filters_summary = computed(() => {
       summary += ` - per lunghezza: [${filters.length}]`
     }
     if (filters.feed_ids.length > 0 && filters.feed_ids.indexOf(-1) === -1) {
-      summary += ` - per fonti: [${filters.feed_ids.map(id => feed_dict.value[id]?.title || id)}]`
+      summary += ` - per fonti: [${filters.feed_ids.map((id) => feed_dict.value[id]?.title || id)}]`
     }
     return summary
   }
@@ -163,7 +163,7 @@ async function fetchAllNewsArticles() {
     articles.value = data.results
     next.value = data.next ? data.next : ""
     initialDataLoaded.value.allNews = true
-    count_fetch.value -=1
+    count_fetch.value -= 1
   }
 }
 
@@ -183,7 +183,7 @@ async function fetchMoreAllNewsArticles() {
 }
 
 async function fetchReadArticles() {
-  count_fetch.value +=1
+  count_fetch.value += 1
   const response = await fetch_wrapper(`../../api/articles/?read=true`)
   if (response.status == 403) {
     document.location = "/accounts/"
@@ -191,16 +191,16 @@ async function fetchReadArticles() {
     const data: PaginatedArticleReadList = await response.json()
     readArticles.value = data.results
     initialDataLoaded.value.read = true
-    count_fetch.value -=1
+    count_fetch.value -= 1
   }
 }
 
 async function fetchForYouData() {
-  count_fetch.value +=1
+  count_fetch.value += 1
   const listsResponse = await fetch_wrapper(`../../api/lists/me/`)
   if (listsResponse.status == 403) {
     document.location = "/accounts/"
-    count_fetch.value -=1
+    count_fetch.value -= 1
     return
   }
   const listsData: UserArticleListsSerializerFull[] = await listsResponse.json()
@@ -221,11 +221,11 @@ async function fetchForYouData() {
     forYouArticles.value = [] // Clear if no newsfeed or it's empty
   }
   initialDataLoaded.value.forYou = true
-  count_fetch.value -=1
+  count_fetch.value -= 1
 }
 
 async function fetchFeeds() {
-  count_fetch.value +=1
+  count_fetch.value += 1
   const response = await fetch_wrapper(`../../api/feeds/simple/`)
   if (response.status == 403) {
     document.location = "/accounts/"
@@ -233,7 +233,7 @@ async function fetchFeeds() {
     const data: FeedSerializerSimple[] = await response.json()
     feeds.value = data
   }
-  count_fetch.value -=1
+  count_fetch.value -= 1
 }
 
 const feed_dict = computed(() => {
@@ -248,7 +248,7 @@ async function activateTab(tabName: string) {
   activeTab.value = tabName
   // Fetch feeds if not already fetched. They are needed by all tabs for feed_dict.
   if (feeds.value.length === 0) {
-      await fetchFeeds() 
+    await fetchFeeds()
   }
 
   // Fetch specific tab data if not already loaded
@@ -285,7 +285,7 @@ watch(
   () => filters.what,
   async (newWhat, oldWhat) => {
     console.log(`HomeView what watch for 'All News', newWhat = [${newWhat}] oldWhat = [${oldWhat}]`)
-    if (newWhat !== oldWhat && activeTab.value === 'all-news') {
+    if (newWhat !== oldWhat && activeTab.value === "all-news") {
       articles.value = [] // Clear current "All News" articles
       // count_fetch is handled by fetchAllNewsArticles itself
       await fetchAllNewsArticles()
@@ -303,7 +303,7 @@ watch(
     data-bs-toggle="offcanvas"
     data-bs-target="#offcanvasFilters"
     type="button"
-    style="position: fixed; top: 5rem; left: 0.5rem; z-index: 1030;"
+    style="position: fixed; top: 5rem; left: 95vw; z-index: 1030;"
   >
     <img
       v-if="not_filtering"
@@ -338,7 +338,7 @@ watch(
           :aria-selected="activeTab === 'all-news'"
           @click="activateTab('all-news')"
         >
-          All News
+          Tutti
         </button>
       </li>
       <li class="nav-item" role="presentation">
@@ -354,7 +354,7 @@ watch(
           :aria-selected="activeTab === 'read'"
           @click="activateTab('read')"
         >
-          Read
+          Letti
         </button>
       </li>
       <li class="nav-item" role="presentation">
@@ -370,7 +370,7 @@ watch(
           :aria-selected="activeTab === 'for-you'"
           @click="activateTab('for-you')"
         >
-          For You
+          Per te
         </button>
       </li>
     </ul>
@@ -385,11 +385,14 @@ watch(
         aria-labelledby="all-news-tab"
         tabindex="0"
       >
-        <div v-if="count_fetch == 0 && initialDataLoaded.allNews">
+        <p>
+          Gli articoli più recenti.
+        </p>
+        <div v-if="count_fetch <= 0 && initialDataLoaded.allNews">
           <div class="row my-3" v-if="filtered_articles.length == 0">
             <div class="col-md-12">
               <div class="alert alert-warning text-center" role="alert">
-                Non ci sono articoli da visualizzare per "All News".
+                Non ci sono articoli da visualizzare qui.
                 <span v-if="!not_filtering"
                   >Forse i tuoi criteri di ricerca sono troppo restrittivi? Controlla il
                   <b>bottone filtro articoli</b>
@@ -400,7 +403,7 @@ watch(
                     width="18"
                     height="18"
                   />
-                  a sinistra!</span
+                  a destra!</span
                 >
               </div>
             </div>
@@ -432,17 +435,21 @@ watch(
                 :disabled="fetching"
                 v-if="next != ''"
               >
-                Carica altri articoli (All News)
+                Carica altri articoli (tutti)
               </button>
-              <p v-else>Fine (All News).</p>
+              <p v-else>Fine (tutti)).</p>
             </div>
           </div>
         </div>
         <div class="container my-3" v-else-if="!initialDataLoaded.allNews && count_fetch > 0">
           <div class="row">
             <div class="text-center col-md-8 offset-md-2">
-              <h1 class="mb-3" v-if="!not_filtering && activeTab === 'all-news'">{{ filters_summary }}...</h1>
-              <h1 class="mb-3" v-else-if="activeTab === 'all-news'">Tutti gli articoli in ordine cronologico ...</h1>
+              <h1 class="mb-3" v-if="!not_filtering && activeTab === 'all-news'">
+                {{ filters_summary }}...
+              </h1>
+              <h1 class="mb-3" v-else-if="activeTab === 'all-news'">
+                Tutti gli articoli in ordine cronologico ...
+              </h1>
               <div class="spinner-border text-primary" role="status">
                 <span class="visually-hidden">Loading...</span>
               </div>
@@ -460,7 +467,10 @@ watch(
         aria-labelledby="read-tab"
         tabindex="0"
       >
-        <div v-if="count_fetch == 0 && initialDataLoaded.read">
+        <div v-if="count_fetch <= 0 && initialDataLoaded.read">
+          <p>
+            Gli articoli più recenti già letti da altri e/o da te
+          </p>
           <div class="row my-3" v-if="readArticles.length == 0">
             <div class="col-md-12">
               <div class="alert alert-warning text-center" role="alert">
@@ -470,7 +480,6 @@ watch(
           </div>
           <div class="row my-3" v-else>
             <div class="col-md-12">
-              <h1 class="text-center mb-3">Articoli Letti</h1>
               <div class="wrapper">
                 <ArticleCard
                   v-for="article in readArticles"
@@ -484,15 +493,18 @@ watch(
             </div>
           </div>
         </div>
-        <div class="container my-3" v-else-if="!initialDataLoaded.read && count_fetch > 0 && activeTab === 'read'">
-            <div class="row">
-                <div class="text-center col-md-8 offset-md-2">
-                    <h1 class="mb-3">Articoli letti...</h1>
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
-                </div>
+        <div
+          class="container my-3"
+          v-else-if="!initialDataLoaded.read && count_fetch > 0 && activeTab === 'read'"
+        >
+          <div class="row">
+            <div class="text-center col-md-8 offset-md-2">
+              <h1 class="mb-3">Articoli letti...</h1>
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
             </div>
+          </div>
         </div>
       </div>
 
@@ -505,18 +517,21 @@ watch(
         aria-labelledby="for-you-tab"
         tabindex="0"
       >
-        <div v-if="count_fetch == 0 && initialDataLoaded.forYou">
+        <div v-if="count_fetch <= 0 && initialDataLoaded.forYou">
           <div class="row my-3" v-if="forYouArticles.length == 0">
             <div class="col-md-12">
               <div class="alert alert-warning text-center" role="alert">
-                Non ci sono articoli "For You" (dalla lista "newsfeed") da visualizzare.
-                Assicurati di avere una lista chiamata "newsfeed" con articoli.
+                Non ci sono articoli per te da visualizzare. Assicurati
+                di avere una lista chiamata "newsfeed" con articoli.
               </div>
             </div>
           </div>
           <div class="row my-3" v-else>
             <div class="col-md-12">
-              <h1 class="text-center mb-3">Articoli "For You" (Newsfeed)</h1>
+              <p>
+                Personalizza questa lista automatica scegliendo le parole (prioritarie o vietate) e le lingue preferite nella
+                <RouterLink to="/settings">pagina "Impostazioni"</RouterLink>.
+              </p>
               <div class="wrapper">
                 <ArticleCard
                   v-for="article in forYouArticles"
@@ -530,15 +545,18 @@ watch(
             </div>
           </div>
         </div>
-        <div class="container my-3" v-else-if="!initialDataLoaded.forYou && count_fetch > 0 && activeTab === 'for-you'">
-            <div class="row">
-                <div class="text-center col-md-8 offset-md-2">
-                    <h1 class="mb-3">Articoli "For You"...</h1>
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
-                </div>
+        <div
+          class="container my-3"
+          v-else-if="!initialDataLoaded.forYou && count_fetch > 0 && activeTab === 'for-you'"
+        >
+          <div class="row">
+            <div class="text-center col-md-8 offset-md-2">
+              <h1 class="mb-3">Articoli "For You"...</h1>
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
             </div>
+          </div>
         </div>
       </div>
     </div>
@@ -547,12 +565,12 @@ watch(
   <div
     v-if="activeTab === 'all-news'"
     id="offcanvasFilters"
-    class="offcanvas offcanvas-start"
+    class="offcanvas offcanvas-end"
     tabindex="-1"
     aria-labelledby="offcanvasFiltersLabel"
   >
     <div class="offcanvas-header">
-      <h5 id="offcanvasFiltersLabel" class="offcanvas-title">Filtra gli articoli (All News)</h5>
+      <h5 id="offcanvasFiltersLabel" class="offcanvas-title">Filtra tutti gli articoli)</h5>
       <button
         type="button"
         class="btn-close"
@@ -571,10 +589,10 @@ watch(
         @clear="filterActions.clear"
         @toggle_all_feeds="filterActions.toggle_all_feeds"
         @toggle_feed="filterActions.toggle_feed"
-        @update_what="(value) => filters.what = value"
-        @update_language="(value) => filters.language = value"
-        @update_when="(value) => filters.when = value"
-        @update_length="(value) => filters.length = value"
+        @update_what="(value) => (filters.what = value)"
+        @update_language="(value) => (filters.language = value)"
+        @update_when="(value) => (filters.when = value)"
+        @update_length="(value) => (filters.length = value)"
       />
     </div>
   </div>
