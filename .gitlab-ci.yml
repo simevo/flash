@@ -190,14 +190,6 @@ build-docker-image-postgres:
     REPO: $CI_REGISTRY_IMAGE/postgres
     CONTEXT: .
 
-lint-python:
-  stage: test
-  image:
-    name: $CI_REGISTRY_IMAGE/backend-test:$TAG
-    entrypoint: [""]
-  script:
-    - pre-commit run --show-diff-on-failure --color=always --all-files
-
 backend-test:
   stage: test
   image:
