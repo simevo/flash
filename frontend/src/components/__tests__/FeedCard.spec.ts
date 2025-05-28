@@ -7,7 +7,6 @@ import FeedCard from "../FeedCard.vue"
 import ThreeStateCheckBox from "../ThreeStateCheckBox.vue"
 import { fetch_wrapper } from "../../utils" // Adjusted path assuming utils is in src/utils
 import { useAuthStore } from "../../stores/auth.store" // Adjusted path
-import { loadEnv } from "vite"
 
 // Mock fetch_wrapper
 vi.mock("../../utils", () => ({
