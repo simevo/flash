@@ -51,11 +51,13 @@ from news.api.serializers import FeedSerializer
 from news.api.serializers import FeedSerializerSimple
 from news.api.serializers import ProfileSerializer
 from news.api.serializers import UserArticleListsSerializer
+from news.api.serializers import FeedPollingSerializer
 from news.api.serializers import UserArticleListsSerializerFull
 from news.api.serializers import UserFeedSerializer
 from news.models import Articles
 from news.models import ArticlesCombined
 from news.models import FeedIcons
+from news.models import FeedPolling
 from news.models import Feeds
 from news.models import FeedsCombined
 from news.models import UserArticleLists
@@ -730,6 +732,13 @@ class OPMLExportView(APIView):
             xml_declaration=True,
         )
         return HttpResponse(xml_string, content_type="application/xml; charset=utf-8")
+
+
+class FeedPollingViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = FeedPolling.objects.all().order_by("-poll_start_time")
+    serializer_class = FeedPollingSerializer
+    permission_classes = [permissions.IsAdminUser]
+    filterset_fields = ["feed_id"]
 
 
 class ImageUploadView(APIView):
