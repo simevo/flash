@@ -27,3 +27,14 @@ Verify that the RSS feed is generated with:
 
     kubectl -n flash exec flash-6dd97d9dcc-s4rgm -- curl http://mkfd:5001/public/feeds/72365d96-68ec-4692-a0c2-22008f734f53.xml
  
+## Detecting duplicates
+
+The command `find_duplicates` can be used to detect duplicate articles. It accepts as options arguments:
+- a threshold which is the minimum similarity score required to consider two articles as duplicates
+- a minimum article ID to process
+
+The command will output a list of duplicate sets, where each set contains articles that are considered duplicates.
+
+Example:
+
+    kubectl -n flash exec flash-6dd97d9dcc-s4rgm -- python manage.py find_duplicates 0.01 4000000
