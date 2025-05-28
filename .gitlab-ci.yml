@@ -240,7 +240,7 @@ e2e-test:
     DJANGO_ALLOWED_HOSTS: "django,flash"
     DJANGO_SUPERUSER_USERNAME: root
     DJANGO_SUPERUSER_PASSWORD: root
-    DJANGO_SUPERUSER_EMAIL: admin@example.com
+    DJANGO_SUPERUSER_EMAIL: root@example.com
     POSTGRES_DB: test_flash_e2e
     POSTGRES_HOST: db
     POSTGRES_PASSWORD: flash_e2e

@@ -6,11 +6,44 @@ set -o nounset
 
 echo "========== Migrate:"
 python /app/manage.py migrate --noinput
-echo "========== Create superuser (if DJANGO_SUPERUSER_USERNAME is set):"
+
+echo "========== Processing superuser (if DJANGO_SUPERUSER_USERNAME is set):"
 if [ -n "$DJANGO_SUPERUSER_USERNAME" ]; then
-    python /app/manage.py createsuperuser --noinput
-    echo "Superuser creation command executed."
-    echo "========== Mark superuser email as verified (django-allauth):"
+    echo "Processing superuser (Username: $DJANGO_SUPERUSER_USERNAME):"
+
+    # Initialize a variable to track if user was created in this run
+    # USER_CREATED_THIS_RUN=false # Not strictly needed with this logic flow but good for clarity if expanded
+
+    # Check if user already exists
+    echo "Checking if superuser $DJANGO_SUPERUSER_USERNAME already exists..."
+    # The python script will exit with 0 if user exists, 1 if not.
+    # `set -o errexit` means script would exit if python fails for other reasons.
+    if python /app/manage.py shell -c "from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.filter(username='${DJANGO_SUPERUSER_USERNAME}').exists() or exit(1)" ; then
+        echo "Superuser $DJANGO_SUPERUSER_USERNAME already exists. Skipping creation."
+    else
+        echo "Superuser $DJANGO_SUPERUSER_USERNAME does not exist. Attempting creation..."
+        # DJANGO_SUPERUSER_PASSWORD and DJANGO_SUPERUSER_EMAIL must be set for createsuperuser --noinput
+        if [ -z "${DJANGO_SUPERUSER_PASSWORD:-}" ] || [ -z "${DJANGO_SUPERUSER_EMAIL:-}" ]; then
+            echo "Error: DJANGO_SUPERUSER_PASSWORD and DJANGO_SUPERUSER_EMAIL must be set to create a superuser."
+            exit 1
+        fi
+        python /app/manage.py createsuperuser --noinput
+        if [ $? -ne 0 ]; then
+            echo "Failed to create superuser $DJANGO_SUPERUSER_USERNAME. Exiting."
+            exit 1
+        fi
+        # USER_CREATED_THIS_RUN=true
+        echo "Superuser $DJANGO_SUPERUSER_USERNAME created successfully."
+    fi
+
+    # Ensure django-allauth email is verified and primary
+    # This runs whether the user was just created or already existed.
+    echo "========== Ensure superuser email is verified (django-allauth) for $DJANGO_SUPERUSER_USERNAME:"
+    # Requires DJANGO_SUPERUSER_EMAIL to be set.
+    if [ -z "${DJANGO_SUPERUSER_EMAIL:-}" ]; then
+        echo "Error: DJANGO_SUPERUSER_EMAIL must be set to process django-allauth email. Exiting."
+        exit 1
+    fi
     python /app/manage.py shell <<EOF
 from django.contrib.auth import get_user_model
 from allauth.account.models import EmailAddress
@@ -18,43 +51,54 @@ import os
 
 User = get_user_model()
 username = os.environ.get('DJANGO_SUPERUSER_USERNAME')
-email_address = os.environ.get('DJANGO_SUPERUSER_EMAIL')
+email_address = os.environ.get('DJANGO_SUPERUSER_EMAIL') # This is now guaranteed by the shell check above
 
-if username and email_address:
-    try:
-        user = User.objects.get(username=username)
+# Username is also guaranteed by the outer 'if [ -n "$DJANGO_SUPERUSER_USERNAME" ]'
+if not username: # Should not happen due to outer check, but defensive
+    print("CRITICAL: DJANGO_SUPERUSER_USERNAME somehow empty here. Exiting.")
+    exit(1)
 
-        # Get or create the email address record
-        email_obj, created = EmailAddress.objects.get_or_create(user=user, email=email_address)
+try:
+    user = User.objects.get(username=username) # User must exist at this point
 
-        # Mark as verified and primary
+    email_obj, created = EmailAddress.objects.get_or_create(user=user, email=email_address)
+
+    needs_save = False
+    if not email_obj.verified:
         email_obj.verified = True
+        needs_save = True
+        print(f"Marking email {email_address} for user {username} as verified.")
+    if not email_obj.primary:
         email_obj.primary = True
-        email_obj.save()
+        needs_save = True
+        print(f"Marking email {email_address} for user {username} as primary.")
 
-        print(f"Email {email_address} for user {username} marked as verified and primary.")
-    except User.DoesNotExist:
-        print(f"User {username} not found. Cannot mark email as verified.")
-        exit(1)
-    except Exception as e:
-        print(f"Error marking email as verified: {e}")
-        exit(1)
-else:
-    print("DJANGO_SUPERUSER_USERNAME or DJANGO_SUPERUSER_EMAIL not set. Skipping email verification.")
-    # If these are not set, createsuperuser would likely have issues too,
-    # but this check is specific to this block's environment variables.
-    # Depending on script structure, this 'else' might be redundant if the outer 'if' already checks username.
+    if needs_save:
+        email_obj.save()
+        print(f"EmailAddress record for {email_address} (user {username}) updated.")
+    else:
+        print(f"EmailAddress record for {email_address} (user {username}) already correct (verified and primary).")
+
+except User.DoesNotExist:
+    # This implies the user was not found after it should have been created or confirmed to exist.
+    # This case should ideally be prevented by the preceding logic.
+    print(f"User {username} not found. This should not happen if creation/existence check passed. Cannot mark email as verified.")
+    exit(1)
+except Exception as e:
+    print(f"Error ensuring email is verified/primary: {e}")
+    exit(1)
 EOF
-    # Check the exit code of the python script
     if [ $? -ne 0 ]; then
-        echo "Failed to mark superuser email as verified. Exiting."
+        echo "Failed to process superuser email for django-allauth. Exiting."
         exit 1
     fi
-    echo "Superuser email verification process completed."
+    echo "Superuser email processing for django-allauth completed."
 else
-    echo "DJANGO_SUPERUSER_USERNAME not set, skipping superuser creation."
+    echo "DJANGO_SUPERUSER_USERNAME not set, skipping superuser processing."
 fi
+
 echo "========== Collect static files:"
 python /app/manage.py collectstatic --noinput
+
 echo "========== Start server:"
 exec /usr/local/bin/gunicorn config.wsgi --timeout 60 --bind 0.0.0.0:5000 --chdir=/app
