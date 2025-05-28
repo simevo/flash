@@ -1,7 +1,6 @@
 ---
 stages:
-  - lint
-  - prepare
+  - lint-and-prepare
   - build deps images
   - lint javascript
   - build final images
@@ -12,7 +11,7 @@ variables:
   CI_DEBUG_SERVICES: "true"
 
 precommit:
-  stage: lint
+  stage: lint-and-prepare
   image: python:3.12
   variables:
     PRE_COMMIT_HOME: ${CI_PROJECT_DIR}/.cache/pre-commit
@@ -25,7 +24,7 @@ precommit:
     - pre-commit run --show-diff-on-failure --color=always --all-files
 
 lint-dockerfile:
-  stage: lint
+  stage: lint-and-prepare
   image: hadolint/hadolint:latest-debian
   script:
     - hadolint --ignore DL3008 --ignore DL3006 compose/local/readability/Dockerfile
@@ -36,7 +35,7 @@ lint-dockerfile:
     - hadolint --ignore DL3008 --ignore DL3006 frontend/Dockerfile
 
 prepare:
-  stage: prepare
+  stage: lint-and-prepare
   image:
     name: alpine/git
     entrypoint: [""]
