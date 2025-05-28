@@ -24,6 +24,7 @@ from django.shortcuts import get_object_or_404
 from django.shortcuts import render
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
+from django.views.decorators.vary import vary_on_cookie
 from django_filters import rest_framework as filters
 from drf_spectacular.utils import extend_schema
 from ebooklib import epub
@@ -241,11 +242,17 @@ class ArticlesView(
     pagination_class = StandardResultsSetPagination
 
     @method_decorator(cache_page(60 * 5))
+    @method_decorator(vary_on_cookie)
     def list(self, request, *args, **kwargs):
         # 1. Get the filtered queryset
         queryset = self.filter_queryset(
             self.get_queryset(),
         )  # This applies ArticlesFilter
+
+        ufe = UserFeeds.objects.filter(user=request.user, rating=-5)
+        exclude_feeds = [o.feed_id for o in ufe]
+        if len(exclude_feeds) > 0:
+            queryset = queryset.exclude(feed_id__in=exclude_feeds)
 
         # 2. Define the perturbation expression
         # The goal is a deterministic perturbation of the chronological order (id).

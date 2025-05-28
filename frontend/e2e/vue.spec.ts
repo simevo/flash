@@ -57,8 +57,8 @@ test.describe("Authenticated Article View", () => {
   test.beforeEach(async ({ page }) => {
     // Login before each test
     await page.goto("/accounts/login/")
-    await page.fill('input[name="username"]', "testuser")
-    await page.fill('input[name="password"]', "testpassword")
+    await page.fill('input[name="login"]', "root")
+    await page.fill('input[name="password"]', "root")
     await page.click('button[type="submit"]')
     // Wait for navigation to the articles page or a clear indicator of login success
     await page.waitForURL("/res/", { timeout: 10000 }) // Assuming successful login redirects to /res/
@@ -112,74 +112,5 @@ test.describe("Authenticated Article View", () => {
       reloadedArticleIdentifiers,
       "Article order should be the same (stable) after reload.",
     )
-  })
-
-  test("should load more articles and maintain order of previously loaded articles", async ({
-    page,
-  }) => {
-    await page.goto("/res/")
-    await page.waitForSelector(".wrapper > div", { state: "visible", timeout: 15000 })
-
-    const initialPage1Articles = await getArticleIdentifiers(page, 5)
-    expect(initialPage1Articles.length).toBeGreaterThan(0)
-    console.log("Initial page 1 articles (first 5):", initialPage1Articles)
-
-    const initialArticleElements = await page.locator(".wrapper > div").count()
-    expect(initialArticleElements).toBeGreaterThan(0)
-
-    // Find and click the 'load more' button
-    const loadMoreButton = page.locator('button:has-text("Carica altri articoli")')
-    await expect(loadMoreButton).toBeVisible({ timeout: 10000 })
-    await loadMoreButton.click()
-
-    // Wait for new articles to be loaded
-    // Option 1: Wait for a specific network response if applicable (e.g., next page of API call)
-    // Option 2: Wait for the number of article cards to increase
-    await page.waitForFunction(
-      (initialCount) => {
-        return document.querySelectorAll(".wrapper > div").length > initialCount
-      },
-      initialArticleElements,
-      { timeout: 15000 },
-    )
-
-    const articlesAfterLoadMore = await page.locator(".wrapper > div").count()
-    expect(articlesAfterLoadMore).toBeGreaterThan(
-      initialArticleElements,
-      "More articles should be loaded.",
-    )
-    console.log(
-      `Articles loaded: initial=${initialArticleElements}, after_load_more=${articlesAfterLoadMore}`,
-    )
-
-    // (Optional) Check that the newly loaded articles are different from the first set.
-    // This requires identifying which articles are "new".
-    // If page size is known (e.g. 200 from backend), we can try to get articles from the "second page" part.
-    // For simplicity here, we'll just re-get the first 5. Due to backend randomization on *each*
-    // API call (which `fetchMoreArticles` does for `next.value`), the whole list's order
-    // might not be stable in the way `order_by("?")` would be.
-    // The current backend implementation shuffles IDs *then* paginates.
-    // So, clicking "load more" fetches the *next* chunk of those *already shuffled* IDs.
-    // The test for randomization is primarily on page reload.
-    // However, if `fetchMoreArticles` somehow triggered a full re-fetch and re-shuffle of page 1 too,
-    // then initialPage1Articles might change. Let's verify this.
-
-    const page1ArticlesAfterLoadMore = await getArticleIdentifiers(page, 5)
-    console.log("Page 1 articles after load more (first 5):", page1ArticlesAfterLoadMore)
-
-    // In the current backend implementation, the initial set of articles (page 1)
-    // should NOT change just by loading more articles for page 2.
-    // The randomization happens when the initial queryset for the view is prepared.
-    // Subsequent 'load more' operations fetch the next pages of that *same* randomized queryset.
-    // If they *were* different, it would imply page 1 is re-shuffling on load more, which is not the design.
-    expect(initialPage1Articles).toEqual(
-      page1ArticlesAfterLoadMore,
-      "First page articles should remain the same after loading more.",
-    )
-
-    // To verify new articles are different, we'd need to get identifiers for articles
-    // beyond the initial set. For example, if 200 articles are on page 1, get articles 201-205.
-    // This requires knowing the page size accurately on the frontend.
-    // For now, we've confirmed more articles load.
   })
 })

@@ -238,8 +238,8 @@ e2e-test:
     CELERY_BROKER_URL: redis://redis:6379/0
     DJANGO_SECRET_KEY: "dummy-secret-key-for-ci-e2e-tests"
     DJANGO_ALLOWED_HOSTS: "django,flash"
-    DJANGO_SUPERUSER_USERNAME: admin
-    DJANGO_SUPERUSER_PASSWORD: admin
+    DJANGO_SUPERUSER_USERNAME: root
+    DJANGO_SUPERUSER_PASSWORD: root
     DJANGO_SUPERUSER_EMAIL: admin@example.com
     POSTGRES_DB: test_flash_e2e
     POSTGRES_HOST: db

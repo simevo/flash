@@ -81,7 +81,7 @@ Useful additional `pytest` options:
 ```sh
 docker-compose -f docker-compose.local.yml up -d postgres django frontend flash
 docker-compose -f docker-compose.local.yml exec frontend bash
-CI=1 yarn test:e2e vue.spec.ts
+CI=1 yarn test:e2e --project=chromium vue.spec.ts
 ^C
 yarn playwright show-report --host 0
 ```

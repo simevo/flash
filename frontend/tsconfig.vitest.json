@@ -3,12 +3,15 @@
   "include": [
     "src/**/__tests__/*",
     "env.d.ts",
+    "src/components/FeedCard.vue",
     "src/components/RatingToolbar.vue",
     "src/components/PositiveRating.vue",
     "src/components/NegativeRating.vue",
     "src/components/ThreeStateCheckBox.vue",
     "src/components/ThreeStateCheckBox.vue",
     "src/types/CheckBoxValue.ts",
+    "src/components/sts.ts",
+    "src/stores/auth.store.ts",
     "src/utils.ts"
   ],
   "exclude": [],

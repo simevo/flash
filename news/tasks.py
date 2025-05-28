@@ -58,25 +58,25 @@ def precompute_user(user, start_timestamp, embedding_service):
     ufe = UserFeeds.objects.filter(user=user, rating=-5)
     exclude_feeds = [o.feed_id for o in ufe]
     if len(exclude_feeds) > 0:
-        logger.debug(f"== filtering by excluded feeds: {exclude_feeds}")
+        logger.info(f"== filtering by excluded feeds: {exclude_feeds}")
         qs = qs.exclude(feed_id__in=exclude_feeds)
         filtered = True
 
     if len(user.profile.languages) > 0:
-        logger.debug(f"== filtering by languages: {user.profile.languages}")
+        logger.info(f"== filtering by languages: {user.profile.languages}")
         qs = qs.filter(language__in=user.profile.languages)
         filtered = True
 
     if len(user.profile.blacklist) > 0:
         terms = "|".join(user.profile.blacklist)
-        logger.debug(f"== filtering by blacklist: {terms}")
+        logger.info(f"== filtering by blacklist: {terms}")
         query = SearchQuery(terms, search_type="raw", config="pg_catalog.simple")
         qs = qs.exclude(tsv=query)
         filtered = True
 
     if len(user.profile.whitelist) > 0:
         terms = " ".join(user.profile.whitelist)
-        logger.debug(f"== filtering by whitelist: {terms}")
+        logger.info(f"== filtering by whitelist: {terms}")
         embedding = embedding_service.get_embedding(terms)
         qs = qs.order_by(
             CosineDistance(

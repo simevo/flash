@@ -1,11 +1,13 @@
 <script setup lang="ts">
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { RouterLink } from "vue-router"
-import { computed } from "vue";
+import { computed } from "vue"
 import { secondsToString } from "./sts"
 import { useAuthStore } from "../stores/auth.store"
-import ThreeStateCheckBox from "./ThreeStateCheckBox.vue";
-import type { CheckBoxValue } from "../types/CheckBoxValue";
-import { fetch_wrapper } from "../utils";
+import ThreeStateCheckBox from "./ThreeStateCheckBox.vue"
+import type { CheckBoxValue } from "../types/CheckBoxValue"
+import { fetch_wrapper } from "../utils"
 
 const auth = useAuthStore()
 
@@ -13,7 +15,7 @@ import type { components } from "../generated/schema.d.ts"
 type Feed = components["schemas"]["Feed"]
 type PatchedFeed = Feed & { my_rating: number | undefined }
 
-defineProps<{
+const props = defineProps<{
   feed: PatchedFeed
   clickable: boolean
 }>()
@@ -24,40 +26,40 @@ const emit = defineEmits<{
 }>()
 
 const showHideState = computed<CheckBoxValue>(() => {
-  const rating = props.feed.my_rating;
+  const rating = props.feed.my_rating
   if (rating === undefined || rating === null) {
-    return null; // Indeterminate
+    return null // Indeterminate
   }
   if (rating >= -4 && rating <= 5) {
-    return true; // Checked (Show)
+    return true // Checked (Show)
   }
   if (rating === -5) {
-    return false; // Unchecked (Don't show)
+    return false // Unchecked (Don't show)
   }
-  return null; // Default to indeterminate for any other unexpected values
-});
+  return null // Default to indeterminate for any other unexpected values
+})
 
 async function handleShowHideChange(newState: CheckBoxValue) {
-  let newRating: number;
+  let newRating: number
   if (newState === true) {
-    newRating = 0; // Default "show" rating
+    newRating = 0 // Default "show" rating
   } else if (newState === false) {
-    newRating = -5; // "Don't show" rating
-  } else { // newState === null (cycled from false to null)
-    newRating = 0; // Treat as "show"
+    newRating = -5 // "Don't show" rating
+  } else {
+    // newState === null (cycled from false to null)
+    newRating = 0 // Treat as "show"
   }
 
   // Optimistically update local state for immediate UI feedback
-  const originalRating = props.feed.my_rating; // Store original rating for potential revert
-  (props.feed as any).my_rating = newRating;
-
+  const originalRating = props.feed.my_rating // Store original rating for potential revert
+  ;(props.feed as any).my_rating = newRating
 
   const payload = {
-    feed: props.feed.id, 
+    feed: props.feed.id,
     rating: newRating,
-  };
+  }
 
-  emit('updating', true);
+  emit("updating", true)
 
   try {
     const response = await fetch_wrapper("/api/user-feeds/", {
@@ -66,22 +68,24 @@ async function handleShowHideChange(newState: CheckBoxValue) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(payload),
-    });
+    })
 
     if (response.ok) {
-      console.log("Visibility updated successfully.");
+      alert(
+        "Visibilità aggiornata; ci potrebbe volere fino ad un'ora affinché la modifica abbia effetto.",
+      )
     } else {
       // Revert optimistic update on failure
-      (props.feed as any).my_rating = originalRating;
-      const errorData = await response.text();
-      alert(`Error updating visibility: ${response.statusText} - ${errorData}`);
+      ;(props.feed as any).my_rating = originalRating
+      const errorData = await response.text()
+      alert(`Errore di aggiornamento della visibilità: ${response.statusText} - ${errorData}`)
     }
   } catch (error) {
     // Revert optimistic update on failure
-    (props.feed as any).my_rating = originalRating;
-    alert(`Network error: ${error}`);
+    ;(props.feed as any).my_rating = originalRating
+    alert(`Errore di rete: ${error}`)
   } finally {
-    emit('updating', false); 
+    emit("updating", false)
   }
 }
 </script>
@@ -165,12 +169,14 @@ async function handleShowHideChange(newState: CheckBoxValue) {
               Ultimo aggiornamento
               {{ secondsToString(new Date().getTime() / 1000 - feed.last_polled_epoch) }}
             </small>
-            <ThreeStateCheckBox
-              class="float-end mb-2"
-              :value="showHideState"
-              @change="handleShowHideChange"
-              title="Toggle visibility"
-            />
+            <span class="float-end mb-2">
+              Mostra nella home:
+              <ThreeStateCheckBox
+                :value="showHideState"
+                @change="handleShowHideChange"
+                title="Clicca per mostrare/nascondere"
+              />
+            </span>
           </p>
         </div>
       </div>
