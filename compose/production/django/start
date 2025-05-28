@@ -10,6 +10,47 @@ echo "========== Create superuser (if DJANGO_SUPERUSER_USERNAME is set):"
 if [ -n "$DJANGO_SUPERUSER_USERNAME" ]; then
     python /app/manage.py createsuperuser --noinput
     echo "Superuser creation command executed."
+    echo "========== Mark superuser email as verified (django-allauth):"
+    python /app/manage.py shell <<EOF
+from django.contrib.auth import get_user_model
+from allauth.account.models import EmailAddress
+import os
+
+User = get_user_model()
+username = os.environ.get('DJANGO_SUPERUSER_USERNAME')
+email_address = os.environ.get('DJANGO_SUPERUSER_EMAIL')
+
+if username and email_address:
+    try:
+        user = User.objects.get(username=username)
+
+        # Get or create the email address record
+        email_obj, created = EmailAddress.objects.get_or_create(user=user, email=email_address)
+
+        # Mark as verified and primary
+        email_obj.verified = True
+        email_obj.primary = True
+        email_obj.save()
+
+        print(f"Email {email_address} for user {username} marked as verified and primary.")
+    except User.DoesNotExist:
+        print(f"User {username} not found. Cannot mark email as verified.")
+        exit(1)
+    except Exception as e:
+        print(f"Error marking email as verified: {e}")
+        exit(1)
+else:
+    print("DJANGO_SUPERUSER_USERNAME or DJANGO_SUPERUSER_EMAIL not set. Skipping email verification.")
+    # If these are not set, createsuperuser would likely have issues too,
+    # but this check is specific to this block's environment variables.
+    # Depending on script structure, this 'else' might be redundant if the outer 'if' already checks username.
+EOF
+    # Check the exit code of the python script
+    if [ $? -ne 0 ]; then
+        echo "Failed to mark superuser email as verified. Exiting."
+        exit 1
+    fi
+    echo "Superuser email verification process completed."
 else
     echo "DJANGO_SUPERUSER_USERNAME not set, skipping superuser creation."
 fi
