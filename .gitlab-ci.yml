@@ -2,7 +2,7 @@
 stages:
   - lint-and-prepare
   - build deps images
-  - lint javascript
+  - frontend-lint-and-test
   - build final images
   - test
   - tag
@@ -134,8 +134,8 @@ build-docker-image-deps-frontend:
     CONTEXT: ./frontend
     ARGS: --target deps-frontend-base
 
-lint-javascript:
-  stage: lint javascript
+frontend-lint:
+  stage: frontend-lint-and-test
   image: $CI_REGISTRY_IMAGE/deps-frontend:$DEPS_FRONTEND_TAG
   before_script:
     - cd frontend/
@@ -144,6 +144,19 @@ lint-javascript:
     - yarn type-check
     - yarn lint
     - yarn format-check
+
+frontend-test:
+  stage: frontend-lint-and-test
+  image: $CI_REGISTRY_IMAGE/deps-frontend:$DEPS_FRONTEND_TAG
+  script:
+    - cd frontend/
+    - yarn install
+    - yarn test:unit --reporter=verbose --reporter=html
+  artifacts:
+    paths:
+      - frontend/html/
+    when: always
+    expire_in: 1 week
 
 build-docker-image-backend:
   extends: .build-docker-image
@@ -213,19 +226,6 @@ backend-test:
     - wait-for-it "${POSTGRES_HOST}:${POSTGRES_PORT}" -t 30
   script:
     - /usr/local/bin/pytest
-
-frontend-test:
-  stage: test
-  image: $CI_REGISTRY_IMAGE/deps-frontend:$DEPS_FRONTEND_TAG
-  script:
-    - cd frontend/
-    - yarn install
-    - yarn test:unit --reporter=verbose --reporter=html
-  artifacts:
-    paths:
-      - frontend/html/
-    when: always
-    expire_in: 1 week
 
 e2e-test:
   stage: test
