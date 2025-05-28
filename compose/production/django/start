@@ -6,6 +6,13 @@ set -o nounset
 
 echo "========== Migrate:"
 python /app/manage.py migrate --noinput
+echo "========== Create superuser (if DJANGO_SUPERUSER_USERNAME is set):"
+if [ -n "$DJANGO_SUPERUSER_USERNAME" ]; then
+    python /app/manage.py createsuperuser --noinput
+    echo "Superuser creation command executed."
+else
+    echo "DJANGO_SUPERUSER_USERNAME not set, skipping superuser creation."
+fi
 echo "========== Collect static files:"
 python /app/manage.py collectstatic --noinput
 echo "========== Start server:"
