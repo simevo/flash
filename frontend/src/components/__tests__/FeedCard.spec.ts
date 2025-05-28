@@ -2,6 +2,7 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest"
 import { mount, flushPromises } from "@vue/test-utils"
+import { createRouter, createMemoryHistory } from "vue-router"
 import FeedCard from "../FeedCard.vue"
 import ThreeStateCheckBox from "../ThreeStateCheckBox.vue"
 import { fetch_wrapper } from "../../utils" // Adjusted path assuming utils is in src/utils
@@ -39,15 +40,29 @@ const createMockFeed = (
   language: "en",
 })
 
+const router = createRouter({
+  history: createMemoryHistory(),
+  routes: [
+    { path: "/", component: { template: "<div>Home</div>" } },
+    // Route for the edit feed page, as used in FeedCard's RouterLink
+    { path: "/edit_feed/:id", name: "edit_feed", component: { template: "<div>Edit Feed</div>" } },
+  ],
+})
+
 describe("FeedCard.vue", () => {
   let mockAuthStore: any
 
-  beforeEach(() => {
+  beforeEach(async () => {
     // Reset mocks before each test
     vi.clearAllMocks()
     // Default mock user for most tests
     mockAuthStore = useAuthStore as any
     mockAuthStore.mockReturnValue({ user: { is_staff: false } })
+
+    // It's good practice to push a default route to the router before each test
+    // that uses it, to ensure a consistent starting point.
+    await router.push("/")
+    await router.isReady()
   })
 
   describe("Rendering", () => {
@@ -128,27 +143,39 @@ describe("FeedCard.vue", () => {
       expect(checkBox.props("value")).toBe(null)
     })
 
-    it("renders edit button if user is staff", () => {
-      mockAuthStore.mockReturnValue({ user: { is_staff: true } })
+    it("renders edit button if user is staff", async () => {
+      // Ensure the auth store mock is correctly updated for this specific test
+      ;(useAuthStore as any).mockReturnValue({ user: { is_staff: true } })
       const feed = createMockFeed(1, 0)
       const wrapper = mount(FeedCard, {
         props: { feed, clickable: true },
         global: {
-          stubs: { RouterLink: false }, // Don't stub RouterLink to find it by id
+          plugins: [router], // Add the router plugin
+          // Do not stub RouterLink here to allow it to work with the router
         },
       })
+      // Wait for any potential navigation or async updates triggered by router
+      await flushPromises()
       expect(wrapper.find("#edit").exists()).toBe(true)
     })
 
-    it("does NOT render edit button if user is not staff", () => {
-      mockAuthStore.mockReturnValue({ user: { is_staff: false } })
+    it("does NOT render edit button if user is not staff", async () => {
+      // Ensure the auth store mock is correctly updated for this specific test
+      ;(useAuthStore as any).mockReturnValue({ user: { is_staff: false } })
       const feed = createMockFeed(1, 0)
       const wrapper = mount(FeedCard, {
         props: { feed, clickable: true },
         global: {
-          stubs: { RouterLink: true },
+          plugins: [router], // Add the router plugin
+          stubs: {
+            // If RouterLink is used elsewhere and not for the edit button,
+            // you might still need to stub it globally or locally for other tests.
+            // For this specific test, not stubbing RouterLink is important for the edit button.
+          },
         },
       })
+      // Wait for any potential navigation or async updates triggered by router
+      await flushPromises()
       expect(wrapper.find("#edit").exists()).toBe(false)
     })
   })
@@ -220,7 +247,9 @@ describe("FeedCard.vue", () => {
 
       expect(fetch_wrapper).toHaveBeenCalledTimes(1)
       expect(wrapper.props("feed").my_rating).toBe(initialRating) // Reverted
-      expect(alertSpy).toHaveBeenCalledWith("Error updating visibility: Error - API Error")
+      expect(alertSpy).toHaveBeenCalledWith(
+        "Errore di aggiornamento della visibilità: Error - API Error",
+      )
       expect(wrapper.emitted().updating).toEqual([[true], [false]])
       alertSpy.mockRestore()
     })
@@ -374,7 +403,7 @@ describe("FeedCard.vue", () => {
 
       expect(fetch_wrapper).toHaveBeenCalledTimes(1)
       expect(wrapper.props("feed").my_rating).toBe(initialRating) // Reverted
-      expect(alertSpy).toHaveBeenCalledWith(`Network error: ${networkError}`)
+      expect(alertSpy).toHaveBeenCalledWith(`Errore di rete: ${networkError}`)
       expect(wrapper.emitted().updating).toEqual([[true], [false]])
       alertSpy.mockRestore()
     })
