@@ -78,21 +78,35 @@ async function fetchLists() {
     document.location = "/accounts/"
   } else {
     const data: UserArticleListsSerializerFull[] = await response.json()
-    lists.value = data
-    if (data.length > 0 && !current_list_id.value) {
-      const newsfeed = data.find((list) => list.name == "newsfeed")
-      if (newsfeed) {
-        current_list_id.value = newsfeed.id
+    lists.value = data // Store all lists first
+    // Update current_list_id selection logic
+    if (!current_list_id.value || !lists.value.find(list => list.id === current_list_id.value && !list.automatic)) {
+      const firstNonAutomaticList = displayableLists.value.length > 0 ? displayableLists.value[0] : null
+      if (firstNonAutomaticList) {
+        current_list_id.value = firstNonAutomaticList.id
+      } else if (data.length > 0) {
+        // Fallback if only automatic lists exist (though they won't be tabbed) or no non-automatic.
+        // Or, set to null if no non-automatic lists should be selected by default.
+        // For now, let's ensure a list is selected if any exist, even if it won't be tabbed.
+        // This might need adjustment based on desired behavior when only automatic lists are present.
+        // A better approach: if displayableLists is empty, current_list_id might become null.
+        current_list_id.value = displayableLists.value.length > 0 ? displayableLists.value[0].id : null;
       } else {
-        current_list_id.value = data[0].id
+        current_list_id.value = null // No lists at all
       }
     }
     count_fetch.value -= 1
   }
 }
 
+const displayableLists = computed(() => {
+  return lists.value.filter((list) => !list.automatic)
+})
+
 const current_list = computed(() => {
-  return lists.value.find((list) => list.id == current_list_id.value)
+  // Ensure current_list is one of the displayable (non-automatic) lists
+  if (current_list_id.value === null) return null;
+  return displayableLists.value.find((list) => list.id == current_list_id.value)
 })
 
 const feed_dict = computed(() => {
@@ -373,11 +387,11 @@ function window_open(url: string): void {
 
 <template>
   <div class="container-fluid" v-if="count_fetch == 0">
-    <div class="row my-3" v-if="lists.length == 0">
+    <div class="row my-3" v-if="displayableLists.length == 0">
       <div class="col-md-12">
         <div class="alert alert-warning text-center" role="alert">
-          Non hai ancora delle liste da visualizzare. Per creare la tua prima lista salva un
-          articolo, dalla pagina di dettaglio articolo clicca sul pulsante "<i>Salva in lista</i>"
+          Non hai ancora creato delle liste personalizzate. Le liste automatiche (come Newsfeed) non sono mostrate qui.
+          <br />Per creare la tua prima lista, salva un articolo dalla sua pagina di dettaglio cliccando sul pulsante "<i>Salva in lista</i>"
           <img
             class="icon me-2"
             src="~bootstrap-icons/icons/heart-fill.svg"
@@ -390,9 +404,9 @@ function window_open(url: string): void {
     </div>
     <div class="row my-3" v-else>
       <div class="col-md-12">
-        <h1 class="text-center">Articoli salvati nelle liste</h1>
+        <h1 class="text-center">Articoli salvati nelle tue liste personalizzate</h1>
         <ul class="nav nav-tabs" id="myTab" role="tablist">
-          <li class="nav-item" role="presentation" v-for="list in lists" :key="list.id">
+          <li class="nav-item" role="presentation" v-for="list in displayableLists" :key="list.id">
             <button
               class="nav-link"
               :class="{ active: list.id == current_list_id }"
@@ -401,18 +415,9 @@ function window_open(url: string): void {
               type="button"
               role="tab"
             >
-              <img
-                v-if="list.automatic"
-                class="icon"
-                src="~bootstrap-icons/icons/robot.svg"
-                alt="rss icon"
-                width="18"
-                height="18"
-                title="Lista automatica"
-              />
+              <!-- Removed automatic list icon as they are filtered out -->
               {{ list.name }}
               <button
-                v-if="!list.automatic"
                 v-show="list.id == current_list_id"
                 class="btn btn-outline-danger btn-sm ms-3"
                 title="Rimuovi questa lista"
@@ -428,7 +433,7 @@ function window_open(url: string): void {
               </button>
             </button>
           </li>
-          <li>
+          <li v-if="current_list_id && current_list"> <!-- Ensure a list is selected before showing these global list actions -->
             <div style="position: absolute; right: 1em" class="btn-group">
               <button
                 type="button"
@@ -451,7 +456,7 @@ function window_open(url: string): void {
                 class="btn btn-success"
                 title="Leggi ad alta voce tutti gli articoli in questa lista"
                 v-if="tts"
-                :disabled="tts_open || articles.length === 0"
+                :disabled="tts_open || !current_list || current_list.articles.length === 0 || articles.length === 0"
                 v-on:click="tts_speak()"
               >
                 <img src="~bootstrap-icons/icons/megaphone.svg" alt="tts icon" /> Leggi
@@ -538,9 +543,9 @@ function window_open(url: string): void {
             id="home-tab-pane"
             role="tabpanel"
             tabindex="0"
-            v-if="current_list"
+            v-if="current_list" 
           >
-            <div v-if="current_list?.articles.length == 0">
+            <div v-if="current_list.articles.length == 0">
               <div class="alert alert-warning" role="alert">
                 Non ci sono ancora articoli in questa lista. Per salvare un articolo, dalla pagina
                 di dettaglio articolo clicca sul pulsante "<i>Salva in lista</i>"
@@ -555,15 +560,15 @@ function window_open(url: string): void {
             </div>
           </div>
         </div>
-        <div class="row" v-if="current_list && current_list?.articles.length > 0">
-          <div v-if="articles.length == 0">
+        <div class="row" v-if="current_list && current_list.articles.length > 0">
+          <div v-if="articles.length == 0 && current_list.articles.length > 0"> <!-- Show spinner only if current_list expects articles -->
             <div class="text-center col-md-8 offset-md-2">
               <div class="spinner-border text-primary" role="status">
                 <span class="visually-hidden">Loading...</span>
               </div>
             </div>
           </div>
-          <div class="col-md-12" v-else>
+          <div class="col-md-12" v-else-if="articles.length > 0">
             <div class="wrapper">
               <ArticleCard
                 v-for="article in articles"
@@ -573,7 +578,7 @@ function window_open(url: string): void {
                 :index="1"
                 :id="`article-${article.id}`"
                 class="article-card"
-                :list_id="current_list.automatic ? null : current_list_id"
+                :list_id="current_list_id" 
                 @remove-article-from-list="removeArticleFromList"
               />
             </div>

@@ -45,15 +45,6 @@ const router = createRouter({
       },
     },
     {
-      path: "/read/",
-      name: "read",
-      props: true,
-      component: () => import("../views/ReadView.vue"),
-      meta: {
-        title: "Letti",
-      },
-    },
-    {
       path: "/feeds/",
       name: "feeds",
       props: true,
