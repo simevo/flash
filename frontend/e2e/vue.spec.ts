@@ -81,6 +81,7 @@ test.describe("Authenticated Article View", () => {
   })
 
   test("populate articles table", async ({ page }) => {
+    await expect(page).toHaveURL("/res/")
     await refresh_feed(page, 1)
     await refresh_feed(page, 2)
     await refresh_feed(page, 3)

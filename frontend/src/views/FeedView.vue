@@ -14,8 +14,16 @@
             data-bs-target="#feedPollingCollapse"
             aria-expanded="false"
             aria-controls="feedPollingCollapse"
+            title="Statistiche di articoli aggregati (funzione riservata agli utenti di staff)"
           >
-            Monitoring
+            <img
+              class="icon me-2"
+              src="~bootstrap-icons/icons/lock.svg"
+              alt="lock icon"
+              width="18"
+              height="18"
+            />
+            Monitoraggio
           </button>
         </h2>
         <div
@@ -24,36 +32,27 @@
           aria-labelledby="feedPollingAccordionHeader"
         >
           <div class="accordion-body">
-            <!-- Sparkline Chart -->
-            <div class="mb-3" style="height: 200px">
-              <canvas id="feedPollingSparkline"></canvas>
-            </div>
-
             <!-- Paginated Table -->
             <div v-if="feedPollingData.length > 0">
               <table class="table table-striped table-sm">
                 <thead>
                   <tr>
-                    <th>Poll Start Time</th>
-                    <th>Poll End Time</th>
-                    <th>HTTP Status</th>
-                    <th>Retrieved</th>
-                    <th>Failed</th>
-                    <th>Stored</th>
-                    <th>Error</th>
+                    <th>Avvio</th>
+                    <th>Fine</th>
+                    <th>Codice di stato HTTP</th>
+                    <th>Articoli acquisiti</th>
+                    <th>Articoli errati</th>
+                    <th>Articoli salvati</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr v-for="record in paginatedFeedPollingData" :key="record.id">
                     <td>{{ formatDate(record.poll_start_time) }}</td>
                     <td>{{ formatDate(record.poll_end_time) }}</td>
-                    <td>{{ record.http_status }}</td>
+                    <td>{{ record.http_status_code }}</td>
                     <td>{{ record.articles_retrieved }}</td>
                     <td>{{ record.articles_failed }}</td>
                     <td>{{ record.articles_stored }}</td>
-                    <td :title="record.error_message || ''" style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                      {{ record.error_message }}
-                    </td>
                   </tr>
                 </tbody>
               </table>
@@ -61,9 +60,7 @@
               <nav aria-label="Feed polling pagination">
                 <ul class="pagination pagination-sm justify-content-center">
                   <li class="page-item" :class="{ disabled: currentPage === 1 }">
-                    <button class="page-link" @click="changePage(currentPage - 1)">
-                      Previous
-                    </button>
+                    <button class="page-link" @click="changePage(currentPage - 1)">Previous</button>
                   </li>
                   <li
                     class="page-item"
@@ -76,9 +73,7 @@
                     </button>
                   </li>
                   <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-                    <button class="page-link" @click="changePage(currentPage + 1)">
-                      Next
-                    </button>
+                    <button class="page-link" @click="changePage(currentPage + 1)">Next</button>
                   </li>
                 </ul>
               </nav>
@@ -127,32 +122,18 @@
 
 <script setup lang="ts">
 import { fetch_wrapper } from "../utils"
-import { onActivated, watch, computed } from "vue" // Added computed
+import { onActivated, watch, computed } from "vue"
 import { useRoute } from "vue-router"
 import { ref, onMounted, type Ref } from "vue"
-import { Chart, registerables } from "chart.js/auto" // Added Chart
-Chart.register(...registerables) // Register all controllers, elements, scales, and plugins
 
 import type { components } from "../generated/schema.d.ts"
 type ArticleRead = components["schemas"]["ArticleRead"]
 type Feed = components["schemas"]["Feed"]
 type PaginatedArticleReadList = components["schemas"]["PaginatedArticleReadList"]
-type PatchedFeed = Feed & { my_rating: number }
+type PatchedFeed = Feed & { my_rating: number | undefined }
 type UserFeed = components["schemas"]["UserFeed"]
 type User = components["schemas"]["User"] // Added User type
-
-// Define FeedPollingRecord type based on the serializer
-interface FeedPollingRecord {
-  id: number
-  feed_id: number
-  poll_start_time: string
-  poll_end_time: string | null
-  http_status: number | null
-  error_message: string | null
-  articles_retrieved: number | null
-  articles_stored: number | null
-  articles_failed: number | null
-}
+type FeedPolling = components["schemas"]["FeedPolling"]
 
 import ArticleCard from "../components/ArticleCard.vue"
 import FeedCard from "../components/FeedCard.vue"
@@ -167,10 +148,9 @@ const route = useRoute()
 
 // New reactive variables
 const isStaffUser: Ref<boolean> = ref(false)
-const feedPollingData: Ref<FeedPollingRecord[]> = ref([])
+const feedPollingData: Ref<FeedPolling[]> = ref([])
 const currentPage: Ref<number> = ref(1)
 const itemsPerPage: Ref<number> = ref(10)
-let sparklineChartInstance: Chart | null = null
 
 export interface Props {
   feed_id: string
@@ -261,14 +241,12 @@ async function fetchFeeds() {
       feed_dict.value[f.id] = f
     })
     // Ensure feed.value is set even if user-feeds fails or no rating exists
-    if (!feed.value && data.some(f => f.id === Number(props.feed_id))) {
-        feed.value = <PatchedFeed>{
-            ...data.find(f => f.id === Number(props.feed_id)),
-            my_rating: undefined,
-        };
+    if (!feed.value && data.some((f) => f.id === Number(props.feed_id))) {
+      feed.value = <PatchedFeed>{
+        ...data.find((f) => f.id === Number(props.feed_id)),
+        my_rating: undefined,
+      }
     }
-
-
   } catch (error) {
     console.error("Error in fetchFeeds:", error)
   } finally {
@@ -301,19 +279,8 @@ async function fetchFeedPollingData(feedId: string) {
   try {
     const response = await fetch_wrapper(`../../api/feed-polling/?feed_id=${feedId}`)
     if (response.ok) {
-      const data: FeedPollingRecord[] = await response.json()
-      // The API returns paginated results, we need to handle that if we want all.
-      // For now, assuming the default pagination of the API is enough or we only care about the first page.
-      // If the API returns an object with 'results', use data.results
-      if (Array.isArray(data)) {
-        feedPollingData.value = data
-      } else if (data && Array.isArray((data as any).results)) {
-        feedPollingData.value = (data as any).results
-      } else {
-        console.error("Unexpected format for feed polling data:", data)
-        feedPollingData.value = []
-      }
-      renderSparklineChart()
+      const data: FeedPolling[] = await response.json()
+      feedPollingData.value = data
       currentPage.value = 1 // Reset to first page on new data
     } else {
       console.error("Failed to fetch feed polling data:", response.statusText)
@@ -327,66 +294,6 @@ async function fetchFeedPollingData(feedId: string) {
   }
 }
 
-function renderSparklineChart() {
-  const canvas = document.getElementById("feedPollingSparkline") as HTMLCanvasElement
-  if (!canvas) return
-
-  if (sparklineChartInstance) {
-    sparklineChartInstance.destroy()
-  }
-
-  // Prepare data for the chart (last 24 records, articles_retrieved)
-  const chartData = feedPollingData.value
-    .slice(0, 24) // API returns reverse chronological, so first 24 are latest
-    .reverse() // Reverse to show time progression from left to right
-    .map((record) => record.articles_retrieved ?? 0) // Use nullish coalescing for undefined/null
-
-  const labels = feedPollingData.value
-    .slice(0, 24)
-    .reverse()
-    .map((record) => formatDate(record.poll_start_time).split(",")[1]) // Just time part for brevity
-
-  sparklineChartInstance = new Chart(canvas, {
-    type: "line",
-    data: {
-      labels: labels,
-      datasets: [
-        {
-          label: "Articles Retrieved",
-          data: chartData,
-          borderColor: "rgb(75, 192, 192)",
-          tension: 0.1,
-          fill: false,
-        },
-      ],
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      scales: {
-        y: {
-          beginAtZero: true,
-        },
-        x: {
-          ticks: {
-            autoSkip: true,
-            maxTicksLimit: 10
-          }
-        }
-      },
-      plugins: {
-        legend: {
-          display: false, // Hide legend for a sparkline feel
-        },
-        tooltip: {
-          mode: 'index',
-          intersect: false
-        }
-      },
-    },
-  })
-}
-
 onMounted(() => {
   console.log("FeedView mounted")
   fetchArticles()
@@ -395,8 +302,8 @@ onMounted(() => {
   // Fetch polling data only if feed_id is available and user is staff,
   // otherwise it will be fetched by the watcher or when isStaffUser becomes true.
   if (props.feed_id && isStaffUser.value) {
-     count_fetch.value +=1 // account for this fetch
-     fetchFeedPollingData(props.feed_id).finally(() => count_fetch.value -=1);
+    count_fetch.value += 1 // account for this fetch
+    fetchFeedPollingData(props.feed_id).finally(() => (count_fetch.value -= 1))
   }
 })
 
@@ -413,24 +320,27 @@ watch(
       fetchArticles()
       fetchFeeds()
       if (isStaffUser.value) {
-        count_fetch.value +=1 // account for this fetch
-        fetchFeedPollingData(newId as string).finally(() => count_fetch.value -=1);
+        count_fetch.value += 1 // account for this fetch
+        fetchFeedPollingData(newId as string).finally(() => (count_fetch.value -= 1))
       }
     }
   },
 )
 
 // Watch for isStaffUser to become true and feed_id to be available, then fetch polling data
-watch([isStaffUser, () => props.feed_id], ([staff, feedIdNew], [_, feedIdOld]) => {
-  if (staff && feedIdNew) {
-    // Check if feedId actually changed or if it's the initial load for a staff user
-    if (feedPollingData.value.length === 0 || feedIdNew !== feedIdOld) {
-        count_fetch.value +=1 // account for this fetch
-        fetchFeedPollingData(feedIdNew as string).finally(() => count_fetch.value -=1);
+watch(
+  [isStaffUser, () => props.feed_id],
+  ([staff, feedIdNew], [, feedIdOld]) => {
+    if (staff && feedIdNew) {
+      // Check if feedId actually changed or if it's the initial load for a staff user
+      if (feedPollingData.value.length === 0 || feedIdNew !== feedIdOld) {
+        count_fetch.value += 1 // account for this fetch
+        fetchFeedPollingData(feedIdNew as string).finally(() => (count_fetch.value -= 1))
+      }
     }
-  }
-}, { immediate: false }) // Set immediate to false, onMounted handles initial load if user is already staff
-
+  },
+  { immediate: false },
+) // Set immediate to false, onMounted handles initial load if user is already staff
 
 async function refresh_feed(feed_id: number) {
   count_fetch.value = 2 // For fetchArticles and fetchFeeds
@@ -439,20 +349,20 @@ async function refresh_feed(feed_id: number) {
   })
   if (response.status == 403) {
     document.location = "/accounts/"
-  } else if (response.ok){
+  } else if (response.ok) {
     const data = await response.json()
     alert(`Fonte aggiornata: ${JSON.stringify(data)}`)
     fetchArticles() // This will decrement count_fetch
-    fetchFeeds()    // This will also decrement count_fetch
+    fetchFeeds() // This will also decrement count_fetch
     if (isStaffUser.value) {
-      count_fetch.value +=1 // account for this fetch
-      fetchFeedPollingData(props.feed_id).finally(() => count_fetch.value -=1);
+      count_fetch.value += 1 // account for this fetch
+      fetchFeedPollingData(props.feed_id).finally(() => (count_fetch.value -= 1))
     }
   } else {
     alert(`Errore durante l'aggiornamento della fonte.`)
     // Still decrement count_fetch as the main operations might have partially succeeded or failed
     // and we need to allow the UI to potentially render error states or existing data.
-    count_fetch.value = 0; // Reset to show UI
+    count_fetch.value = 0 // Reset to show UI
   }
 }
 </script>

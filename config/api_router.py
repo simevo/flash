@@ -5,9 +5,9 @@ from rest_framework.routers import SimpleRouter
 
 from flash.users.api.views import UserViewSet
 from news.api.views import ArticlesView
+from news.api.views import FeedPollingViewSet
 from news.api.views import FeedsView
 from news.api.views import ImageUploadView
-from news.api.views import FeedPollingViewSet
 from news.api.views import OPMLExportView
 from news.api.views import ProfileView
 from news.api.views import UserArticleListsView

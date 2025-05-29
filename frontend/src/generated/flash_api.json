@@ -601,6 +601,81 @@
         }
       }
     },
+    "/api/feed-polling/": {
+      "get": {
+        "operationId": "feed_polling_list",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "feed_id",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "tags": ["feed-polling"],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "tokenAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FeedPolling"
+                  }
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/feed-polling/{id}/": {
+      "get": {
+        "operationId": "feed_polling_retrieve",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "A unique integer value identifying this feed polling.",
+            "required": true
+          }
+        ],
+        "tags": ["feed-polling"],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "tokenAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeedPolling"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/feeds/": {
       "get": {
         "operationId": "feeds_list",
@@ -881,6 +956,27 @@
               }
             },
             "description": ""
+          }
+        }
+      }
+    },
+    "/api/feeds/opml/": {
+      "get": {
+        "operationId": "feeds_opml_retrieve",
+        "description": "Exports all feeds as an OPML file using ElementTree.",
+        "tags": ["feeds"],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "tokenAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "No response body"
           }
         }
       }
@@ -2480,6 +2576,56 @@
         },
         "required": ["homepage", "id", "language", "title", "url"]
       },
+      "FeedPolling": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "readOnly": true
+          },
+          "poll_start_time": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "poll_end_time": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "http_status_code": {
+            "type": "integer",
+            "maximum": 2147483647,
+            "minimum": -2147483648
+          },
+          "articles_retrieved": {
+            "type": "integer",
+            "maximum": 2147483647,
+            "minimum": -2147483648
+          },
+          "articles_failed": {
+            "type": "integer",
+            "maximum": 2147483647,
+            "minimum": -2147483648
+          },
+          "articles_stored": {
+            "type": "integer",
+            "maximum": 2147483647,
+            "minimum": -2147483648
+          },
+          "feed": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "articles_failed",
+          "articles_retrieved",
+          "articles_stored",
+          "feed",
+          "http_status_code",
+          "id",
+          "poll_end_time",
+          "poll_start_time"
+        ]
+      },
       "FeedSerializerSimple": {
         "type": "object",
         "properties": {
@@ -2760,6 +2906,21 @@
           },
           "list_fulltext": {
             "type": "boolean"
+          },
+          "is_bot_user": {
+            "type": "boolean"
+          },
+          "mastodon_client_id": {
+            "type": "string"
+          },
+          "mastodon_client_secret": {
+            "type": "string"
+          },
+          "mastodon_access_token": {
+            "type": "string"
+          },
+          "mastodon_api_base_url": {
+            "type": "string"
           }
         }
       },
@@ -2915,6 +3076,21 @@
           },
           "list_fulltext": {
             "type": "boolean"
+          },
+          "is_bot_user": {
+            "type": "boolean"
+          },
+          "mastodon_client_id": {
+            "type": "string"
+          },
+          "mastodon_client_secret": {
+            "type": "string"
+          },
+          "mastodon_access_token": {
+            "type": "string"
+          },
+          "mastodon_api_base_url": {
+            "type": "string"
           }
         },
         "required": ["id"]

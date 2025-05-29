@@ -303,7 +303,7 @@ watch(
     data-bs-toggle="offcanvas"
     data-bs-target="#offcanvasFilters"
     type="button"
-    style="position: fixed; top: 5rem; left: 95vw; z-index: 1030;"
+    style="position: fixed; top: 5rem; left: 95vw; z-index: 1030"
   >
     <img
       v-if="not_filtering"
@@ -385,9 +385,7 @@ watch(
         aria-labelledby="all-news-tab"
         tabindex="0"
       >
-        <p>
-          Gli articoli più recenti.
-        </p>
+        <p>Gli articoli più recenti.</p>
         <div v-if="count_fetch <= 0 && initialDataLoaded.allNews">
           <div class="row my-3" v-if="filtered_articles.length == 0">
             <div class="col-md-12">
@@ -468,9 +466,7 @@ watch(
         tabindex="0"
       >
         <div v-if="count_fetch <= 0 && initialDataLoaded.read">
-          <p>
-            Gli articoli più recenti già letti da altri e/o da te
-          </p>
+          <p>Gli articoli più recenti già letti da altri e/o da te</p>
           <div class="row my-3" v-if="readArticles.length == 0">
             <div class="col-md-12">
               <div class="alert alert-warning text-center" role="alert">
@@ -521,15 +517,16 @@ watch(
           <div class="row my-3" v-if="forYouArticles.length == 0">
             <div class="col-md-12">
               <div class="alert alert-warning text-center" role="alert">
-                Non ci sono articoli per te da visualizzare. Assicurati
-                di avere una lista chiamata "newsfeed" con articoli.
+                Non ci sono articoli per te da visualizzare. Assicurati di avere una lista chiamata
+                "newsfeed" con articoli.
               </div>
             </div>
           </div>
           <div class="row my-3" v-else>
             <div class="col-md-12">
               <p>
-                Personalizza questa lista automatica scegliendo le parole (prioritarie o vietate) e le lingue preferite nella
+                Personalizza questa lista automatica scegliendo le parole (prioritarie o vietate) e
+                le lingue preferite nella
                 <RouterLink to="/settings">pagina "Impostazioni"</RouterLink>.
               </p>
               <div class="wrapper">

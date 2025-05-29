@@ -148,6 +148,38 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  "/api/feed-polling/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations["feed_polling_list"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/feed-polling/{id}/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations["feed_polling_retrieve"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   "/api/feeds/": {
     parameters: {
       query?: never
@@ -190,6 +222,23 @@ export interface paths {
     get?: never
     put?: never
     post: operations["feeds_refresh_create"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/feeds/opml/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** @description Exports all feeds as an OPML file using ElementTree. */
+    get: operations["feeds_opml_retrieve"]
+    put?: never
+    post?: never
     delete?: never
     options?: never
     head?: never
@@ -598,6 +647,18 @@ export interface components {
       frequency?: string | null
       tags?: string[] | null
     }
+    FeedPolling: {
+      readonly id: number
+      /** Format: date-time */
+      poll_start_time: string
+      /** Format: date-time */
+      poll_end_time: string
+      http_status_code: number
+      articles_retrieved: number
+      articles_failed: number
+      articles_stored: number
+      feed: number
+    }
     FeedSerializerSimple: {
       id: number
       title: string
@@ -682,6 +743,11 @@ export interface components {
       languages?: string[]
       list_hour?: number
       list_fulltext?: boolean
+      is_bot_user?: boolean
+      mastodon_client_id?: string
+      mastodon_client_secret?: string
+      mastodon_access_token?: string
+      mastodon_api_base_url?: string
     }
     PatchedUser: {
       /** @description Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only. */
@@ -731,6 +797,11 @@ export interface components {
       languages?: string[]
       list_hour?: number
       list_fulltext?: boolean
+      is_bot_user?: boolean
+      mastodon_client_id?: string
+      mastodon_client_secret?: string
+      mastodon_access_token?: string
+      mastodon_api_base_url?: string
     }
     User: {
       /** @description Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only. */
@@ -1069,6 +1140,49 @@ export interface operations {
       }
     }
   }
+  feed_polling_list: {
+    parameters: {
+      query?: {
+        feed_id?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["FeedPolling"][]
+        }
+      }
+    }
+  }
+  feed_polling_retrieve: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        /** @description A unique integer value identifying this feed polling. */
+        id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["FeedPolling"]
+        }
+      }
+    }
+  }
   feeds_list: {
     parameters: {
       query?: never
@@ -1216,6 +1330,24 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["Feed"]
         }
+      }
+    }
+  }
+  feeds_opml_retrieve: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description No response body */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
       }
     }
   }

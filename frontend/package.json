@@ -22,7 +22,6 @@
     "@vueuse/core": "^11.3.0",
     "bootstrap": "^5.3.5",
     "bootstrap-icons": "^1.11.3",
-    "chart.js": "^4.4.9",
     "franc": "^6.2.0",
     "pinia": "^3.0.2",
     "quill": "^2.0.3",

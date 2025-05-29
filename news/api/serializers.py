@@ -4,10 +4,10 @@ from rest_framework import serializers
 
 from news.models import Articles
 from news.models import ArticlesCombined
+from news.models import FeedPolling
 from news.models import Feeds
 from news.models import FeedsCombined
 from news.models import Profile
-from news.models import FeedPolling
 from news.models import UserArticleLists
 from news.models import UserFeeds
 

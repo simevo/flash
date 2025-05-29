@@ -47,11 +47,11 @@ from news.api.serializers import ArticleReadSerializer
 from news.api.serializers import ArticleSerializer
 from news.api.serializers import ArticleSerializerFull
 from news.api.serializers import FeedCreateSerializer
+from news.api.serializers import FeedPollingSerializer
 from news.api.serializers import FeedSerializer
 from news.api.serializers import FeedSerializerSimple
 from news.api.serializers import ProfileSerializer
 from news.api.serializers import UserArticleListsSerializer
-from news.api.serializers import FeedPollingSerializer
 from news.api.serializers import UserArticleListsSerializerFull
 from news.api.serializers import UserFeedSerializer
 from news.models import Articles
