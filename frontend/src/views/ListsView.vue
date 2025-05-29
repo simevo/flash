@@ -20,6 +20,10 @@ type ArticleRead = components["schemas"]["ArticleRead"]
 type Article = components["schemas"]["ArticleSerializerFull"]
 type FeedSerializerSimple = components["schemas"]["FeedSerializerSimple"]
 type UserArticleListsSerializerFull = components["schemas"]["UserArticleListsSerializerFull"]
+type ListsMeRetrieve = (components["schemas"]["UserArticleListsSerializerFull"] & {
+  article_count?: number
+  total_estimated_reading_time?: string
+})[]
 type PaginatedArticleReadList = components["schemas"]["PaginatedArticleReadList"]
 
 const route = useRoute()
@@ -34,7 +38,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 const articles: Ref<ArticleRead[]> = ref([])
 const feeds: Ref<FeedSerializerSimple[]> = ref([])
-const lists: Ref<UserArticleListsSerializerFull[]> = ref([])
+const lists: Ref<ListsMeRetrieve> = ref([])
 const count_fetch = ref(2)
 const current_list_id: Ref<string | null> = ref(props.list_id)
 
@@ -573,10 +577,9 @@ function window_open(url: string): void {
               v-if="current_list && current_list.article_count !== undefined"
               class="mt-3 text-muted"
             >
-              This list contains {{ current_list.article_count }}
-              {{ current_list.article_count === 1 ? "article" : "articles" }}. Estimated reading
-              time:
-              {{ current_list.total_estimated_reading_time_minutes }} minutes.
+              Questa lista contiene {{ current_list.article_count }}
+              {{ current_list.article_count === 1 ? "articolo" : "articoli" }}. Il tempo totale di
+              lettura stimato è: {{ current_list.total_estimated_reading_time }}.
             </p>
           </div>
         </div>

@@ -1664,7 +1664,10 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          "application/json": components["schemas"]["UserArticleLists"]
+          "application/json": (components["schemas"]["UserArticleListsSerializerFull"] & {
+            article_count?: number
+            total_estimated_reading_time?: string
+          })[]
         }
       }
     }

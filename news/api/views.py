@@ -1,8 +1,7 @@
-# ruff: noqa: E501
+# ruff: noqa: E501, PLR2004, PLR0915, C901, PLR0911, PLR0912
 
 import html
 import re
-import time
 import uuid
 from io import BytesIO
 from xml.etree import ElementTree as ET
@@ -92,14 +91,14 @@ def get_epub(
     articles,
     list_name,
     article_count,
-    total_estimated_reading_time_minutes,
+    total_estimated_reading_time,
 ):
     book = epub.EpubBook()
 
     # set metadata
     book.set_identifier(str(uuid.uuid4()))
     book.set_title(
-        f"{list_name} ({article_count} articles, {total_estimated_reading_time_minutes} min read)"
+        f"{list_name} ({article_count} articles, {total_estimated_reading_time} min read)",
     )
     base_language = "it"
     book.set_language(base_language)
@@ -114,18 +113,20 @@ def get_epub(
     )
     summary_chapter.content = f"""<h1>List Summary: {list_name}</h1>
 <p>Total articles: {article_count}</p>
-<p>Estimated total reading time: {total_estimated_reading_time_minutes} minutes</p>"""
+<p>Estimated total reading time: {total_estimated_reading_time} minutes</p>"""
     book.add_item(summary_chapter)
 
     # create chapters
     cs = []  # chapters
     fs = {}  # chapters grouped by feed_id
     fn = {}  # feed name for each feed_id
-    spine = ["nav", summary_chapter]  # Add summary chapter to the beginning of the spine
+    spine = [
+        "nav",
+        summary_chapter,
+    ]  # Add summary chapter to the beginning of the spine
     i = 1
     for data in articles:
-        # Individual article reading time calculation - WPM is 200, 6 chars per word
-        data["minutes"] = int(data["length"] / (6 * 200)) if data["length"] else 0
+        data["minutes"] = int(data["length"] / (6 * 300)) if data["length"] else 0
 
         if not data["title"] and not data["title_original"]:
             title_combined = "[Senza titolo]"
@@ -160,18 +161,18 @@ def get_epub(
         c.content = f"""<h1>{data['title_combined']}</h1>
 <p><strong>Pubblicato</strong>: {data['stamp']}</p>
 <p><strong>Di</strong>: {data['author']}</p>
-<p><strong>Da</strong>: {data['feed']['title']}</p>
+<p><strong>Da</strong>: {data['feed']}</p>
 <p><strong>Tempo di lettura stimato</strong>: {data['minutes']} minuti</p>
 {data['content_combined']}
 <p><strong>Commenta</strong>: <a href="https://{data['aggregator_hostname']}/article/{data['id']}">https://{data['aggregator_hostname']}/article/{data['id']}</a></p>
 <p><strong>Vai all'articolo originale</strong>: <a href="{data['url']}">{data['url']}</a></p>"""
         cs.append(c)
-        feed_id = data["feed"]["id"]
+        feed_id = data["feed"]
         if feed_id in fs:
             fs[feed_id] = fs[feed_id] + (c,)
         else:
             fs[feed_id] = (c,)
-            fn[feed_id] = data["feed"]["title"]
+            fn[feed_id] = str(data["feed"])
         # add chapter
         book.add_item(c)
         # add chapter to spine
@@ -569,11 +570,76 @@ class UserFeedsView(viewsets.ModelViewSet):
         return Response(uf.id, status=status.HTTP_201_CREATED)
 
 
+def seconds_to_string1(seconds: float) -> str:
+    """
+    Convert seconds to human-readable time interval string in Italian.
+    """
+    hour = 3600
+    day = 24 * hour
+    week = 7 * day
+    year = 365.2421 * day
+    month = year / 12.0
+
+    years = round(seconds / year)
+    months = round(seconds / month)
+    weeks = round(seconds / week)
+    days = round(seconds / day)
+    hours = round(seconds / hour)
+    minutes = round(seconds / 60)
+
+    if years >= 2:
+        return f"{years} anni"
+    if years == 1:
+        return "un anno"
+    if months >= 2:
+        return f"{months} mesi"
+    if months == 1:
+        return "un mese"
+    if weeks > 1:
+        return f"{weeks} settimane"
+    if weeks == 1:
+        return "una settimana"
+    if days >= 2:
+        return f"{days} giorni"
+    if days == 1:
+        return "un giorno"
+    if hours > 1:
+        return f"{hours} ore"
+    if hours == 1:
+        return "un'ora"
+    if minutes > 1:
+        return f"{minutes} minuti"
+    if minutes == 1:
+        return "un minuto"
+    if seconds > 20:
+        return "½ minuto"
+    return "un attimo"
+
+
 class UserArticleListsView(viewsets.ModelViewSet):
     queryset = UserArticleLists.objects.all()
     serializer_class = UserArticleListsSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    @extend_schema(
+        responses={
+            200: {
+                "type": "array",
+                "items": {
+                    "allOf": [
+                        {"$ref": "#/components/schemas/UserArticleListsSerializerFull"},
+                        {
+                            "type": "object",
+                            "properties": {
+                                "article_count": {"type": "integer"},
+                                "total_estimated_reading_time": {"type": "string"},
+                            },
+                        },
+                    ],
+                },
+            },
+        },
+    )
     @action(detail=False, methods=["GET"])
     def me(self, request, *args, **kwargs):
         data = (
@@ -587,27 +653,34 @@ class UserArticleListsView(viewsets.ModelViewSet):
         for d in data:
             article_ids = d.pop("articles_set")
             # Ensure article_ids is a list of actual IDs, not None or other structures.
-            if article_ids is None: # Can happen if a list has no articles
+            if article_ids is None:  # Can happen if a list has no articles
                 article_ids = []
-            
+
             # Filter out None values if ArrayAgg can produce [None] for empty relations
             # though typically it produces an empty list or a list of actual PKs.
             # Let's be safe.
             processed_article_ids = [aid for aid in article_ids if aid is not None]
 
-            d["articles"] = processed_article_ids # Store the processed list of IDs
+            d["articles"] = processed_article_ids  # Store the processed list of IDs
             article_count = len(processed_article_ids)
             d["article_count"] = article_count
 
             if article_count > 0:
-                articles_data = ArticlesCombined.objects.filter(id__in=processed_article_ids)
-                total_length = sum(article.length for article in articles_data if article.length is not None)
-                total_estimated_reading_time_minutes = int(total_length / (6 * 200))
+                articles_data = ArticlesCombined.objects.filter(
+                    id__in=processed_article_ids,
+                )
+                total_length = sum(
+                    article.length
+                    for article in articles_data
+                    if article.length is not None
+                )
+                seconds = (60 * total_length) / 6 / 300
+                total_estimated_reading_time = seconds_to_string1(seconds)
             else:
-                total_estimated_reading_time_minutes = 0
-            
-            d["total_estimated_reading_time_minutes"] = total_estimated_reading_time_minutes
-            
+                total_estimated_reading_time = ""
+
+            d["total_estimated_reading_time"] = total_estimated_reading_time
+
         return Response(data)
 
     @extend_schema(
@@ -696,20 +769,30 @@ class UserArticleListsView(viewsets.ModelViewSet):
             user_id=request.user.id,
         )
         article_list_obj = get_object_or_404(queryset, pk=pk)
-        full_article_list = article_list_obj.articles.all()
-        article_count = full_article_list.count()
-        total_estimated_reading_time_minutes = 0
+        article_list = article_list_obj.articles.all()
+        article_count = article_list.count()
+        total_estimated_reading_time = ""
+        articles_data = []
         if article_count > 0:
-            sum_of_lengths = sum(article.length for article in full_article_list if article.length)
-            total_estimated_reading_time_minutes = int(sum_of_lengths / (6 * 200))
+            articles_data = ArticlesCombined.objects.filter(id__in=article_list)
+            for article in articles_data:
+                seconds = (60 * article.length) / 6 / 300
+                article.estimated_reading_time = seconds_to_string1(seconds)
+            total_length = sum(
+                article.length
+                for article in articles_data
+                if article.length is not None
+            )
+            seconds = (60 * total_length) / 6 / 300
+            total_estimated_reading_time = seconds_to_string1(seconds)
 
         return render(
             request,
             "list.html",
             {
-                "list": full_article_list,
+                "list": articles_data,
                 "article_count": article_count,
-                "total_estimated_reading_time_minutes": total_estimated_reading_time_minutes,
+                "total_estimated_reading_time": total_estimated_reading_time,
                 "list_name": article_list_obj.name,
             },
         )
@@ -722,17 +805,28 @@ class UserArticleListsView(viewsets.ModelViewSet):
         user_list = get_object_or_404(queryset, pk=pk)
         article_list = user_list.articles.all()
         article_count = article_list.count()
-        total_estimated_reading_time_minutes = 0
+        total_estimated_reading_time = ""
+        articles_data = []
         if article_count > 0:
-            sum_of_lengths = sum(article.length for article in article_list if article.length)
-            total_estimated_reading_time_minutes = int(sum_of_lengths / (6 * 200))
+            articles_data = ArticlesCombined.objects.filter(id__in=article_list)
+            for article in articles_data:
+                seconds = (60 * article.length) / 6 / 300
+                article.estimated_reading_time = seconds_to_string1(seconds)
+            total_length = sum(
+                article.length
+                for article in articles_data
+                if article.length is not None
+            )
+            seconds = (60 * total_length) / 6 / 300
+            total_estimated_reading_time = seconds_to_string1(seconds)
+
         html = render(
             request,
             "list.html",
             {
-                "list": article_list,
+                "list": articles_data,
                 "article_count": article_count,
-                "total_estimated_reading_time_minutes": total_estimated_reading_time_minutes,
+                "total_estimated_reading_time": total_estimated_reading_time,
                 "list_name": user_list.name,
             },
         )
@@ -758,19 +852,29 @@ class UserArticleListsView(viewsets.ModelViewSet):
             user_id=request.user.id,
         )
         user_list = get_object_or_404(queryset, pk=pk)
-        articles_qs = user_list.articles.all()
-        article_count = articles_qs.count()
-        total_estimated_reading_time_minutes = 0
+        article_list = user_list.articles.all()
+        article_count = article_list.count()
+        total_estimated_reading_time = ""
+        articles_data = []
         if article_count > 0:
-            sum_of_lengths = sum(article.length for article in articles_qs if article.length)
-            total_estimated_reading_time_minutes = int(sum_of_lengths / (6 * 200))
+            articles_data = ArticlesCombined.objects.filter(id__in=article_list)
+            for article in articles_data:
+                seconds = (60 * article.length) / 6 / 300
+                article.estimated_reading_time = seconds_to_string1(seconds)
+            total_length = sum(
+                article.length
+                for article in articles_data
+                if article.length is not None
+            )
+            seconds = (60 * total_length) / 6 / 300
+            total_estimated_reading_time = seconds_to_string1(seconds)
 
-        serializer = ArticleSerializerFull(articles_qs, many=True)
+        serializer = ArticleSerializerFull(articles_data, many=True)
         book = get_epub(
             serializer.data,
             user_list.name,
             article_count,
-            total_estimated_reading_time_minutes,
+            total_estimated_reading_time,
         )
         response = HttpResponse(content_type="application/epub+zip")
         response["Content-Disposition"] = (

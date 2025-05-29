@@ -20,13 +20,18 @@
   </head>
   <body>
     <h1>{{ list_name }}</h1>
-    {% if article_count is not None %}
     <p>
-      Total articles: {{ article_count }}<br />
-      Estimated total reading time: {{ total_estimated_reading_time_minutes }} minutes
+      Questa lista contiene {{ article_count }}
+      {% if article_count == 1 %}
+        articolo
+      {% else %}
+        articoli
+      {% endif %}
+      .
+      Il tempo totale di lettura
+      stimato è: {{ total_estimated_reading_time }}.
     </p>
-    {% endif %}
-    <hr>
+    <hr />
     {% for article in list %}
       <h2 id="ref{{ article.id }}">
         {% if article.language != 'it' %}[{{ article.title_original }}]{% endif %}
@@ -40,6 +45,9 @@
       </p>
       <p>
         <strong>Da</strong>: {{ article.feed }}
+      </p>
+      <p>
+        <strong>Tempo di lettura stimato</strong>: {{ article.estimated_reading_time }}
       </p>
       {% if article.content %}
         {% if article.language != 'it' %}

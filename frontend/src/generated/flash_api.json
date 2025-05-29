@@ -1517,7 +1517,25 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UserArticleLists"
+                  "type": "array",
+                  "items": {
+                    "allOf": [
+                      {
+                        "$ref": "#/components/schemas/UserArticleListsSerializerFull"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "article_count": {
+                            "type": "integer"
+                          },
+                          "total_estimated_reading_time": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    ]
+                  }
                 }
               }
             },
