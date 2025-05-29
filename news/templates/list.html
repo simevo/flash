@@ -19,6 +19,14 @@
     </style>
   </head>
   <body>
+    <h1>{{ list_name }}</h1>
+    {% if article_count is not None %}
+    <p>
+      Total articles: {{ article_count }}<br />
+      Estimated total reading time: {{ total_estimated_reading_time_minutes }} minutes
+    </p>
+    {% endif %}
+    <hr>
     {% for article in list %}
       <h2 id="ref{{ article.id }}">
         {% if article.language != 'it' %}[{{ article.title_original }}]{% endif %}

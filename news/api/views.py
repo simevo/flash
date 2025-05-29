@@ -88,25 +88,44 @@ class StandardResultsSetPagination(pagination.PageNumberPagination):
     page_size = 200
 
 
-def get_epub(articles):
+def get_epub(
+    articles,
+    list_name,
+    article_count,
+    total_estimated_reading_time_minutes,
+):
     book = epub.EpubBook()
 
     # set metadata
     book.set_identifier(str(uuid.uuid4()))
-    book.set_title(f"Flash {time.strftime('%Y-%m-%dT%H:%M:%S', time.gmtime())}")
+    book.set_title(
+        f"{list_name} ({article_count} articles, {total_estimated_reading_time_minutes} min read)"
+    )
     base_language = "it"
     book.set_language(base_language)
 
     book.add_author("flash")
 
+    # Create a chapter for the summary
+    summary_chapter = epub.EpubHtml(
+        title="Summary",
+        file_name="summary.xhtml",
+        lang=base_language,
+    )
+    summary_chapter.content = f"""<h1>List Summary: {list_name}</h1>
+<p>Total articles: {article_count}</p>
+<p>Estimated total reading time: {total_estimated_reading_time_minutes} minutes</p>"""
+    book.add_item(summary_chapter)
+
     # create chapters
     cs = []  # chapters
     fs = {}  # chapters grouped by feed_id
     fn = {}  # feed name for each feed_id
-    spine = ["nav"]
+    spine = ["nav", summary_chapter]  # Add summary chapter to the beginning of the spine
     i = 1
     for data in articles:
-        data["minutes"] = int(data["length"] / 6 / 300)
+        # Individual article reading time calculation - WPM is 200, 6 chars per word
+        data["minutes"] = int(data["length"] / (6 * 200)) if data["length"] else 0
 
         if not data["title"] and not data["title_original"]:
             title_combined = "[Senza titolo]"
@@ -566,7 +585,29 @@ class UserArticleListsView(viewsets.ModelViewSet):
             .values("id", "name", "automatic", "articles_set", "user")
         )
         for d in data:
-            d["articles"] = d.pop("articles_set")
+            article_ids = d.pop("articles_set")
+            # Ensure article_ids is a list of actual IDs, not None or other structures.
+            if article_ids is None: # Can happen if a list has no articles
+                article_ids = []
+            
+            # Filter out None values if ArrayAgg can produce [None] for empty relations
+            # though typically it produces an empty list or a list of actual PKs.
+            # Let's be safe.
+            processed_article_ids = [aid for aid in article_ids if aid is not None]
+
+            d["articles"] = processed_article_ids # Store the processed list of IDs
+            article_count = len(processed_article_ids)
+            d["article_count"] = article_count
+
+            if article_count > 0:
+                articles_data = ArticlesCombined.objects.filter(id__in=processed_article_ids)
+                total_length = sum(article.length for article in articles_data if article.length is not None)
+                total_estimated_reading_time_minutes = int(total_length / (6 * 200))
+            else:
+                total_estimated_reading_time_minutes = 0
+            
+            d["total_estimated_reading_time_minutes"] = total_estimated_reading_time_minutes
+            
         return Response(data)
 
     @extend_schema(
@@ -654,9 +695,24 @@ class UserArticleListsView(viewsets.ModelViewSet):
         queryset = UserArticleLists.objects.filter(
             user_id=request.user.id,
         )
-        article_list = get_object_or_404(queryset, pk=pk)
-        full_article_list = article_list.articles.all()
-        return render(request, "list.html", {"list": full_article_list})
+        article_list_obj = get_object_or_404(queryset, pk=pk)
+        full_article_list = article_list_obj.articles.all()
+        article_count = full_article_list.count()
+        total_estimated_reading_time_minutes = 0
+        if article_count > 0:
+            sum_of_lengths = sum(article.length for article in full_article_list if article.length)
+            total_estimated_reading_time_minutes = int(sum_of_lengths / (6 * 200))
+
+        return render(
+            request,
+            "list.html",
+            {
+                "list": full_article_list,
+                "article_count": article_count,
+                "total_estimated_reading_time_minutes": total_estimated_reading_time_minutes,
+                "list_name": article_list_obj.name,
+            },
+        )
 
     @action(detail=True)
     def pdf(self, request, pk=None):
@@ -665,7 +721,21 @@ class UserArticleListsView(viewsets.ModelViewSet):
         )
         user_list = get_object_or_404(queryset, pk=pk)
         article_list = user_list.articles.all()
-        html = render(request, "list.html", {"list": article_list})
+        article_count = article_list.count()
+        total_estimated_reading_time_minutes = 0
+        if article_count > 0:
+            sum_of_lengths = sum(article.length for article in article_list if article.length)
+            total_estimated_reading_time_minutes = int(sum_of_lengths / (6 * 200))
+        html = render(
+            request,
+            "list.html",
+            {
+                "list": article_list,
+                "article_count": article_count,
+                "total_estimated_reading_time_minutes": total_estimated_reading_time_minutes,
+                "list_name": user_list.name,
+            },
+        )
         response = HttpResponse(content_type="application/pdf")
         response["Content-Disposition"] = (
             f'attachment; filename="list_{user_list.name}.pdf"'
@@ -688,11 +758,20 @@ class UserArticleListsView(viewsets.ModelViewSet):
             user_id=request.user.id,
         )
         user_list = get_object_or_404(queryset, pk=pk)
-        serializer = UserArticleListsSerializerFull(user_list)
-        article_list = serializer.data["articles"]
-        full_article_list = ArticlesCombined.objects.filter(id__in=article_list)
-        serializer = ArticleSerializerFull(full_article_list, many=True)
-        book = get_epub(serializer.data)
+        articles_qs = user_list.articles.all()
+        article_count = articles_qs.count()
+        total_estimated_reading_time_minutes = 0
+        if article_count > 0:
+            sum_of_lengths = sum(article.length for article in articles_qs if article.length)
+            total_estimated_reading_time_minutes = int(sum_of_lengths / (6 * 200))
+
+        serializer = ArticleSerializerFull(articles_qs, many=True)
+        book = get_epub(
+            serializer.data,
+            user_list.name,
+            article_count,
+            total_estimated_reading_time_minutes,
+        )
         response = HttpResponse(content_type="application/epub+zip")
         response["Content-Disposition"] = (
             f'attachment; filename="list_{user_list.name}.epub"'

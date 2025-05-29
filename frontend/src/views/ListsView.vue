@@ -568,6 +568,16 @@ function window_open(url: string): void {
                 />.
               </div>
             </div>
+            <!-- Display article count and estimated reading time -->
+            <p
+              v-if="current_list && current_list.article_count !== undefined"
+              class="mt-3 text-muted"
+            >
+              This list contains {{ current_list.article_count }}
+              {{ current_list.article_count === 1 ? "article" : "articles" }}. Estimated reading
+              time:
+              {{ current_list.total_estimated_reading_time_minutes }} minutes.
+            </p>
           </div>
         </div>
         <div class="row" v-if="current_list && current_list.articles.length > 0">
