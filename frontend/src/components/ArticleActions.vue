@@ -173,7 +173,7 @@ function window_open(url: string): void {
             v-if="list.articles.indexOf(article.id) == -1"
             v-show="list.automatic == false"
             class="dropdown-item"
-            @click="save(list.id)"
+            @click.prevent="save(list.id)"
             href="#"
             tabindex="-1"
             aria-disabled="true"
@@ -193,7 +193,7 @@ function window_open(url: string): void {
           href="#"
           tabindex="-1"
           aria-disabled="true"
-          @click="create_list_and_save()"
+          @click.prevent="create_list_and_save()"
           >Crea una nuova lista e salva</a
         >
       </div>
@@ -225,7 +225,7 @@ function window_open(url: string): void {
           href="#"
           title="Copia link nel clipboard"
           role="button"
-          @click="copy_link(`https://${host}/article/${article.id}`)"
+          @click.prevent="copy_link(`https://${host}/article/${article.id}`)"
         >
           <img
             class="icon"
@@ -411,7 +411,7 @@ function window_open(url: string): void {
           href="#"
           title="Scarica in formato html"
           role="button"
-          @click="window_open(`/api/articles/${article.id}/html/`)"
+          @click.prevent="window_open(`/api/articles/${article.id}/html/`)"
         >
           <img
             class="icon"
@@ -427,7 +427,7 @@ function window_open(url: string): void {
           href="#"
           title="Scarica in formato epub"
           role="button"
-          @click="window_open(`/api/articles/${article.id}/epub/`)"
+          @click.prevent="window_open(`/api/articles/${article.id}/epub/`)"
         >
           <img
             class="icon"
@@ -443,7 +443,7 @@ function window_open(url: string): void {
           href="#"
           title="Scarica in formato pdf"
           role="button"
-          @click="window_open(`/api/articles/${article.id}/pdf/`)"
+          @click.prevent="window_open(`/api/articles/${article.id}/pdf/`)"
         >
           <img
             class="icon"
