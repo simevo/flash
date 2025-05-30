@@ -33,7 +33,7 @@
           </button>
         </h1>
         <div class="input-group position-relative d-inline-flex align-items-center mb-3">
-          <label for="language" class="col-2"> Lingua </label>
+          <label for="language" class="col-2">Lingua</label>
           <select
             v-model="language"
             class="form-select"
@@ -49,7 +49,7 @@
           </select>
         </div>
         <div class="input-group position-relative d-inline-flex align-items-center mb-3">
-          <label for="text" class="col-2"> Ricerca </label>
+          <label for="text" class="col-2">Ricerca</label>
           <input
             type="text"
             class="form-control"
@@ -70,7 +70,7 @@
           ></button>
         </div>
         <div class="input-group position-relative d-inline-flex align-items-center mb-3">
-          <label class="col-2"> Tags </label>
+          <label class="col-2">Tags</label>
           <span
             v-for="[tag, value] of Object.entries(tags)"
             :key="tag"
@@ -92,7 +92,7 @@
           ></button>
         </div>
         <div class="input-group position-relative d-inline-flex align-items-center mb-3">
-          <label for="ordinamento" class="col-2"> Ordinamento </label>
+          <label for="ordinamento" class="col-2">Ordinamento</label>
           <select
             v-model="sort_by"
             class="form-select"
@@ -131,6 +131,25 @@
             @click="toggle_sort()"
           />
         </div>
+        <div class="input-group position-relative d-inline-flex align-items-center mb-3">
+          <input
+            id="hidden"
+            name="hidden"
+            type="checkbox"
+            class="form-checkbox col-1"
+            v-model="hidden"
+          />
+          <label for="hidden" class="col-5">Nascoste</label>
+          <input
+            id="hidden"
+            name="hidden"
+            type="checkbox"
+            class="form-checkbox col-1"
+            v-model="preferred"
+          />
+          <label for="preferred" class="col-2">Preferite</label>
+        </div>
+
         <hr />
         <div v-if="filtered_feeds.length == 0">
           <div class="alert alert-warning text-center" role="alert">
@@ -221,6 +240,9 @@ const languages: { [key: string]: string } = {
   de: "Tedesco",
 }
 
+const hidden = ref(false)
+const preferred = ref(false)
+
 async function fetchFeeds() {
   const response = await fetch_wrapper(`../../api/feeds/`)
   if (response.status == 403) {
@@ -244,17 +266,24 @@ const filtered_feeds = computed(() => {
       : feeds.value.filter((feed) => {
           return feed.language === language.value
         })
-  const fff = ff.filter((feed) => {
-    if (feed.tags) {
-      return !feed.tags.some((tag) => {
-        if (!tags.value[<tag_keys>tag]) {
-          return true
-        }
-      })
-    } else {
+  const fff = ff
+    .filter((feed) => {
+      if (feed.tags) {
+        return !feed.tags.some((tag) => {
+          if (!tags.value[<tag_keys>tag]) {
+            return true
+          }
+        })
+      } else {
+        return true
+      }
+    })
+    .filter((feed) => {
+      if (preferred.value && feed.my_rating == 5) return true
+      if (hidden.value && feed.my_rating == -5) return true
+      if (preferred.value || hidden.value) return false
       return true
-    }
-  })
+    })
   const search_value = search.value.toLowerCase()
   if (search_value) {
     const regex =
