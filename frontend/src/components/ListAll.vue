@@ -68,12 +68,12 @@ const filters_summary = computed(() => {
   if (not_filtering.value) {
     return "Filtra gli articoli"
   } else {
-    let summary = "Filtro articoli attivo"
+    let summary = " Filtro articoli attivo"
     if (filters.what.trim()) {
       summary += ` - per parole chiave [${filters.what.trim()}]`
     }
     if (filters.when !== "all") {
-      summary += ` - per data: [${filters.when}]`
+      summary += ` - per data: [${filters.when}] giorni`
     }
     if (filters.language !== "all") {
       summary += ` - per lingua: [${filters.language}]`
@@ -206,7 +206,7 @@ onDeactivated(() => {
     data-bs-toggle="offcanvas"
     data-bs-target="#offcanvasFilters"
     type="button"
-    style="position: fixed; top: 5rem; left: 95vw; z-index: 1030"
+    style="position: absolute; top: 5rem; right: 0.5em; z-index: 1030"
   >
     <img
       v-if="not_filtering"
@@ -284,8 +284,10 @@ onDeactivated(() => {
   <div class="container my-3" v-else>
     <div class="row">
       <div class="text-center col-md-8 offset-md-2">
-        <h1 class="mb-3" v-if="!not_filtering">{{ filters_summary }}...</h1>
-        <p class="mb-3">Recupero la lista di tutti gli articoli recenti ...</p>
+        <p class="mb-3">
+          Recupero la lista di tutti gli articoli recenti ...
+          <span v-if="!not_filtering">{{ filters_summary }}</span>
+        </p>
         <div class="spinner-border text-primary" role="status">
           <span class="visually-hidden">Loading...</span>
         </div>
