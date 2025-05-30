@@ -38,3 +38,27 @@ The command will output a list of duplicate sets, where each set contains articl
 Example:
 
     kubectl -n flash exec flash-6dd97d9dcc-s4rgm -- python manage.py find_duplicates 0.01 4000000
+
+## Feed Polling Statistics
+
+The system automatically records statistics for each attempt to poll an RSS feed. This information can be valuable for administrators to monitor the health and performance of different feeds.
+
+The following data is recorded for each poll:
+- **Feed**: The feed that was polled.
+- **Poll Start Time**: The timestamp when the polling for this feed began.
+- **Poll End Time**: The timestamp when the polling for this feed finished.
+- **HTTP Status Code**: The HTTP status code received when attempting to fetch the feed (e.g., 200 for success, 404 for not found, 500 for server error).
+- **Articles Retrieved**: The number of articles successfully identified and retrieved from the feed content.
+- **Articles Failed**: The number of articles that were identified but could not be processed or stored due to errors.
+- **Articles Stored**: The number of new, unique articles that were successfully stored in the database.
+
+**How to Access:**
+
+These statistics are stored in the `FeedPolling` model and can be accessed via the Django Admin interface. Look for the "Feed Pollings" (or similar, depending on pluralization in Django admin) section under the "News" application.
+
+**Interpreting the Statistics:**
+
+- **Frequent Errors (non-200 HTTP Status Codes):** May indicate that a feed URL is broken, has moved, or the source server is unreliable.
+- **Low `Articles Retrieved` or `Articles Stored`:** Could suggest issues with the feed format, or that the feed content is not changing frequently. If `Articles Retrieved` is high but `Articles Stored` is low, it might mean many duplicate articles are being fetched.
+- **High `Articles Failed`:** Points to problems in processing articles from that feed, possibly due to unexpected content structure.
+- **Long polling times (difference between `Poll End Time` and `Poll Start Time`):** Could indicate a slow or unresponsive feed source.

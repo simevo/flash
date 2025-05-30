@@ -3,17 +3,17 @@ flash - User Guide
 
 ## Features
 
-1. **Filtering** – from the home page, click on the "filter" button (the one with the funnel icon in the top-left) to expand an hidden “off-canvas” sidebar that offers several client-side filtering criteria: by language, date, length and source feed. As the filtering criteria are changed, the article list is updated in (almost) real time, as almost all the filtering is client-side. Finally, full-text search is server-side: once you enter one or more keywords, while you wait for the refreshed data to be loaded from the backend a spinner is shown with a reminder that the current list is filtered. All filtering settings are persisted on the device which means that if you use Flash from two devices you may see different newsfeeds.
+1. **Filtering** – from the main article list views (e.g., "Tutti", "Per te"), click on the "filter" button (a floating button with a funnel icon, typically on the right side of the screen) to expand an off-canvas sidebar. This sidebar offers several client-side filtering criteria: by language, date, and length. As the filtering criteria are changed, the article list is updated in (almost) real time. Full-text search is also available and is server-side: once you enter one or more keywords, while you wait for the refreshed data to be loaded from the backend a spinner is shown with a reminder that the current list is filtered. All filtering settings are persisted on the device, meaning if you use Flash from two devices, you may see different newsfeeds based on your local filter settings.
 
 2. **Sharing** on social media – from the article detail page, click on the “share” icon and open the link to the article in your favorite social network (Bluesky, Facebook, Linkedin, Mastodon, Reddit, Telegram, Twitter and Whatsapp). You also have the option "Copy link to clipboard" for SMS / email sharing.
 
 3. Saving articles to **lists** – you can create one or more lists then save articles for reading later, bookmarking and exporting. These are managed from the “Saved articles” (heart icon) page.
 
-4. **Algorithmic newsfeed** based on user preferences – a special article list (identified by the “robot” icon) is the "newsfeed" which is automatically updated every hour by the algorithm™ according to your preferences. The newsfeed personalization options are set:
+4. **Algorithmic newsfeed and Preferred Feeds** – The "Per te" (Personalized Newsfeed) tab (identified by a “robot” icon) displays an article list automatically updated every hour by an algorithm based on your preferences. The newsfeed personalization options are set:
 
    - languages and whitelisted / blacklisted keywords, from the “Settings” page
 
-   - feeds ratings: up to 5 stars (positive) and down to 5 thumbs-downs (if you rate a feed with 5 thumbs-downs, their articles will disappear from your personalized newsfeed completely!).
+   - feeds ratings: up to 5 stars (positive) and down to 5 thumbs-downs (if you rate a feed with 5 thumbs-downs, their articles will disappear from your personalized newsfeed completely!). Giving a high rating (e.g., 4 or 5 stars) to a feed signals it as a preferred source, and its articles will be prioritized in your "Per te" newsfeed. The "Preferiti" (Favorites) tab is dedicated to displaying articles specifically from these highly-rated feeds.
 
 5. Exporting lists as **RSS** feeds – all lists (including the automatic newsfeed) can be exported as anonymized and public RSS feeds (accessible without authentication) so that they can be consumed by other news aggregators or published automatically elsewhere: just click on the button with the RSS icon to copy the link to the clipboard. This feature can be used to create element / matrix rooms for each topic, where a "Feed Rss" bot publishes the relevant article links to bootstrap conversations.
 
@@ -47,9 +47,14 @@ flash - User Guide
 
 ## Basic usage
 
-The aggregator presents to the anonymous visitor a restricted list of news items (only articles which some logged-in user has already read):
+Flash offers two distinct experiences depending on whether you are logged in.
+
+**Anonymous Visitor Homepage:**
+
+The aggregator presents to the anonymous visitor a restricted list of news items (only articles which some logged-in user has already read). This page is server-rendered by Django.
 
 ![Home page](homepage.jpeg)
+[VERIFY SCREENSHOT: homepage.jpeg for anonymous users - ensure still accurate.]
 
 Clicking on an article opens an interstitial page:
 
@@ -59,8 +64,26 @@ which teases the user to log in to read the full text:
 
 ![Reserved article detail](res_article_detail.jpeg)
 
-Logged in users also see more information on the home page (for example an extract of the article):
+**Logged-in User Homepage (Tabbed Interface):**
 
-![Reserved home page](res_homepage.jpeg)
+Once logged in, users are presented with a client-rendered Single Page Application (SPA) built with Vue.js. This interface features a tabbed layout for navigating different article views:
 
-Anonymous pages are easy to recognize by the gray color of the header (after logging in the header color changes to "dark" [Mocha Mousse](https://www.pantone.com/eu/it/color-of-the-year/2025)), but they also differ because they are Server-side-rendered by Django, whereas the reserved pages are part of a client-rendered Single Page Application.
+[SCREENSHOT NEEDED: New logged-in homepage showing the tabbed interface (Tutti, Letti, Per te, Preferiti tabs) and the overall layout. This replaces res_homepage.jpeg.]
+
+The primary tabs typically include:
+-   **Tutti** (All Articles): Shows all available articles, paginated.
+-   **Letti** (Read Articles): Displays articles you have previously read.
+-   **Per te** (Personalized Newsfeed): Your algorithmic newsfeed, tailored to your preferences and feed ratings (see Feature 4).
+-   **Preferiti** (Favorites): Shows articles from your highly-rated (preferred) feeds.
+
+Articles within these tabbed views are displayed as cards, showing:
+-   The feed's logo (linking to the feed's page/source).
+-   The article title (linking to the full article detail page). If the article has been translated, both original and translated titles might be shown.
+-   A short excerpt of the article content.
+-   The author's name (linking to a page showing other articles by the same author).
+-   The publication time, displayed as a relative time (e.g., "2 hours ago").
+-   An estimated reading time for the article.
+
+These lists are paginated, and you can load more articles using a "Load more articles" button. Client-side filtering (by language, date, length) is available for these lists via the floating filter button (see Feature 1).
+
+Anonymous pages are easy to recognize by the gray color of the header. After logging in, the header color changes to "dark" ([Mocha Mousse](https://www.pantone.com/eu/it/color-of-the-year/2025)) for the SPA.
