@@ -1,18 +1,18 @@
 # ruff: noqa: S314, E501, UP031
-import re
+import json
 from pathlib import Path
-from xml.etree import ElementTree as ET
 
 import requests
 
 base_language = "it"
+SEPARATOR = "|||SEPARATOR|||"
 
 
 def secret(path):
     if secret.cached.get(path, "") == "":
         with Path(path).open() as secret_file:
             encoded_secret = secret_file.read()
-        secret.cached[path] = encoded_secret
+        secret.cached[path] = encoded_secret.strip()  # Ensure no leading/trailing whitespace
     return secret.cached[path]
 
 
@@ -23,95 +23,55 @@ class TranslationError(Exception):
     """Custom exception for translation errors."""
 
 
-def get_token():
-    # Get the access token from ADM, token is good for 10 minutes
-    key = secret("secrets/key")
-    url = f"https://api.cognitive.microsoft.com/sts/v1.0/issueToken?Subscription-Key={key}"
-    access_token = requests.post(url, data="", timeout=5)
-    if access_token.status_code == 200:  # noqa: PLR2004
-        token = "Bearer " + access_token.text
-    else:
-        message = f"error while getting token ! status code = {access_token.status_code}, status message = {access_token.text}"
-        raise TranslationError(message)
-    return token
+def translate(from_lang_code, title, content):
+    api_key = secret("secrets/key")
+    url = f"https://api.cognitive.microsofttranslator.com/translate?api-version=3.0&to={base_language}&from={from_lang_code}"
 
+    headers = {
+        "Ocp-Apim-Subscription-Key": api_key,
+        "Content-Type": "application/json",
+    }
 
-def translate(token, from_lang_code, title, content):
-    title_translated = ""
-    content_translated = ""
-    split = split_content(content, 8000)
-    for s in split:
-        xml = """<?xml version="1.0"?>
-            <TranslateArrayRequest>
-                <AppId/>
-                <From>%s</From>
-                <Options>
-                    <Category xmlns="http://schemas.datacontract.org/2004/07/Microsoft.MT.Web.Service.V2" />
-                    <ContentType xmlns="http://schemas.datacontract.org/2004/07/Microsoft.MT.Web.Service.V2">text/html</ContentType>
-                    <ReservedFlags xmlns="http://schemas.datacontract.org/2004/07/Microsoft.MT.Web.Service.V2" />
-                    <State xmlns="http://schemas.datacontract.org/2004/07/Microsoft.MT.Web.Service.V2" />
-                    <Uri xmlns="http://schemas.datacontract.org/2004/07/Microsoft.MT.Web.Service.V2" />
-                    <User xmlns="http://schemas.datacontract.org/2004/07/Microsoft.MT.Web.Service.V2" />
-                </Options>
-                <Texts>
-                    <string xmlns="http://schemas.microsoft.com/2003/10/Serialization/Arrays"><![CDATA[%s]]></string>
-                    <string xmlns="http://schemas.microsoft.com/2003/10/Serialization/Arrays"><![CDATA[%s]]></string>
-                </Texts>
-                <To>%s</To>
-            </TranslateArrayRequest>""" % (
-            from_lang_code,
-            title,
-            s,
-            base_language,
-        )
-        headers = {
-            "Authorization ": token,
-            "Content-Type": "application/xml; charset=utf-8",
-        }
-        url = "http://api.microsofttranslator.com/v2/Http.svc/TranslateArray"
-        translation_data = requests.post(
-            url,
-            headers=headers,
-            data=xml.encode("utf-8"),
-            timeout=30,
-        )  # make request
-        if translation_data.status_code == 200:  # noqa: PLR2004
-            translation = ET.fromstring(
-                translation_data.text.encode("utf-8"),
-            )  # parse xml return values
-            title_translated = translation[0][3].text
-            if len(translation) > 1:
-                if translation[1][3].text:
-                    content_translated += translation[1][3].text
-        else:
-            message = f"error ! status code = {translation_data.status_code}, status message = {translation_data.text}"
+    combined_text = f"{title}{SEPARATOR}{content}"
+    body = [{"Text": combined_text}]
+
+    translation_data = requests.post(
+        url,
+        headers=headers,
+        json=body,
+        timeout=30,
+    )
+
+    if translation_data.status_code == 200:  # noqa: PLR2004
+        try:
+            response_json = translation_data.json()
+            if not response_json or "translations" not in response_json[0]:
+                raise TranslationError("Invalid response format from translation API.")
+
+            translated_text_combined = response_json[0]["translations"][0]["text"]
+            
+            if SEPARATOR not in translated_text_combined:
+                # Handle cases where separator might be missing or altered by translation
+                # For now, we'll assume title is short and content is the rest
+                # This might need more robust handling depending on typical title/content lengths
+                # or if the separator itself can be part of the translatable text.
+                # A simple heuristic: if there's a period, split there, else assign all to content.
+                # This is a fallback and might not be perfect.
+                parts = translated_text_combined.split('.', 1)
+                if len(parts) > 1:
+                    title_translated = parts[0] + '.'
+                    content_translated = parts[1].strip()
+                else: # No period, or separator issue, assign all to content, title becomes empty or a fixed string
+                    title_translated = "" # Or some default, or log a warning
+                    content_translated = translated_text_combined
+            else:
+                title_translated, content_translated = translated_text_combined.split(SEPARATOR, 1)
+
+        except (json.JSONDecodeError, IndexError, KeyError) as e:
+            message = f"Error parsing translation response: {e}, Response: {translation_data.text}"
             raise TranslationError(message)
+    else:
+        message = f"Error ! status code = {translation_data.status_code}, status message = {translation_data.text}"
+        raise TranslationError(message)
+
     return (title_translated, content_translated)
-
-
-def split_content(content, max_length):
-    # splits the content in an array of strings
-    # with length approximately less than or equal to max_length
-    # taking care not to break up the tags
-    open_tag = re.compile(r"<")
-    close_tag = re.compile(r">")
-    split = []
-    while True:
-        s = content[:max_length]
-        content = content[max_length:]
-        o = len(open_tag.findall(s))
-        c = len(close_tag.findall(s))
-        if o > c:
-            pos = content.find(">")
-            if pos >= 0:
-                s = s + content[: pos + 1]
-                content = content[pos + 1 :]
-        if o < c:
-            pos = s.rfind(">")
-            if pos >= 0:
-                s = s[: pos - 1]
-                content = s[pos - 1 :] + content
-        split.append(s)
-        if len(content) == 0:
-            break
-    return split
