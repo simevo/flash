@@ -1,11 +1,11 @@
 flash - Admin Guide
 ===================
 
-## Adding a scraped feed
+## Adding a scraped RSS feed
 
 Certain sites lack an RSS feed. For these generate locally a config for mkfd as follows.
 
-Start he service locally:
+Start the service locally:
 
     docker-compose -f docker-compose.local.yml up mkfd
 
@@ -15,7 +15,7 @@ Assuming a3db0357d90b is the CONTAINER ID of mkfd (find out with `docker ps`), a
 
     docker cp a3db0357d90b:/app/configs/72365d96-68ec-4692-a0c2-22008f734f53.yaml .
 
-Then, assuming `mkfd-7497cf55d-6w2zk` is the name of the mkfd service (find out with `kubectl -n flash get pods`), copy over the file:
+Then, assuming `mkfd-7497cf55d-6w2zk` is the name of the mkfd service pod (find out with `kubectl -n flash get pods`), copy over the file:
 
     kubectl cp 72365d96-68ec-4692-a0c2-22008f734f53.yaml flash/mkfd-7497cf55d-6w2zk:/configs/.
 
@@ -30,6 +30,7 @@ Verify that the RSS feed is generated with:
 ## Detecting duplicates
 
 The command `find_duplicates` can be used to detect duplicate articles. It accepts as options arguments:
+
 - a threshold which is the minimum similarity score required to consider two articles as duplicates
 - a minimum article ID to process
 
@@ -43,7 +44,8 @@ Example:
 
 The system automatically records statistics for each attempt to poll an RSS feed. This information can be valuable for administrators to monitor the health and performance of different feeds.
 
-The following data is recorded for each poll:
+The following data is recorded for each poll attempt:
+
 - **Feed**: The feed that was polled.
 - **Poll Start Time**: The timestamp when the polling for this feed began.
 - **Poll End Time**: The timestamp when the polling for this feed finished.
@@ -52,13 +54,11 @@ The following data is recorded for each poll:
 - **Articles Failed**: The number of articles that were identified but could not be processed or stored due to errors.
 - **Articles Stored**: The number of new, unique articles that were successfully stored in the database.
 
-**How to Access:**
+These statistics are accessible for staff users in the feed datil page, under the exandable section "Monitoraggio".
 
-These statistics are stored in the `FeedPolling` model and can be accessed via the Django Admin interface. Look for the "Feed Pollings" (or similar, depending on pluralization in Django admin) section under the "News" application.
+Some tips for interpreting them:
 
-**Interpreting the Statistics:**
-
-- **Frequent Errors (non-200 HTTP Status Codes):** May indicate that a feed URL is broken, has moved, or the source server is unreliable.
-- **Low `Articles Retrieved` or `Articles Stored`:** Could suggest issues with the feed format, or that the feed content is not changing frequently. If `Articles Retrieved` is high but `Articles Stored` is low, it might mean many duplicate articles are being fetched.
-- **High `Articles Failed`:** Points to problems in processing articles from that feed, possibly due to unexpected content structure.
-- **Long polling times (difference between `Poll End Time` and `Poll Start Time`):** Could indicate a slow or unresponsive feed source.
+- Frequent Errors (non-200 HTTP Status Codes): May indicate that a feed URL is broken, has moved, the server is unreliable or just throttling automated requests.
+- Low "Articles Retrieved" or "Articles Stored": Could suggest issues with the article retrieval, or that the feed content is not changing frequently.
+- High "Articles Failed": Points to problems in processing articles from that feed, possibly due to unexpected content structure.
+- Long polling times (difference between "Poll End Time" and "Poll Start Time"): Could indicate a slow or unresponsive feed source.

@@ -7,22 +7,27 @@ This section describes the overall architecture of the Flash project, including 
 
 The architecture is the classical **three-tier** architecture for webapps:
 
-![architecture](./architettura.svg "Architecture")
+![architecture](./architecture.png "Architecture")
 
-The **front-end** (1) is implemented in HTML5 with:
+1. The **back-end** service is implemented in the Python 3.12 language as an "API only" [Django](https://www.djangoproject.com/) project based on [Django REST framework (DRF)](https://www.django-rest-framework.org/); there are no app forms/visual interfaces except the admin interface and the API playground provided by DRF.
 
-- the [Bootstrap CSS framework](https://getbootstrap.com/) version 5 (currently in beta)
+2. The **front-end** service executes the nginx web server which serves a bundle of static, "compiled" HTML5 / CSS /JavaScript file produced with the [vite](https://vite.dev/) build tool from TypeScript sources making use of:
 
-- the [Babel JavaScript transpiler](https://babeljs.io/) to convert from JavaScript ES6 source code into "compiled" ES5 code that can be grokked by any browser
+   - the [Bootstrap CSS framework](https://getbootstrap.com/) version 5.3
 
-- and [Vue.js front end JavaScript framework](https://vuejs.org/) version 2.
+   - and [Vue.js front end JavaScript framework](https://vuejs.org/) version 3;
 
-The **back-end** (2) is implemented in the Python 3.9 language as an "API only" [Django](https://www.djangoproject.com/) project based on [Django REST framework (DRF)](https://www.django-rest-framework.org/); there are no app forms/visual interfaces except the admin interface and the API playground provided by DRF.
+   Additionally nginx proxies the backend API as `/api`. In development mode nginx also proxies the vite development server.
 
-The **data-base** (3) reuses the existing PostgreSql database, with minimal changes to the tables as required by Django.
+3. Asynchronous **task processing** is based on the [Celery](https://docs.celeryq.dev/en/stable/index.html) distributed task queue, and takes care os slow tasks such as feed polling and calculating vector embeddings.
+
+4. The **data-base** service executes the PostgreSql relational database, with the [pgvector](https://github.com/pgvector/pgvector) vector similarity extension.
+
+5. The **readability** service runs [Readability.js](https://github.com/mozilla/readability) (a standalone version of the readability library used for Firefox Reader View) as a service, to retrieve the full text of articles for those feeds which do not include it in the RSS.
+
+6. The **mkfd** runs the [mkfd](https://github.com/TBosak/mkfd) RSS feed builder as a service, for those feeds that do not offer an RSS feed. See ["Adding a scraped RSS feed"](./ADMIN.md) in the Admin Guide.
 
 This architecture allows us to get the best out of Django (for the database interface, data types and API structure), while keeping the app UI reactive and fast.
-
 
 ## Database schema
 
