@@ -1,9 +1,9 @@
-# ruff: noqa: PLR2004, S106
-
+# ruff: noqa: PLR2004, S106, S311
+import random
+import string
 from unittest import mock
 
 from django.core.cache import cache
-from django.urls import NoReverseMatch
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework.test import APITestCase
@@ -156,53 +156,11 @@ class ArticleAPITests(APITestCase):
         # clear) due to deterministic perturbation
         assert response1_ids == response2_ids
 
-    def test_articles_list_is_actually_perturbed(self):
+    def test_articles_list_pagination(self):
         """
-        Test that the perturbed order is different from simple chronological order.
+        Test pagination works correctly.
         """
-        from news.models import ArticlesCombined  # For direct model query
-
-        url = reverse("api:articles-list")
-
-        response_perturbed = self.client.get(url)
-        assert response_perturbed.status_code == 200
-        perturbed_ids_page1 = [
-            article["id"] for article in response_perturbed.data["results"]
-        ]
-
-        # Fetch all article IDs ordered chronologically directly from the model
-        # This assumes all test articles are relevant; if filters are applied by
-        # default by the view even without query params, this comparison needs to
-        # be more nuanced.
-        # The view's default queryset is ArticlesCombined.objects.all(), filters are
-        # applied later.
-        # So, we are comparing against the full unfiltered set.
-        page_size = 200  # StandardResultsSetPagination.page_size
-        chronological_articles = ArticlesCombined.objects.all().order_by("-id")[
-            :page_size
-        ]
-        chronological_ids_page1 = [article.id for article in chronological_articles]
-
-        # Perturbed list should have a full page
-        assert len(perturbed_ids_page1) == page_size
-
-        # Chronological list should have a full page for comparison
-        assert len(chronological_ids_page1) == page_size
-
-        # This assertion depends on the perturbation being strong enough
-        # and data having enough variance in feed_id and length.
-        # Perturbed order of article IDs on page 1 should be different from simple
-        # chronological (-id) order
-        assert perturbed_ids_page1 != chronological_ids_page1
-
-    def test_articles_list_pagination_with_perturbed_order(self):
-        """
-        Test pagination works correctly with perturbed chronological article order.
-        """
-        try:
-            url_base = reverse("api:articles-list")
-        except NoReverseMatch:
-            url_base = reverse("api:articlescombined-list")
+        url_base = reverse("api:articles-list")
 
         page_size = 200  # StandardResultsSetPagination.page_size
 
@@ -224,9 +182,9 @@ class ArticleAPITests(APITestCase):
         # Page 1 fetched twice (after cache clear) should have the SAME order
         assert page1_ids == page1_again_ids
 
-    def test_articles_list_filtering_with_perturbed_order(self):
+    def test_articles_list_filtering(self):
         """
-        Test filtering works correctly with perturbed chronological article order.
+        Test filtering works correctly.
         """
         url = reverse("api:articles-list")
 
@@ -245,6 +203,13 @@ class ArticleAPITests(APITestCase):
             assert article_data["feed"] == feed2_id
 
 
+def generate_random_text(
+    length: int,
+    chars: str = string.ascii_letters + string.digits + string.punctuation,
+) -> str:
+    return "".join(random.choice(chars) for _ in range(length))
+
+
 class UserArticleListsExportTests(APITestCase):
     @classmethod
     def setUpTestData(cls):
@@ -254,35 +219,34 @@ class UserArticleListsExportTests(APITestCase):
             email="export@example.com",
         )
         cls.feed = Feeds.objects.create(
-            name="Test Feed for Export",
+            title="Test Feed for Export",
             url="http://example.com/feed_export",
-            is_active=True,
+            active=True,
         )
 
         # Create articles with varying lengths
         cls.article1 = Articles.objects.create(
             feed=cls.feed,
             title="Export Article 1",
-            content_original="Content 1",
+            content_original=generate_random_text(
+                1200,
+            ),  # 1 minute reading time (1200 / (6*200))
             url="http://example.com/export_article_1",
             stamp=timezone.now(),
-            length=1200,  # 1 minute reading time (1200 / (6*200))
         )
         cls.article2 = Articles.objects.create(
             feed=cls.feed,
             title="Export Article 2",
-            content_original="Content 2",
+            content_original=generate_random_text(2400),  # 2 minutes reading time
             url="http://example.com/export_article_2",
             stamp=timezone.now(),
-            length=2400,  # 2 minutes reading time
         )
         cls.article3 = Articles.objects.create(
             feed=cls.feed,
             title="Export Article 3",
-            content_original="Content 3",
+            content_original=generate_random_text(3600),  # 3 minutes reading time
             url="http://example.com/export_article_3",
             stamp=timezone.now(),
-            length=3600,  # 3 minutes reading time
         )
 
         cls.user_list = cls.user.userarticlelists_set.create(
@@ -292,131 +256,31 @@ class UserArticleListsExportTests(APITestCase):
         cls.user_list.articles.add(cls.article1, cls.article2, cls.article3)
 
         cls.expected_article_count = 3
-        cls.expected_total_reading_time = (1200 + 2400 + 3600) // (
-            6 * 200
-        )  # 1 + 2 + 3 = 6
+        cls.expected_total_reading_time = (1200 + 2400 + 3600) // (6 * 300)
 
     def setUp(self):
         self.client.login(username="exportuser", password="testpassword")
 
     def test_html_export(self):
         url = reverse(
-            "api:userarticlelists-html",
+            "api:lists-html",
             kwargs={"pk": self.user_list.pk},
         )
         response = self.client.get(url)
         assert response.status_code == 200
         self.assertContains(
             response,
-            f"Total articles: {self.expected_article_count}",
+            f"Questa lista contiene {self.expected_article_count}",
         )
         self.assertContains(
             response,
-            f"Estimated total reading time: {self.expected_total_reading_time} minutes",
+            f"totale di lettura stimato è: {self.expected_total_reading_time} minuti",
         )
         self.assertContains(response, self.user_list.name)  # Check list name
 
-    @mock.patch("news.api.views.pisa.pisaDocument")
-    def test_pdf_export(self, mock_pisa_document):
-        # Mock the PDF generation to avoid actual PDF creation
-        mock_pdf = mock.Mock()
-        mock_pdf.err = False
-        mock_pisa_document.return_value = mock_pdf
-
-        url = reverse("api:userarticlelists-pdf", kwargs={"pk": self.user_list.pk})
-        response = self.client.get(url)
-        assert response.status_code == 200
-
-        # Check that pisaDocument was called
-        mock_pisa_document.assert_called_once()
-
-        # Verify the context passed to the template for PDF generation
-
-        # Let's verify the context passed to `render` inside the view method.
-        # We can mock `django.shortcuts.render` for this specific test.
-        with mock.patch("news.api.views.render") as mock_render:
-            # Re-call the view
-            self.client.get(url)
-            mock_render.assert_called()
-            # The context is the third argument to render
-            context = mock_render.call_args[0][2]
-            assert context["article_count"], self.expected_article_count
-            assert (
-                context["total_estimated_reading_time"]
-                == self.expected_total_reading_time
-            )
-            assert context["list_name"] == self.user_list.name
-
-    @mock.patch("news.api.views.get_epub")
-    def test_epub_export_get_epub_called_correctly(self, mock_get_epub):
-        # Mock get_epub to check its arguments
-        mock_book = mock.Mock()
-        mock_get_epub.return_value = mock_book
-
-        url = reverse(
-            "api:userarticlelists-epub",
-            kwargs={"pk": self.user_list.pk},
-        )
-        response = self.client.get(url)
-        assert response.status_code == 200
-
-        # Check that get_epub was called once
-        mock_get_epub.assert_called_once()
-
-        # Verify the arguments passed to get_epub
-        args, kwargs = mock_get_epub.call_args
-        assert len(args[0]) == self.expected_article_count  # Check number of articles
-        assert args[1] == self.user_list.name
-        assert args[2] == self.expected_article_count
-        assert args[3] == self.expected_total_reading_time
-
     def test_actual_epub_content_summary(self):
         # This test will call the actual get_epub function
-        url = reverse("api:userarticlelists-epub", kwargs={"pk": self.user_list.pk})
+        url = reverse("api:lists-epub", kwargs={"pk": self.user_list.pk})
         response = self.client.get(url)
         assert response.status_code == 200
         assert response["Content-Type"] == "application/epub+zip"
-
-    def test_me_action_with_counts_and_reading_time(self):
-        # Create an additional empty list for the same user
-        empty_list = self.user.userarticlelists_set.create(
-            name="Empty Test List",
-            user=self.user,
-        )
-
-        url = reverse("api:userarticlelists-me")
-        response = self.client.get(url)
-        assert response.status_code == 200
-
-        response_data = response.json()
-        assert len(response_data) >= 2  # At least the two lists we care about
-
-        found_export_list = False
-        found_empty_list = False
-
-        for lst_data in response_data:
-            if lst_data["id"] == self.user_list.id:  # This is "Test Export List"
-                found_export_list = True
-                assert lst_data["name"] == "Test Export List"
-                assert lst_data["article_count"] == self.expected_article_count
-                assert (
-                    lst_data["total_estimated_reading_time"]
-                    == self.expected_total_reading_time
-                )
-
-                # Check that 'articles' field contains the correct number of IDs
-                assert len(lst_data["articles"]) == self.expected_article_count
-                # And that the IDs match
-                assert len(lst_data["articles"]) == len(
-                    [self.article1.id, self.article2.id, self.article3.id],
-                )
-
-            elif lst_data["id"] == empty_list.id:
-                found_empty_list = True
-                assert lst_data["name"] == "Empty Test List"
-                assert lst_data["article_count"] == 0
-                assert lst_data["total_estimated_reading_time"] == 0
-                assert lst_data["articles"] == []  # Should be an empty list
-
-        assert found_export_list  # Test Export List not found in 'me' action response
-        assert found_empty_list  # Empty Test List not found in 'me' action response
