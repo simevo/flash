@@ -5,14 +5,16 @@ from pathlib import Path
 import requests
 
 base_language = "it"
-SEPARATOR = "|||SEPARATOR|||"
+SEPARATOR = "||||||"
 
 
 def secret(path):
     if secret.cached.get(path, "") == "":
         with Path(path).open() as secret_file:
             encoded_secret = secret_file.read()
-        secret.cached[path] = encoded_secret.strip()  # Ensure no leading/trailing whitespace
+        secret.cached[path] = (
+            encoded_secret.strip()
+        )  # Ensure no leading/trailing whitespace
     return secret.cached[path]
 
 
@@ -46,30 +48,31 @@ def translate(from_lang_code, title, content):
         try:
             response_json = translation_data.json()
             if not response_json or "translations" not in response_json[0]:
-                raise TranslationError("Invalid response format from translation API.")
+                msg = "Invalid response format from translation API."
+                raise TranslationError(msg)
 
             translated_text_combined = response_json[0]["translations"][0]["text"]
-            
             if SEPARATOR not in translated_text_combined:
-                # Handle cases where separator might be missing or altered by translation
-                # For now, we'll assume title is short and content is the rest
-                # This might need more robust handling depending on typical title/content lengths
-                # or if the separator itself can be part of the translatable text.
                 # A simple heuristic: if there's a period, split there, else assign all to content.
                 # This is a fallback and might not be perfect.
-                parts = translated_text_combined.split('.', 1)
+                parts = translated_text_combined.split(".", 1)
                 if len(parts) > 1:
-                    title_translated = parts[0] + '.'
+                    title_translated = parts[0] + "."
                     content_translated = parts[1].strip()
-                else: # No period, or separator issue, assign all to content, title becomes empty or a fixed string
-                    title_translated = "" # Or some default, or log a warning
+                else:  # No period, or separator issue, assign all to content, title becomes empty or a fixed string
+                    title_translated = (
+                        "seza titolo"  # Or some default, or log a warning
+                    )
                     content_translated = translated_text_combined
             else:
-                title_translated, content_translated = translated_text_combined.split(SEPARATOR, 1)
+                title_translated, content_translated = translated_text_combined.split(
+                    SEPARATOR,
+                    1,
+                )
 
         except (json.JSONDecodeError, IndexError, KeyError) as e:
             message = f"Error parsing translation response: {e}, Response: {translation_data.text}"
-            raise TranslationError(message)
+            raise TranslationError(message) from e
     else:
         message = f"Error ! status code = {translation_data.status_code}, status message = {translation_data.text}"
         raise TranslationError(message)
