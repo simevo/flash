@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { copy_link, fetch_wrapper, find_voice } from "../utils"
+import { copy_link, fetch_wrapper } from "../utils" // Removed find_voice
 import {
   computed,
-  inject,
+  // inject, // Removed inject as base_language is no longer injected here
   onActivated,
   onDeactivated,
   onMounted,
@@ -12,6 +12,7 @@ import {
   type Ref,
 } from "vue"
 import ArticleCard from "../components/ArticleCard.vue"
+import TtsToolbar from "../components/TtsToolbar.vue"; // Import TtsToolbar
 
 import type { components } from "../generated/schema.d.ts"
 import { useRoute } from "vue-router"
@@ -42,19 +43,16 @@ const lists: Ref<ListsMeRetrieve> = ref([])
 const count_fetch = ref(2)
 const current_list_id: Ref<string | null> = ref(props.list_id)
 
-const tts = ref(false)
-const tts_open = ref(false)
-const stopped = ref(true)
-const current_article = ref(0)
-const speaking = ref(false)
-const current_chunk = ref(0)
+// TTS-related data properties removed, new ones added below
+const show_tts_toolbar = ref(false);
+const tts_available = ref(false);
 
 const host = "notizie.calomelano.it"
 
 async function fetchArticles() {
   if (current_list.value && current_list.value.articles.length > 0) {
     const response = await fetch_wrapper(
-      `../../api/articles/?ids=${current_list.value.articles.join(",")}`,
+      `/api/articles/?ids=${current_list.value.articles.join(",")}`, // Changed path
     )
     if (response.status == 403) {
       document.location = "/accounts/"
@@ -66,7 +64,7 @@ async function fetchArticles() {
 }
 
 async function fetchFeeds() {
-  const response = await fetch_wrapper(`../../api/feeds/simple/`)
+  const response = await fetch_wrapper(`/api/feeds/simple/`) // Changed path
   if (response.status == 403) {
     document.location = "/accounts/"
   } else {
@@ -77,7 +75,7 @@ async function fetchFeeds() {
 }
 
 async function fetchLists() {
-  const response = await fetch_wrapper(`../../api/lists/me/`)
+  const response = await fetch_wrapper(`/api/lists/me/`) // Changed path
   if (response.status == 403) {
     document.location = "/accounts/"
   } else {
@@ -138,11 +136,16 @@ onMounted(async () => {
   await fetchLists()
   await fetchFeeds()
   await fetchArticles()
-  tts_init()
+  // tts_init() removed
+  tts_available.value = "speechSynthesis" in window;
+  if (tts_available.value) {
+    window.speechSynthesis.cancel(); // Clear any previous utterances
+  }
 })
 
 onUnmounted(() => {
   console.log("ListsView unmounted")
+  // Potentially add window.speechSynthesis.cancel() here if toolbar isn't guaranteed to unmount first
 })
 
 onActivated(() => {
@@ -153,9 +156,50 @@ onDeactivated(() => {
   console.log("ListsView deactivated")
 })
 
+// New tts_speak method
+function tts_speak() {
+  if (!tts_available.value) {
+    console.log("TTS not available");
+    alert("La funzionalità Text-to-Speech non è disponibile su questo browser.");
+    return;
+  }
+  console.log("ListsView tts_speak: showing toolbar");
+  show_tts_toolbar.value = true;
+}
+
+// Event handlers for TtsToolbar events
+function handleTtsClosed() {
+  console.log("ListsView handleTtsClosed: hiding toolbar");
+  show_tts_toolbar.value = false;
+}
+
+function handleTtsStarted() {
+  console.log("ListsView handleTtsStarted");
+  // Optional: Add logic if needed when TTS starts
+}
+
+function handleTtsStopped() {
+  console.log("ListsView handleTtsStopped");
+  // Optional: Add logic if needed when TTS stops
+}
+
+function handleArticleChanged(articleId: number | string, articleIndex: number) {
+  console.log(`ListsView handleArticleChanged: articleId=${articleId}, articleIndex=${articleIndex}`);
+  const article_card = document.getElementById(`article-${articleId}`);
+  if (article_card) {
+    // Clear previous highlights
+    const all_cards = document.querySelectorAll('.article-card');
+    all_cards.forEach(card => (card as HTMLElement).style.removeProperty('background'));
+
+    // Highlight and scroll
+    article_card.style.background = "lightyellow"; // Or some other highlight
+    article_card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+}
+
 async function removeList(list: UserArticleListsSerializerFull) {
   if (confirm(`Sei sicuro di voler rimuovere la lista "${list.name}"?`)) {
-    const response = await fetch_wrapper(`../../api/lists/${list.id}/`, {
+    const response = await fetch_wrapper(`/api/lists/${list.id}/`, { // Changed path
       method: "DELETE",
     })
     if (response.status == 403) {
@@ -184,210 +228,11 @@ watch(
   },
 )
 
-function tts_init() {
-  if ("speechSynthesis" in window) {
-    console.log("TTS API available")
-    window.speechSynthesis.cancel()
-    tts.value = true
-  } else {
-    console.log("no TTS API !")
-    tts.value = false
-  }
-}
-
-function tts_speak() {
-  console.log("Speak TTS")
-  tts_open.value = true
-  current_article.value = 0
-  // Mobile Safari requires an utterance (even a blank one) during
-  // a user interaction to enable furher utterances
-  speechSynthesis.speak(new SpeechSynthesisUtterance(""))
-  tts_continue()
-}
-
-function tts_continue() {
-  console.log("Continue TTS")
-  stopped.value = false
-  read_article()
-}
-
-function tts_restart() {
-  console.log("Restart TTS")
-  stopped.value = true
-  window.speechSynthesis.cancel()
-  tts_speak()
-}
-
-function tts_back() {
-  console.log("Back TTS")
-  stopped.value = true
-  window.speechSynthesis.cancel()
-  tts_cleanup()
-  current_article.value -= 1
-  tts_continue()
-}
-
-function tts_forward() {
-  console.log("Forward TTS")
-  stopped.value = true
-  window.speechSynthesis.cancel()
-  tts_cleanup()
-  current_article.value += 1
-  tts_continue()
-}
-
-function tts_stop() {
-  console.log("Stop TTS")
-  stopped.value = true
-  window.speechSynthesis.cancel()
-  tts_cleanup()
-  speaking.value = false
-}
-
-let voices: SpeechSynthesisVoice[] = []
-
-if ("speechSynthesis" in window) {
-  voices = window.speechSynthesis.getVoices()
-  // Chrome loads voices asynchronously.
-  window.speechSynthesis.onvoiceschanged = function () {
-    voices = window.speechSynthesis.getVoices()
-  }
-}
-
-const base_language: string = inject("base_language", "it")
-
-async function read_article() {
-  console.log("Reading article: " + current_article.value)
-  if (current_article.value >= articles.value.length) {
-    tts_close()
-    return
-  }
-  if (current_article.value < 0) {
-    current_article.value = 0
-  }
-  const article = articles.value[current_article.value]
-  const lang = article.language
-  console.log("looking for voices with lang = " + lang)
-  const voice = find_voice(voices, lang || "it")
-  if (voice) {
-    console.log("voice = ", voice)
-    const article_full = await fetchArticle(article.id)
-    const content =
-      article.language === base_language ? article_full.content : article_full.content_original
-    const title =
-      article.language === base_language ? article_full.title : article_full.title_original
-    const article_card = document.getElementById(`article-${article.id}`) as HTMLElement
-    if (article_card) {
-      article_card.style.background = "white"
-      article_card.scrollIntoView()
-    }
-    speaking.value = true
-    const content_stripped = stripHtml(content || "")
-    const text = title + ". " + content_stripped
-    // . matches any character (except for line terminators)
-    // {1,1000} matches the previous token between 1 and 1000 times, as many times as possible, giving back as needed (greedy)
-    console.log("Reading text:", text)
-    const chunks = text.match(/.{1,1000}/g)
-    if (chunks) {
-      const trimmed_chunks = chunks.map((chunk) => chunk.trim())
-      const filtered_chunks = trimmed_chunks.filter((chunk) => chunk !== "")
-      console.log("Reading chunks:", filtered_chunks)
-      current_chunk.value = 0
-      read(article_card, voice, filtered_chunks, lang || "it")
-    }
-  } else {
-    alert("Nessuna voce disponibile per:" + lang)
-    current_article.value += 1
-    read_article()
-  }
-}
-
-async function fetchArticle(article_id: number): Promise<Article> {
-  const response = await fetch_wrapper(`../../api/articles/${article_id}/`)
-  const data: Article = await response.json()
-  return data
-}
-
-function stripHtml(html: string): string {
-  const doc = new DOMParser().parseFromString(html, "text/html")
-  return doc.body.textContent || ""
-}
-
-function speaker_start() {
-  console.log("Speaker started " + current_article.value)
-}
-
-function read(
-  article_card: HTMLElement,
-  voice: SpeechSynthesisVoice,
-  chunks: string[],
-  lang: string,
-) {
-  console.log(`${chunks.length} chunks left to read for article ${current_article.value}`)
-
-  const utterance = new window.SpeechSynthesisUtterance()
-
-  const my_current_article = current_article.value
-
-  function speaker_error(e: SpeechSynthesisErrorEvent) {
-    console.log("Speaker error " + e.error)
-    if (!stopped.value && current_article.value == my_current_article) {
-      read(article_card, voice, chunks, lang)
-    }
-  }
-
-  function speaker_end() {
-    console.log(
-      `Speaker ended, current_article = ${current_article.value}, my_current_article = ${my_current_article}`,
-    )
-    if (!stopped.value && current_article.value == my_current_article) {
-      read(article_card, voice, chunks, lang)
-    }
-  }
-
-  if (current_chunk.value == chunks.length) {
-    speaking.value = false
-    utterance.removeEventListener("start", speaker_start)
-    utterance.removeEventListener("error", speaker_error)
-    utterance.removeEventListener("end", speaker_end)
-    tts_cleanup()
-    current_article.value += 1
-    setTimeout(() => {
-      read_article()
-    }, 1500)
-    return
-  }
-  utterance.voice = voice
-  const chunk = chunks[current_chunk.value]
-  current_chunk.value += 1
-  if (article_card && !stopped.value) {
-    const progress = Math.round((100 * current_chunk.value) / chunks.length)
-    article_card.style.background = `linear-gradient(90deg, lightgray ${progress}%, white ${progress}%)`
-  }
-  utterance.text = chunk || ""
-  utterance.lang = lang
-  utterance.addEventListener("start", speaker_start)
-  utterance.addEventListener("error", speaker_error)
-  utterance.addEventListener("end", speaker_end)
-  window.speechSynthesis.speak(utterance)
-}
-
-function tts_close() {
-  console.log("Close TTS")
-  stopped.value = true
-  window.speechSynthesis.cancel()
-  tts_open.value = false
-  tts_cleanup()
-}
-
-function tts_cleanup() {
-  console.log("Cleanup TTS")
-  window.speechSynthesis.cancel()
-  const article_cards = document.getElementsByClassName("article-card")
-  for (let i = 0; i < article_cards.length; i++) {
-    ;(article_cards[i] as HTMLElement).style.removeProperty("background")
-  }
-}
+// All TTS methods like tts_init, tts_speak (old), tts_continue, tts_restart, tts_back,
+// tts_forward, tts_stop, read_article, fetchArticle (if only for TTS), stripHtml (if only for TTS),
+// speaker_start, read, tts_close, tts_cleanup are removed.
+// The 'voices' array and its 'onvoiceschanged' handler are also removed.
+// 'base_language' inject is removed as it's passed as a prop.
 
 function window_open(url: string): void {
   window.open(url)
@@ -493,14 +338,14 @@ function window_open(url: string): void {
                   id="button-speak"
                   class="btn btn-success"
                   title="Leggi ad alta voce tutti gli articoli in questa lista"
-                  v-if="tts"
+                  v-if="tts_available"
                   :disabled="
-                    tts_open ||
+                    show_tts_toolbar || // Disabled if toolbar is already open
                     !current_list ||
                     current_list.articles.length === 0 ||
                     articles.length === 0
                   "
-                  v-on:click="tts_speak()"
+                  @click="tts_speak()"
                 >
                   <img src="~bootstrap-icons/icons/megaphone.svg" alt="tts icon" />
                 </button>
@@ -623,66 +468,17 @@ function window_open(url: string): void {
     id="button-tts"
     role="group"
     aria-label="Controlla la lettura"
-    v-if="tts && tts_open"
+    v-if="show_tts_toolbar"
   >
-    <button
-      type="button"
-      id="button-restart"
-      class="btn btn-success"
-      title="Dall'inizio"
-      v-on:click="tts_restart()"
-    >
-      <img src="~bootstrap-icons/icons/skip-start-fill.svg" alt="fast backward icon" />
-    </button>
-    <button
-      type="button"
-      id="button-back"
-      class="btn btn-success"
-      title="Indietro"
-      v-on:click="tts_back()"
-      :disabled="current_article == 0"
-    >
-      <img src="~bootstrap-icons/icons/rewind-fill.svg" alt="rewind icon" />
-    </button>
-    <button
-      type="button"
-      id="button-stop"
-      class="btn btn-success"
-      title="Stop"
-      v-on:click="tts_stop()"
-      :disabled="!speaking"
-    >
-      <img src="~bootstrap-icons/icons/pause-fill.svg" alt="pause icon" />
-    </button>
-    <button
-      type="button"
-      id="button-continue"
-      class="btn btn-success"
-      title="Continua"
-      v-on:click="tts_continue()"
-      :disabled="speaking"
-    >
-      <img src="~bootstrap-icons/icons/play-fill.svg" alt="play icon" />
-    </button>
-    <button
-      type="button"
-      id="button-forward"
-      class="btn btn-success"
-      title="Avanti"
-      v-on:click="tts_forward()"
-      :disabled="current_article >= articles.length - 1"
-    >
-      <img src="~bootstrap-icons/icons/fast-forward-fill.svg" alt="forward icon" />
-    </button>
-    <button
-      type="button"
-      id="button-close"
-      class="btn btn-success"
-      title="Chiudi"
-      v-on:click="tts_close()"
-    >
-      <img src="~bootstrap-icons/icons/stop-fill.svg" alt="close icon" />
-    </button>
+    <TtsToolbar
+      :articles="articles"
+      :base_language="'it'"
+      :current_list_id="current_list_id"
+      @tts-closed="handleTtsClosed"
+      @tts-started="handleTtsStarted"
+      @tts-stopped="handleTtsStopped"
+      @article-changed="handleArticleChanged"
+    />
   </div>
 </template>
 
