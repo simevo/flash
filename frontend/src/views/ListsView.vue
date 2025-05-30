@@ -12,13 +12,12 @@ import {
   type Ref,
 } from "vue"
 import ArticleCard from "../components/ArticleCard.vue"
-import TtsToolbar from "../components/TtsToolbar.vue"; // Import TtsToolbar
+import TtsToolbar from "../components/TtsToolbar.vue" // Import TtsToolbar
 
 import type { components } from "../generated/schema.d.ts"
 import { useRoute } from "vue-router"
 
 type ArticleRead = components["schemas"]["ArticleRead"]
-type Article = components["schemas"]["ArticleSerializerFull"]
 type FeedSerializerSimple = components["schemas"]["FeedSerializerSimple"]
 type UserArticleListsSerializerFull = components["schemas"]["UserArticleListsSerializerFull"]
 type ListsMeRetrieve = (components["schemas"]["UserArticleListsSerializerFull"] & {
@@ -44,8 +43,8 @@ const count_fetch = ref(2)
 const current_list_id: Ref<string | null> = ref(props.list_id)
 
 // TTS-related data properties removed, new ones added below
-const show_tts_toolbar = ref(false);
-const tts_available = ref(false);
+const show_tts_toolbar = ref(false)
+const tts_available = ref(false)
 
 const host = "notizie.calomelano.it"
 
@@ -137,9 +136,9 @@ onMounted(async () => {
   await fetchFeeds()
   await fetchArticles()
   // tts_init() removed
-  tts_available.value = "speechSynthesis" in window;
+  tts_available.value = "speechSynthesis" in window
   if (tts_available.value) {
-    window.speechSynthesis.cancel(); // Clear any previous utterances
+    window.speechSynthesis.cancel() // Clear any previous utterances
   }
 })
 
@@ -159,47 +158,57 @@ onDeactivated(() => {
 // New tts_speak method
 function tts_speak() {
   if (!tts_available.value) {
-    console.log("TTS not available");
-    alert("La funzionalità Text-to-Speech non è disponibile su questo browser.");
-    return;
+    console.log("TTS not available")
+    alert("La funzionalità Text-to-Speech non è disponibile su questo browser.")
+    return
   }
-  console.log("ListsView tts_speak: showing toolbar");
-  show_tts_toolbar.value = true;
+  console.log("ListsView tts_speak: showing toolbar")
+  show_tts_toolbar.value = true
 }
 
 // Event handlers for TtsToolbar events
 function handleTtsClosed() {
-  console.log("ListsView handleTtsClosed: hiding toolbar");
-  show_tts_toolbar.value = false;
+  console.log("ListsView handleTtsClosed: hiding toolbar")
+  show_tts_toolbar.value = false
+  clearHighlights()
 }
 
 function handleTtsStarted() {
-  console.log("ListsView handleTtsStarted");
+  console.log("ListsView handleTtsStarted")
   // Optional: Add logic if needed when TTS starts
 }
 
 function handleTtsStopped() {
-  console.log("ListsView handleTtsStopped");
+  console.log("ListsView handleTtsStopped")
   // Optional: Add logic if needed when TTS stops
 }
 
-function handleArticleChanged(articleId: number | string, articleIndex: number) {
-  console.log(`ListsView handleArticleChanged: articleId=${articleId}, articleIndex=${articleIndex}`);
-  const article_card = document.getElementById(`article-${articleId}`);
-  if (article_card) {
-    // Clear previous highlights
-    const all_cards = document.querySelectorAll('.article-card');
-    all_cards.forEach(card => (card as HTMLElement).style.removeProperty('background'));
+function clearHighlights() {
+  const all_cards = document.querySelectorAll(".article-card")
+  all_cards.forEach((card) => (card as HTMLElement).style.removeProperty("background"))
+}
 
-    // Highlight and scroll
-    article_card.style.background = "lightyellow"; // Or some other highlight
-    article_card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+function handleArticleChanged(articleId: number) {
+  console.log(`ListsView handleArticleChanged: articleId=${articleId}`)
+  const article_card = document.getElementById(`article-${articleId}`)
+  if (article_card) {
+    clearHighlights()
+    article_card.scrollIntoView({ behavior: "smooth", block: "center" })
+  }
+}
+
+function handleArticleProgress(articleId: number, progress: number) {
+  console.log(`ListsView handleArticleProgress: articleId=${articleId}`)
+  const article_card = document.getElementById(`article-${articleId}`)
+  if (article_card) {
+    article_card.style.background = `linear-gradient(90deg, lightgray ${progress}%, white ${progress}%)`
   }
 }
 
 async function removeList(list: UserArticleListsSerializerFull) {
   if (confirm(`Sei sicuro di voler rimuovere la lista "${list.name}"?`)) {
-    const response = await fetch_wrapper(`/api/lists/${list.id}/`, { // Changed path
+    const response = await fetch_wrapper(`/api/lists/${list.id}/`, {
+      // Changed path
       method: "DELETE",
     })
     if (response.status == 403) {
@@ -478,6 +487,7 @@ function window_open(url: string): void {
       @tts-started="handleTtsStarted"
       @tts-stopped="handleTtsStopped"
       @article-changed="handleArticleChanged"
+      @article-progress="handleArticleProgress"
     />
   </div>
 </template>
