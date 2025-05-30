@@ -1,6 +1,15 @@
 <script setup lang="ts">
 import { fetch_wrapper } from "../utils"
-import { computed, onActivated, onDeactivated, onMounted, onUnmounted, ref, type Ref } from "vue"
+import {
+  computed,
+  onActivated,
+  onDeactivated,
+  onMounted,
+  onUnmounted,
+  ref,
+  type Ref,
+  watch,
+} from "vue"
 
 import ArticleCard from "./ArticleCard.vue"
 
@@ -196,6 +205,17 @@ onActivated(() => {
 onDeactivated(() => {
   console.log("ListAll deactivated")
 })
+
+watch(
+  () => filters.what,
+  async (newWhat, oldWhat) => {
+    console.log(`HomeView what watch for 'All News', newWhat = [${newWhat}] oldWhat = [${oldWhat}]`)
+    if (newWhat !== oldWhat) {
+      articles.value = [] // Clear current articles list
+      await fetchArticles()
+    }
+  },
+)
 </script>
 
 <template>
