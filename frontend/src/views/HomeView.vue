@@ -2,7 +2,16 @@
 import { defineAsyncComponent } from "vue"
 
 import { fetch_wrapper } from "../utils"
-import { computed, onActivated, onDeactivated, onMounted, onUnmounted, ref, type Ref } from "vue"
+import {
+  computed,
+  onActivated,
+  onDeactivated,
+  onMounted,
+  onUnmounted,
+  ref,
+  type Ref,
+  shallowRef,
+} from "vue"
 import type { components } from "../generated/schema.d.ts"
 
 // Define lazy-loaded components
@@ -25,7 +34,7 @@ const tabs = {
   "Per te": ListForyou,
   Preferiti: ListFavs,
 }
-const currentTab = ref(ListAll)
+const currentTab = shallowRef(ListAll)
 const currentTabName: Ref<Tabs> = ref("Tutti")
 
 // --- Fetching Functions ---

@@ -8,13 +8,15 @@ import type { components } from "../generated/schema.d.ts"
 type ArticleRead = components["schemas"]["ArticleRead"]
 type PaginatedArticleReadList = components["schemas"]["PaginatedArticleReadList"]
 type FeedSerializerSimple = components["schemas"]["FeedSerializerSimple"]
+type UserFeed = components["schemas"]["UserFeed"]
 
-import type { Filters, FeedCounts } from "../types/Filters"
+import type { Filters, FeedCounts, Ufd } from "../types/Filters"
 import FormFilter from "./FormFilter.vue"
 
 const ready = ref(false)
 const fetching = ref<boolean>(false)
 const articles: Ref<ArticleRead[]> = ref([])
+const ufd: Ref<Ufd> = ref({})
 const next = ref<string>("")
 
 const props = defineProps<{
@@ -27,7 +29,6 @@ const no_filters: Filters = {
   when: "all",
   language: "all",
   length: "all",
-  feed_ids: [-1],
 }
 
 import { useFiltersStore } from "../stores/filters.store"
@@ -60,9 +61,7 @@ const not_filtering = computed(
     filters.what === no_filters.what &&
     filters.when === no_filters.when &&
     filters.language === no_filters.language &&
-    filters.length === no_filters.length &&
-    filters.feed_ids.length === no_filters.feed_ids.length &&
-    filters.feed_ids.every((value, index) => value === no_filters.feed_ids[index]),
+    filters.length === no_filters.length,
 )
 
 const filters_summary = computed(() => {
@@ -82,18 +81,18 @@ const filters_summary = computed(() => {
     if (filters.length !== "all") {
       summary += ` - per lunghezza: [${filters.length}]`
     }
-    if (filters.feed_ids.length > 0 && filters.feed_ids.indexOf(-1) === -1) {
-      summary += ` - per fonti: [${filters.feed_ids.map((id) => props.feed_dict[id]?.title || id)}]`
-    }
     return summary
   }
 })
 
 const filtered_articles = computed(() => {
+  const articles_without_hidden_feeds = articles.value.filter((article) => {
+    return !(article.feed in ufd.value && ufd.value[article.feed] == -5)
+  })
   if (not_filtering.value) {
-    return articles.value
+    return articles_without_hidden_feeds
   } else {
-    return articles.value.filter((article) => {
+    return articles_without_hidden_feeds.filter((article) => {
       let found = true
       if (filters.when !== "all") {
         const [max, min] = filters.when.split("-")
@@ -106,9 +105,6 @@ const filtered_articles = computed(() => {
       if (filters.length !== "all") {
         const [min, max] = filters.length.split("-")
         found = found && article.length > parseInt(min) && article.length <= parseInt(max)
-      }
-      if (filters.feed_ids.indexOf(-1) === -1) {
-        found = found && filters.feed_ids.some((value) => article.feed === value)
       }
       return found
     })
@@ -156,9 +152,22 @@ async function fetchMoreArticles() {
   }
 }
 
+async function fetchMyFeeds() {
+  const response = await fetch_wrapper(`../../api/user-feeds/`)
+  if (response.status == 403) {
+    document.location = "/accounts/"
+  } else {
+    const ufs: UserFeed[] = await response.json()
+    ufs.forEach((element) => {
+      ufd.value[element.feed_id] = element.rating
+    })
+  }
+}
+
 onMounted(async () => {
   console.log("ListAll mounted")
-  fetchArticles()
+  await fetchMyFeeds()
+  await fetchArticles()
 })
 
 onUnmounted(() => {
@@ -291,9 +300,8 @@ onDeactivated(() => {
         :filters="filters"
         :feed-counts="feed_counts"
         :not-filtering="not_filtering"
+        :ufd="ufd"
         @clear="filterActions.clear"
-        @toggle_all_feeds="filterActions.toggle_all_feeds"
-        @toggle_feed="filterActions.toggle_feed"
         @update_what="(value) => (filters.what = value)"
         @update_language="(value) => (filters.language = value)"
         @update_when="(value) => (filters.when = value)"
@@ -325,9 +333,8 @@ onDeactivated(() => {
         :filters="filters"
         :feed-counts="feed_counts"
         :not-filtering="not_filtering"
+        :ufd="ufd"
         @clear="filterActions.clear"
-        @toggle_all_feeds="filterActions.toggle_all_feeds"
-        @toggle_feed="filterActions.toggle_feed"
         @update_what="(value) => (filters.what = value)"
         @update_language="(value) => (filters.language = value)"
         @update_when="(value) => (filters.when = value)"

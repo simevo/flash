@@ -5,11 +5,9 @@ import type {
   LengthFilter,
   Filters,
   FeedCounts,
-  FeedCount,
+  Ufd,
 } from "../types/Filters"
 
-import type { CheckBoxValue } from "../types/CheckBoxValue"
-import ThreeStateCheckBox from "./ThreeStateCheckBox.vue"
 import { computed, onMounted } from "vue"
 
 import type { components } from "../generated/schema.d.ts"
@@ -23,32 +21,16 @@ const props = defineProps<{
   filters: Filters
   feedCounts: FeedCounts
   notFiltering: boolean
+  ufd: Ufd
 }>()
 
 const emit = defineEmits<{
   (e: "clear"): void
-  (e: "toggle_all_feeds", value: CheckBoxValue, feed_counts: FeedCount[]): void
-  (e: "toggle_feed", feed_id: number): void
   (e: "update_what", value: string): void
   (e: "update_language", value: LanguageFilter): void
   (e: "update_when", value: WhenFilter): void
   (e: "update_length", value: LengthFilter): void
 }>()
-
-function changeAllFeeds(value: CheckBoxValue) {
-  const feedCounts = Object.values(props.feedCounts).map((fc) => fc)
-  emit("toggle_all_feeds", value, feedCounts)
-}
-
-const all_feeds = computed(() => {
-  if (props.filters.feed_ids.length === 0) {
-    return null
-  }
-  if (props.filters.feed_ids.length === 1 && props.filters.feed_ids[0] === -1) {
-    return true
-  }
-  return false
-})
 
 const mergedFeedCounts = computed(() => {
   const mfc = props.feedCounts
@@ -145,44 +127,12 @@ onMounted(() => {
     <option value="1000-5000">medio</option>
     <option value="5000-10000000">lungo (&gt; 5000 caratteri)</option>
   </select>
-  <div
-    class="form-check mb-3"
-    :title="
-      all_feeds === true
-        ? 'Clicca per scegliere le fonti'
-        : all_feeds === false
-          ? 'Clicca per invertire la tua selezione'
-          : 'Clicca per scegliere tutte le fonti'
-    "
-  >
-    <ThreeStateCheckBox id="allFeeds" :value="all_feeds" @change="changeAllFeeds" />
-    <label class="form-check-label" for="allFeeds">
-      <img
-        class="me-2"
-        width="30"
-        height="30"
-        src="~bootstrap-icons/icons/question-square-fill.svg"
-        alt="question mark icon"
-      />
-      <span v-if="all_feeds === true">Qualsiasi fonte</span>
-      <span v-else-if="all_feeds === false">Solo le fonti selezionate</span>
-      <span v-else>Nessuna fonte</span>
-    </label>
-  </div>
-  <div v-for="feed in mergedFeedCounts" :key="feed.feed_id" class="mb-3">
-    <div class="form-check">
-      <input
-        :id="`feed${feed.feed_id}`"
-        class="form-check-input"
-        type="checkbox"
-        :disabled="filters.feed_ids.indexOf(-1) !== -1"
-        :checked="filters.feed_ids.indexOf(feed.feed_id) !== -1"
-        @change="emit('toggle_feed', feed.feed_id)"
-      />
-      <label class="form-check-label" :for="`feed${feed.feed_id}`">
-        <img class="me-2" width="30" height="30" :src="feed.image" alt="feed logo" />
-        <span class="text-muted">{{ feed.feed }} ({{ feed.count }})</span>
-      </label>
+  <hr />
+  <h5>Frequenza delle fonti:</h5>
+  <div v-for="feed in mergedFeedCounts" :key="feed.feed_id" class="my-3">
+    <div v-if="!(feed.feed_id in ufd && ufd[feed.feed_id] == -5)">
+      <img class="me-2" width="30" height="30" :src="feed.image" alt="feed logo" />
+      <span class="text-muted">{{ feed.feed }} ({{ feed.count }})</span>
     </div>
   </div>
 </template>

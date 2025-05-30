@@ -26,7 +26,6 @@ export type Filters = {
   language: LanguageFilter
   when: WhenFilter
   length: LengthFilter
-  feed_ids: number[]
 }
 export type FeedCount = {
   feed: string
@@ -35,3 +34,4 @@ export type FeedCount = {
   feed_id: number
 }
 export type FeedCounts = { [feed_id: number]: FeedCount }
+export type Ufd = { [key: number]: number | undefined }

@@ -12,18 +12,11 @@ from django.contrib.postgres.aggregates import ArrayAgg
 from django.contrib.postgres.search import SearchVector
 from django.core.cache import cache
 from django.core.files.storage import FileSystemStorage
-from django.db.models import (  # Added F, Value, ExpressionWrapper, FloatField
-    ExpressionWrapper,
-)
-from django.db.models import F  # Added F, Value, ExpressionWrapper, FloatField
-from django.db.models import FloatField  # Added F, Value, ExpressionWrapper, FloatField
-from django.db.models import Value  # Added F, Value, ExpressionWrapper, FloatField
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.shortcuts import render
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
-from django.views.decorators.vary import vary_on_cookie
 from django_filters import rest_framework as filters
 from drf_spectacular.utils import extend_schema
 from ebooklib import epub
@@ -258,7 +251,7 @@ class ArticlesView(
     mixins.CreateModelMixin,
     mixins.UpdateModelMixin,
 ):
-    queryset = ArticlesCombined.objects.all()
+    queryset = ArticlesCombined.objects.all().order_by("-id")
     permission_classes = [ArticlePermissions]
     filterset_class = ArticlesFilter
     pagination_class = StandardResultsSetPagination
@@ -281,16 +274,10 @@ class ArticlesView(
                 {"count": 0, "next": None, "previous": None, "results": []},
             )  # Standard paginated empty response
 
-        queryset = self.get_queryset().filter(feed_id__in=list(favorite_feed_ids))
-
-        # Re-use perturbation logic from the list method
-        perturbation_expression = ExpressionWrapper(
-            F("id") - F("feed_id") * Value(20) + (F("length") % Value(10)) * Value(4),
-            output_field=FloatField(),
-        )
-        queryset = queryset.annotate(perturbed_order=perturbation_expression).order_by(
-            "-perturbed_order",
-            "-id",
+        queryset = (
+            self.get_queryset()
+            .filter(feed_id__in=list(favorite_feed_ids))
+            .order_by("-id")
         )
 
         page = self.paginate_queryset(queryset)
@@ -310,43 +297,8 @@ class ArticlesView(
         return Response(serializer.data)
 
     @method_decorator(cache_page(60 * 5))
-    @method_decorator(vary_on_cookie)
     def list(self, request, *args, **kwargs):
-        # 1. Get the filtered queryset
-        queryset = self.filter_queryset(
-            self.get_queryset(),
-        )  # This applies ArticlesFilter
-
-        ufe = UserFeeds.objects.filter(user=request.user, rating=-5)
-        exclude_feeds = [o.feed_id for o in ufe]
-        if len(exclude_feeds) > 0:
-            queryset = queryset.exclude(feed_id__in=exclude_feeds)
-
-        # 2. Define the perturbation expression
-        # The goal is a deterministic perturbation of the chronological order (id).
-        # This will make articles from different feeds, shift slightly relative to
-        # each other around their base chronological position.
-        # Assuming 200 feeds and 2000 articles/day, on average 10 articles per feed.
-        perturbation_expression = ExpressionWrapper(
-            F("id") - F("feed_id") * Value(20) + (F("length") % Value(10)) * Value(4),
-            output_field=FloatField(),  # Use FloatField to handle potential non-integer results from the expression
-        )
-
-        # 3. Annotate the queryset with the perturbed order and apply ordering
-        queryset = queryset.annotate(perturbed_order=perturbation_expression).order_by(
-            "-perturbed_order",
-            "-id",
-        )
-
-        # 4. Paginate the ordered queryset
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-
-        # Fallback: serialize the whole ordered queryset if pagination is not applicable
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
+        return super().list(request, *args, **kwargs)
 
     def get_serializer_class(self):
         if self.request.method in ["GET"]:
