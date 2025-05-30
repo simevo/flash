@@ -931,7 +931,7 @@ class ImageUploadView(APIView):
             )
 
         if file.name.lower().endswith(".svg"):
-            fs = FileSystemStorage(location=settings.MEDIA_ROOT)
+            fs = FileSystemStorage(location=settings.MEDIA_ROOT + "/icons/")
             filename = fs.save(file.name, file)
         else:
             img = Image.open(file)
@@ -959,13 +959,13 @@ class ImageUploadView(APIView):
                 buffer = BytesIO()
                 resized_img.save(buffer, format=img.format or "PNG")
                 buffer.seek(0)
-                fs = FileSystemStorage(location=settings.MEDIA_ROOT)
-                filename = fs.save(f"{file.name}", buffer)
+                fs = FileSystemStorage(location=settings.MEDIA_ROOT + "/icons/")
+                filename = fs.save(file.name, buffer)
             else:
-                fs = FileSystemStorage(location=settings.MEDIA_ROOT)
+                fs = FileSystemStorage(location=settings.MEDIA_ROOT + "/icons/")
                 filename = fs.save(file.name, file)
 
-        uploaded_file_url = f"{settings.MEDIA_URL}{filename}"
+        uploaded_file_url = f"{settings.MEDIA_URL}icons/{filename}"
 
         return Response(
             {

@@ -14,7 +14,7 @@ def create_views(apps, schema_editor):
                        CREATE VIEW feeds_combined AS (
                             SELECT
                                 feeds.*,
-                                COALESCE(news_feedicons.image, '/static/icons/unknown.png') AS image,
+                                COALESCE(news_feedicons.image, '/media/icons/unknown.png') AS image,
                                 feeds_data.last_polled_epoch,
                                 feeds_data.article_count,
                                 feeds_data.average_time_from_last_post

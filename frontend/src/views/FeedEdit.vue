@@ -547,7 +547,7 @@ function resetTags() {
 }
 
 function resetIcon() {
-  if (feed.value) feed.value.image = "/static/icons/unknown.png"
+  if (feed.value) feed.value.image = "/media/icons/unknown.png"
 }
 
 async function handleFileSelect(event: Event) {
