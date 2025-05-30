@@ -5,9 +5,12 @@ import { RouterLink } from "vue-router"
 import { computed } from "vue"
 import { secondsToString } from "./sts"
 import { useAuthStore } from "../stores/auth.store"
-import ThreeStateCheckBox from "./ThreeStateCheckBox.vue"
-import type { CheckBoxValue } from "../types/CheckBoxValue"
 import { fetch_wrapper } from "../utils"
+
+// icons
+const eye = "/res/icons/eye.svg"
+const heartFill = "/res/icons/heart-fill.svg"
+const eyeSlashFill = "/res/icons/eye-slash-fill.svg"
 
 const auth = useAuthStore()
 
@@ -25,29 +28,40 @@ const emit = defineEmits<{
   (e: "updating", value: boolean): void
 }>()
 
-const showHideState = computed<CheckBoxValue>(() => {
+const currentRatingIconName = computed(() => {
   const rating = props.feed.my_rating
-  if (rating === undefined || rating === null) {
-    return null // Indeterminate
+  if (rating === 5) {
+    return heartFill
+  } else if (rating === -5) {
+    return eyeSlashFill
   }
-  if (rating >= -4 && rating <= 5) {
-    return true // Checked (Show)
-  }
-  if (rating === -5) {
-    return false // Unchecked (Don't show)
-  }
-  return null // Default to indeterminate for any other unexpected values
+  return eye // Default for normal/visible (0 or any other value)
 })
 
-async function handleShowHideChange(newState: CheckBoxValue) {
+const currentRatingTitle = computed(() => {
+  const rating = props.feed.my_rating
+  if (rating === 5) {
+    return "Preferito"
+  } else if (rating === -5) {
+    return "Nascosto"
+  }
+  return "Normale"
+})
+
+async function cycleRatingState() {
+  const currentRating = props.feed.my_rating
   let newRating: number
-  if (newState === true) {
-    newRating = 0 // Default "show" rating
-  } else if (newState === false) {
-    newRating = -5 // "Don't show" rating
+
+  // Cycle logic: Normal -> Favorite -> Hidden -> Normal
+  if (currentRating === 5) {
+    // Favorite -> Hidden
+    newRating = -5
+  } else if (currentRating === -5) {
+    // Hidden -> Normal
+    newRating = 0
   } else {
-    // newState === null (cycled from false to null)
-    newRating = 0 // Treat as "show"
+    // Normal (or any other state) -> Favorite
+    newRating = 5
   }
 
   // Optimistically update local state for immediate UI feedback
@@ -72,13 +86,13 @@ async function handleShowHideChange(newState: CheckBoxValue) {
 
     if (response.ok) {
       alert(
-        "Visibilità aggiornata; ci potrebbe volere fino ad un'ora affinché la modifica abbia effetto.",
+        `Impostazione per la fonte ${props.feed.id} aggiornata; ci potrebbe volere fino ad un'ora affinché la modifica abbia effetto.`,
       )
     } else {
       // Revert optimistic update on failure
       ;(props.feed as any).my_rating = originalRating
       const errorData = await response.text()
-      alert(`Errore di aggiornamento della visibilità: ${response.statusText} - ${errorData}`)
+      alert(`Errore di aggiornamento del rating: ${response.statusText} - ${errorData}`)
     }
   } catch (error) {
     // Revert optimistic update on failure
@@ -145,6 +159,20 @@ async function handleShowHideChange(newState: CheckBoxValue) {
             </RouterLink>
             <button
               type="button"
+              class="btn btn-outline-success"
+              @click="cycleRatingState"
+              :title="`Stato attuale: ${currentRatingTitle}. Clicca per cambiare.`"
+            >
+              <img
+                class="icon"
+                :src="currentRatingIconName"
+                :alt="currentRatingTitle"
+                width="18"
+                height="18"
+              />
+            </button>
+            <button
+              type="button"
               class="btn btn-outline-primary"
               aria-label="Aggiorna la fonte"
               title="Aggiorna la fonte"
@@ -169,14 +197,6 @@ async function handleShowHideChange(newState: CheckBoxValue) {
               Ultimo aggiornamento
               {{ secondsToString(new Date().getTime() / 1000 - feed.last_polled_epoch) }}
             </small>
-            <span class="float-end mb-2">
-              Mostra nella home:
-              <ThreeStateCheckBox
-                :value="showHideState"
-                @change="handleShowHideChange"
-                title="Clicca per mostrare/nascondere"
-              />
-            </span>
           </p>
         </div>
       </div>

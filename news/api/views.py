@@ -263,6 +263,52 @@ class ArticlesView(
     filterset_class = ArticlesFilter
     pagination_class = StandardResultsSetPagination
 
+    @action(detail=False, methods=["get"])
+    def favorites(self, request, *args, **kwargs):
+        if not request.user or not request.user.is_authenticated:
+            return Response(
+                {"detail": "Authentication credentials were not provided."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        favorite_feed_ids = UserFeeds.objects.filter(
+            user=request.user,
+            rating=5,
+        ).values_list("feed_id", flat=True)
+
+        if not favorite_feed_ids:
+            return Response(
+                {"count": 0, "next": None, "previous": None, "results": []},
+            )  # Standard paginated empty response
+
+        queryset = self.get_queryset().filter(feed_id__in=list(favorite_feed_ids))
+
+        # Re-use perturbation logic from the list method
+        perturbation_expression = ExpressionWrapper(
+            F("id") - F("feed_id") * Value(20) + (F("length") % Value(10)) * Value(4),
+            output_field=FloatField(),
+        )
+        queryset = queryset.annotate(perturbed_order=perturbation_expression).order_by(
+            "-perturbed_order",
+            "-id",
+        )
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = ArticleReadSerializer(
+                page,
+                many=True,
+                context={"request": request},
+            )
+            return self.get_paginated_response(serializer.data)
+
+        serializer = ArticleReadSerializer(
+            queryset,
+            many=True,
+            context={"request": request},
+        )
+        return Response(serializer.data)
+
     @method_decorator(cache_page(60 * 5))
     @method_decorator(vary_on_cookie)
     def list(self, request, *args, **kwargs):
