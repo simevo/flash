@@ -443,113 +443,6 @@ function window_open(url: string): void {
               </button>
             </button>
           </li>
-          <li v-if="current_list_id && current_list">
-            <!-- Ensure a list is selected before showing these global list actions -->
-            <div style="position: absolute; right: 1em" class="btn-group">
-              <button
-                type="button"
-                class="btn btn-primary ms-3"
-                title="Copia il link al feed RSS di questa lista"
-                @click="copy_link(`https://${host}/api/lists/${current_list_id}/rss/`)"
-              >
-                <img
-                  class="icon"
-                  src="~bootstrap-icons/icons/rss.svg"
-                  alt="rss icon"
-                  width="18"
-                  height="18"
-                />
-              </button>
-              <button
-                type="button"
-                id="button-speak"
-                class="btn btn-success"
-                title="Leggi ad alta voce tutti gli articoli in questa lista"
-                v-if="tts"
-                :disabled="
-                  tts_open ||
-                  !current_list ||
-                  current_list.articles.length === 0 ||
-                  articles.length === 0
-                "
-                v-on:click="tts_speak()"
-              >
-                <img src="~bootstrap-icons/icons/megaphone.svg" alt="tts icon" />
-              </button>
-              <span class="dropdown" role="group">
-                <button
-                  id="download_menu"
-                  class="btn btn-secondary"
-                  type="button"
-                  data-bs-toggle="dropdown"
-                  aria-haspopup="true"
-                  aria-expanded="false"
-                  title="Scarica"
-                >
-                  <img
-                    class="icon"
-                    src="~bootstrap-icons/icons/download.svg"
-                    alt="share icon"
-                    width="18"
-                    height="18"
-                  />
-                </button>
-                <span class="dropdown-menu" aria-labelledby="download_menu">
-                  <a class="dropdown-item" href="#" tabindex="-1" aria-disabled="true"
-                    >Scarica questa lista:</a
-                  >
-                  <a
-                    class="dropdown-item"
-                    href="#"
-                    title="Scarica in formato html"
-                    role="button"
-                    @click="window_open(`/api/lists/${current_list_id}/html/`)"
-                  >
-                    <img
-                      class="icon"
-                      src="~bootstrap-icons/icons/code.svg"
-                      alt="link icon"
-                      width="18"
-                      height="18"
-                    />
-                    <span> html</span>
-                  </a>
-                  <a
-                    class="dropdown-item"
-                    href="#"
-                    title="Scarica in formato epub"
-                    role="button"
-                    @click="window_open(`/api/lists/${current_list_id}/epub/`)"
-                  >
-                    <img
-                      class="icon"
-                      src="~bootstrap-icons/icons/book.svg"
-                      alt="link icon"
-                      width="18"
-                      height="18"
-                    />
-                    <span> epub</span>
-                  </a>
-                  <a
-                    class="dropdown-item"
-                    href="#"
-                    title="Scarica in formato pdf"
-                    role="button"
-                    @click="window_open(`/api/lists/${current_list_id}/pdf/`)"
-                  >
-                    <img
-                      class="icon"
-                      src="~bootstrap-icons/icons/file-earmark-pdf.svg"
-                      alt="link icon"
-                      width="18"
-                      height="18"
-                    />
-                    <span> pdf</span>
-                  </a>
-                </span>
-              </span>
-            </div>
-          </li>
         </ul>
         <div class="tab-content my-3" id="myTabContent">
           <div
@@ -573,14 +466,118 @@ function window_open(url: string): void {
               </div>
             </div>
             <!-- Display article count and estimated reading time -->
-            <p
+            <div
               v-if="current_list && current_list.article_count !== undefined"
               class="mt-3 text-muted"
             >
               Questa lista contiene {{ current_list.article_count }}
               {{ current_list.article_count === 1 ? "articolo" : "articoli" }}. Il tempo totale di
               lettura stimato è: {{ current_list.total_estimated_reading_time }}.
-            </p>
+              <div style="position: absolute; right: 1em" class="btn-group">
+                <button
+                  type="button"
+                  class="btn btn-primary ms-3"
+                  title="Copia il link al feed RSS di questa lista"
+                  @click="copy_link(`https://${host}/api/lists/${current_list_id}/rss/`)"
+                >
+                  <img
+                    class="icon"
+                    src="~bootstrap-icons/icons/rss.svg"
+                    alt="rss icon"
+                    width="18"
+                    height="18"
+                  />
+                </button>
+                <button
+                  type="button"
+                  id="button-speak"
+                  class="btn btn-success"
+                  title="Leggi ad alta voce tutti gli articoli in questa lista"
+                  v-if="tts"
+                  :disabled="
+                    tts_open ||
+                    !current_list ||
+                    current_list.articles.length === 0 ||
+                    articles.length === 0
+                  "
+                  v-on:click="tts_speak()"
+                >
+                  <img src="~bootstrap-icons/icons/megaphone.svg" alt="tts icon" />
+                </button>
+                <span class="dropdown" role="group">
+                  <button
+                    id="download_menu"
+                    class="btn btn-secondary"
+                    type="button"
+                    data-bs-toggle="dropdown"
+                    aria-haspopup="true"
+                    aria-expanded="false"
+                    title="Scarica"
+                  >
+                    <img
+                      class="icon"
+                      src="~bootstrap-icons/icons/download.svg"
+                      alt="share icon"
+                      width="18"
+                      height="18"
+                    />
+                  </button>
+                  <span class="dropdown-menu" aria-labelledby="download_menu">
+                    <a class="dropdown-item" href="#" tabindex="-1" aria-disabled="true"
+                      >Scarica questa lista:</a
+                    >
+                    <a
+                      class="dropdown-item"
+                      href="#"
+                      title="Scarica in formato html"
+                      role="button"
+                      @click="window_open(`/api/lists/${current_list_id}/html/`)"
+                    >
+                      <img
+                        class="icon"
+                        src="~bootstrap-icons/icons/code.svg"
+                        alt="link icon"
+                        width="18"
+                        height="18"
+                      />
+                      <span> html</span>
+                    </a>
+                    <a
+                      class="dropdown-item"
+                      href="#"
+                      title="Scarica in formato epub"
+                      role="button"
+                      @click="window_open(`/api/lists/${current_list_id}/epub/`)"
+                    >
+                      <img
+                        class="icon"
+                        src="~bootstrap-icons/icons/book.svg"
+                        alt="link icon"
+                        width="18"
+                        height="18"
+                      />
+                      <span> epub</span>
+                    </a>
+                    <a
+                      class="dropdown-item"
+                      href="#"
+                      title="Scarica in formato pdf"
+                      role="button"
+                      @click="window_open(`/api/lists/${current_list_id}/pdf/`)"
+                    >
+                      <img
+                        class="icon"
+                        src="~bootstrap-icons/icons/file-earmark-pdf.svg"
+                        alt="link icon"
+                        width="18"
+                        height="18"
+                      />
+                      <span> pdf</span>
+                    </a>
+                  </span>
+                </span>
+              </div>
+            </div>
           </div>
         </div>
         <div class="row" v-if="current_list && current_list.articles.length > 0">
