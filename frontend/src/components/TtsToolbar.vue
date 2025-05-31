@@ -9,7 +9,6 @@ type ArticleRead = components["schemas"]["ArticleRead"]
 const props = defineProps<{
   articles: ArticleRead[]
   base_language: string
-  current_list_id: string | null
 }>()
 
 const emit = defineEmits<{

@@ -2,7 +2,7 @@
 import { copy_link, fetch_wrapper } from "../utils" // Removed find_voice
 import {
   computed,
-  // inject, // Removed inject as base_language is no longer injected here
+  inject,
   onActivated,
   onDeactivated,
   onMounted,
@@ -12,7 +12,7 @@ import {
   type Ref,
 } from "vue"
 import ArticleCard from "../components/ArticleCard.vue"
-import TtsToolbar from "../components/TtsToolbar.vue" // Import TtsToolbar
+import TtsToolbar from "../components/TtsToolbar.vue"
 
 import type { components } from "../generated/schema.d.ts"
 import { useRoute } from "vue-router"
@@ -47,6 +47,7 @@ const show_tts_toolbar = ref(false)
 const tts_available = ref(false)
 
 const host = "notizie.calomelano.it"
+const base_language: string = inject("base_language", "it")
 
 async function fetchArticles() {
   if (current_list.value && current_list.value.articles.length > 0) {
@@ -135,7 +136,6 @@ onMounted(async () => {
   await fetchLists()
   await fetchFeeds()
   await fetchArticles()
-  // tts_init() removed
   tts_available.value = "speechSynthesis" in window
   if (tts_available.value) {
     window.speechSynthesis.cancel() // Clear any previous utterances
@@ -155,7 +155,6 @@ onDeactivated(() => {
   console.log("ListsView deactivated")
 })
 
-// New tts_speak method
 function tts_speak() {
   if (!tts_available.value) {
     console.log("TTS not available")
@@ -236,12 +235,6 @@ watch(
     }
   },
 )
-
-// All TTS methods like tts_init, tts_speak (old), tts_continue, tts_restart, tts_back,
-// tts_forward, tts_stop, read_article, fetchArticle (if only for TTS), stripHtml (if only for TTS),
-// speaker_start, read, tts_close, tts_cleanup are removed.
-// The 'voices' array and its 'onvoiceschanged' handler are also removed.
-// 'base_language' inject is removed as it's passed as a prop.
 
 function window_open(url: string): void {
   window.open(url)
@@ -481,8 +474,7 @@ function window_open(url: string): void {
   >
     <TtsToolbar
       :articles="articles"
-      :base_language="'it'"
-      :current_list_id="current_list_id"
+      :base_language="base_language"
       @tts-closed="handleTtsClosed"
       @tts-started="handleTtsStarted"
       @tts-stopped="handleTtsStopped"
