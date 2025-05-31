@@ -248,6 +248,12 @@ class Profile(models.Model):
     mastodon_client_secret = models.TextField(blank=True)
     mastodon_access_token = models.TextField(blank=True)
     mastodon_api_base_url = models.TextField(blank=True)
+    mastodon_list_name = models.CharField(
+        blank=True,
+        default="newsfeed",
+        help_text="The name of the UserArticleList to publish to Mastodon.",
+        max_length=255,  # Added max_length as CharField requires it
+    )
 
     def __str__(self):
         return f"{self.id}"
