@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { defineAsyncComponent } from "vue"
+import { useTabsStore } from '../stores/tabs.store' // Import the store
+import { storeToRefs } from 'pinia'
 
 import { fetch_wrapper } from "../utils"
 import {
@@ -34,8 +36,13 @@ const tabs = {
   "Per te": ListForyou,
   Preferiti: ListFavs,
 }
-const currentTab = shallowRef(ListAll)
-const currentTabName: Ref<Tabs> = ref("Tutti")
+
+// Use Pinia store for active tab
+const tabsStore = useTabsStore()
+const { activeTab: storeActiveTab } = storeToRefs(tabsStore) // Get reactive state
+
+const currentTab = shallowRef() // Will be set based on store's activeTab
+const currentTabName: Ref<Tabs> = ref(storeActiveTab.value as Tabs) // Initialize with store's value
 
 // --- Fetching Functions ---
 
@@ -59,14 +66,27 @@ const feed_dict = computed(() => {
   return dict
 })
 
-async function activateTab(tab: "Tutti" | "Letti" | "Per te" | "Preferiti") {
+async function activateTab(tab: Tabs) {
+  tabsStore.setActiveTab(tab) // Update store
   currentTabName.value = tab
   currentTab.value = tabs[tab]
 }
 
 onMounted(async () => {
   console.log("HomeView mounted")
-  await activateTab("Tutti")
+  // Initialize tab from store
+  // The component's currentTabName is already initialized from storeActiveTab.value
+  // We need to ensure currentTab (the component instance) is also set.
+  currentTab.value = tabs[storeActiveTab.value as Tabs]
+
+  // It's important that initTabsStore() from tabs.store.ts is called.
+  // This could be done in main.ts, App.vue, or here.
+  // For now, let's assume it will be called in main.ts as per the plan.
+  // If not, it should be called here:
+  // import { initTabsStore } from '../stores/tabs.store';
+  // initTabsStore();
+
+
   fetchFeeds()
 })
 
@@ -86,18 +106,18 @@ onDeactivated(() => {
 <template>
   <div class="container-fluid mt-3">
     <ul class="nav nav-tabs mb-3" id="homeTab" role="tablist">
-      <li class="nav-item" role="presentation" v-for="tab in Object.keys(tabs)" :key="tab">
+      <li class="nav-item" role="presentation" v-for="tabKey in Object.keys(tabs)" :key="tabKey">
         <button
           class="nav-link"
-          :class="{ active: currentTabName === tab }"
-          id="all-tab"
+          :class="{ active: currentTabName === tabKey }"
+          :id="`${tabKey}-tab`"
           type="button"
           role="tab"
-          aria-controls="all-pane"
-          :aria-selected="currentTabName === tab"
-          @click="activateTab(tab as Tabs)"
+          :aria-controls="`${tabKey}-pane`"
+          :aria-selected="currentTabName === tabKey"
+          @click="activateTab(tabKey as Tabs)"
         >
-          {{ tab }}
+          {{ tabKey }}
         </button>
       </li>
     </ul>

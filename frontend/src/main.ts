@@ -2,6 +2,7 @@ import { createApp } from "vue"
 import { createPinia } from "pinia"
 import App from "./App.vue"
 import { useProfileStore } from "./stores/profile.store"
+import { initTabsStore } from "./stores/tabs.store" // Import initTabsStore
 import router from "./router"
 import Vue3Toastify, { type ToastContainerOptions } from "vue3-toastify"
 import "vue3-toastify/dist/index.css"
@@ -12,6 +13,10 @@ const pinia = createPinia()
 const app = createApp(App)
 
 app.use(pinia)
+
+// Initialize TabsStore after Pinia is set up
+initTabsStore()
+
 app.use(router)
 app.use(Vue3Toastify, {
   theme: "light",
