@@ -115,15 +115,44 @@ def get_unread_articles(user):
         list: List of unread articles if successful, empty list if not
     """
     try:
-        newsfeed_list = UserArticleLists.objects.get(user=user, name="newsfeed")
-        all_articles_in_list = newsfeed_list.articles.all().order_by(
+        profile = Profile.objects.get(user=user)
+        list_name = profile.mastodon_list_name
+        if not list_name:  # Default to "newsfeed" if blank
+            list_name = "newsfeed"
+            logging.info(
+                f"mastodon_list_name not set for user {user.username}, "
+                f"defaulting to '{list_name}'.",
+            )
+        else:
+            logging.info(
+                f"Using mastodon_list_name '{list_name}' for user {user.username}.",
+            )
+
+        article_list = UserArticleLists.objects.get(user=user, name=list_name)
+        all_articles_in_list = article_list.articles.all().order_by(
             "-stamp",
         )  # newest first
+    except Profile.DoesNotExist:
+        logging.warning(
+            f"Profile not found for user {user.username}. "
+            f"Cannot determine Mastodon list name, defaulting to 'newsfeed'.",
+        )
+        list_name = "newsfeed" # Default in case profile is missing
+        try:
+            article_list = UserArticleLists.objects.get(user=user, name=list_name)
+            all_articles_in_list = article_list.articles.all().order_by(
+                "-stamp",
+            )
+        except UserArticleLists.DoesNotExist:
+            logging.info(
+                f"No '{list_name}' list found for user {user.username} after profile miss.",
+            )
+            return []
     except UserArticleLists.DoesNotExist:
-        logging.info(f"No 'newsfeed' list found for user {user.username}.")
+        logging.info(f"No '{list_name}' list found for user {user.username}.")
         return []
     except Exception:
-        msg = f"Error fetching newsfeed for user {user.username}"
+        msg = f"Error fetching article list for user {user.username}"
         logging.exception(msg)
         return []
 
