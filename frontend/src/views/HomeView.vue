@@ -2,6 +2,8 @@
 import { defineAsyncComponent } from "vue"
 
 import { fetch_wrapper } from "../utils"
+import { useProfileStore } from "../stores/profile.store"
+import type { Tabs } from "../types/Profile"
 import {
   computed,
   onActivated,
@@ -27,15 +29,15 @@ const ready = ref(false)
 const feeds: Ref<FeedSerializerSimple[]> = ref([]) // All feeds, potentially used by multiple tabs
 
 // --- Tab Management ---
-type Tabs = "Tutti" | "Letti" | "Per te" | "Preferiti"
 const tabs = {
   Tutti: ListAll,
   Letti: ListRead,
   "Per te": ListForyou,
   Preferiti: ListFavs,
 }
-const activeTab = shallowRef(ListAll)
-const activeTabName: Ref<Tabs> = ref("Tutti")
+
+const activeTabName: Ref<Tabs> = ref(useProfileStore().profile.active_tab_name)
+const activeTab = shallowRef(tabs[activeTabName.value])
 
 // --- Fetching Functions ---
 
@@ -59,14 +61,14 @@ const feed_dict = computed(() => {
   return dict
 })
 
-async function activateTab(tab: "Tutti" | "Letti" | "Per te" | "Preferiti") {
-  activeTabName.value = tab
-  activeTab.value = tabs[tab]
+async function activateTab(name: "Tutti" | "Letti" | "Per te" | "Preferiti") {
+  activeTabName.value = name
+  activeTab.value = tabs[name]
+  useProfileStore().set_active_tab_name(name)
 }
 
 onMounted(async () => {
   console.log("HomeView mounted")
-  await activateTab("Tutti")
   fetchFeeds()
 })
 

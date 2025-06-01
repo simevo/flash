@@ -1,6 +1,6 @@
 import { defineStore } from "pinia"
 import { useLocalStorage } from "@vueuse/core"
-import type { Profile } from "../types/Profile"
+import type { Profile, Tabs } from "../types/Profile"
 
 const STORE_NAME = "profile"
 
@@ -10,6 +10,7 @@ const MIN_FONT_SIZE = 12
 const default_profile: Profile = {
   mastodon_server: "",
   font_size: 16,
+  active_tab_name: "Tutti",
 }
 
 export const useProfileStore = defineStore(STORE_NAME, {
@@ -42,6 +43,9 @@ export const useProfileStore = defineStore(STORE_NAME, {
       if (html && font_size <= MAX_FONT_SIZE && font_size >= MIN_FONT_SIZE) {
         html.style.fontSize = `${font_size}px`
       }
+    },
+    set_active_tab_name(name: Tabs) {
+      this.profile.active_tab_name = name
     },
   },
 })
