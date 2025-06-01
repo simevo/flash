@@ -276,7 +276,6 @@ if ("speechSynthesis" in window) {
   // Chrome loads voices asynchronously.
   window.speechSynthesis.onvoiceschanged = function () {
     voices = window.speechSynthesis.getVoices()
-    // alert(voices.map((v) => v.name).join(", "))
   }
 }
 

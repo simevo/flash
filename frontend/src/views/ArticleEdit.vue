@@ -369,9 +369,7 @@ async function save() {
       if (response.status == 403) {
         document.location = "/accounts/"
       } else if (response.status == 200) {
-        toast("Articolo modificato con successo", {
-          type: "success",
-        })
+        alert("Articolo modificato con successo")
         document.location = "/res/article/" + id
       } else {
         response.json().then((data) => {

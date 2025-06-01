@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from "vue-router"
+import { toast } from "vue3-toastify"
 
 import { useAuthStore } from "../stores/auth.store"
 
@@ -103,7 +104,7 @@ router.beforeEach((to, from, next) => {
   if (to.matched.some((record) => record.meta.requiresAdmin)) {
     const auth = useAuthStore()
     if (!auth.user?.is_staff) {
-      alert("Funzione riservata agli utenti di staff")
+      toast("Funzione riservata agli utenti di staff", { type: "error" })
       return
     }
   }

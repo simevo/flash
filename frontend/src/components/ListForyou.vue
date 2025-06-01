@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { copy_link, fetch_wrapper } from "../utils"
 import { inject, onActivated, onDeactivated, onMounted, onUnmounted, ref, type Ref } from "vue"
+import { toast } from "vue3-toastify"
 
 import ArticleCard from "./ArticleCard.vue"
 import TtsToolbar from "../components/TtsToolbar.vue"
@@ -58,7 +59,7 @@ async function fetchArticles() {
 function tts_speak() {
   if (!tts_available.value) {
     console.log("TTS not available")
-    alert("La funzionalità Text-to-Speech non è disponibile su questo browser.")
+    toast("La funzionalità Text-to-Speech non è disponibile su questo browser.", { type: "error" })
     return
   }
   console.log("ListsView tts_speak: showing toolbar")

@@ -439,7 +439,7 @@ async function send() {
       if (response.status == 403) {
         document.location = "/accounts/"
       } else if (response.status == 201) {
-        toast("Fonte aggiunta con successo", { type: "success" })
+        alert("Fonte aggiunta con successo")
         clean()
         response.json().then((data) => {
           document.location = "/res/feed/" + data.id
