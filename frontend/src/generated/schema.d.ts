@@ -132,6 +132,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  "/api/articles/favorites/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations["articles_favorites_retrieve"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   "/api/auth-token/": {
     parameters: {
       query?: never
@@ -748,6 +764,8 @@ export interface components {
       mastodon_client_secret?: string
       mastodon_access_token?: string
       mastodon_api_base_url?: string
+      /** @description The name of the UserArticleList to publish to Mastodon. */
+      mastodon_list_name?: string
     }
     PatchedUser: {
       /** @description Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only. */
@@ -802,6 +820,8 @@ export interface components {
       mastodon_client_secret?: string
       mastodon_access_token?: string
       mastodon_api_base_url?: string
+      /** @description The name of the UserArticleList to publish to Mastodon. */
+      mastodon_list_name?: string
     }
     User: {
       /** @description Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only. */
@@ -1111,6 +1131,25 @@ export interface operations {
         }
         content: {
           "application/json": components["schemas"]["Article"]
+        }
+      }
+    }
+  }
+  articles_favorites_retrieve: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ArticleRead"]
         }
       }
     }

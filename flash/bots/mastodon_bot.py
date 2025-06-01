@@ -104,15 +104,15 @@ def initialize_mastodon_client(user, profile):
     return mastodon_client
 
 
-def get_unread_articles(user):
+def get_unpublished_articles(user):
     """
-    Fetch unread articles for a user.
+    Fetch not-yet-published articles for a user.
 
     Args:
         user: User object
 
     Returns:
-        list: List of unread articles if successful, empty list if not
+        list: List of unpublished articles if successful, empty list if not
     """
     try:
         profile = Profile.objects.get(user=user)
@@ -127,53 +127,47 @@ def get_unread_articles(user):
             logging.info(
                 f"Using mastodon_list_name '{list_name}' for user {user.username}.",
             )
-
-        article_list = UserArticleLists.objects.get(user=user, name=list_name)
-        all_articles_in_list = article_list.articles.all().order_by(
-            "-stamp",
-        )  # newest first
     except Profile.DoesNotExist:
         logging.warning(
             f"Profile not found for user {user.username}. "
             f"Cannot determine Mastodon list name, defaulting to 'newsfeed'.",
         )
-        list_name = "newsfeed" # Default in case profile is missing
-        try:
-            article_list = UserArticleLists.objects.get(user=user, name=list_name)
-            all_articles_in_list = article_list.articles.all().order_by(
-                "-stamp",
-            )
-        except UserArticleLists.DoesNotExist:
-            logging.info(
-                f"No '{list_name}' list found for user {user.username} after profile miss.",
-            )
-            return []
+        list_name = "newsfeed"  # Default in case profile is missing
+
+    try:
+        article_list = UserArticleLists.objects.get(user=user, name=list_name)
+        all_articles_in_list = article_list.articles.all().order_by(
+            "-stamp",
+        )
     except UserArticleLists.DoesNotExist:
-        logging.info(f"No '{list_name}' list found for user {user.username}.")
+        logging.exception(
+            f"No '{list_name}' list found for user {user.username}",
+        )
         return []
     except Exception:
         msg = f"Error fetching article list for user {user.username}"
         logging.exception(msg)
         return []
 
-    unread_articles = []
+    unpublished_articles = []
     for article in all_articles_in_list:
         user_article = UserArticles.objects.filter(
             user=user,
             article=article,
         ).first()
-        if user_article is None or not user_article.read:
+        if user_article is None or not user_article.published:
             article_combined = ArticlesCombined.objects.get(pk=article.id)
-            unread_articles.append(article_combined)
+            unpublished_articles.append(article_combined)
 
-    if not unread_articles:
-        logging.info(f"No unread articles found for user {user.username}.")
+    if not unpublished_articles:
+        logging.info(f"No unpublished articles found for user {user.username}.")
     else:
+        lupa = len(unpublished_articles)
         logging.info(
-            f"Found {len(unread_articles)} unread articles for user {user.username}.",
+            f"Found {lupa} unpublished articles for user {user.username}.",
         )
 
-    return unread_articles
+    return unpublished_articles
 
 
 def create_post_content(article):
@@ -223,7 +217,7 @@ def create_post_content(article):
 
 def post_article_to_mastodon(user, article, mastodon_client, delay_seconds=None):
     """
-    Post an article to Mastodon and mark it as read.
+    Post an article to Mastodon and mark it as published.
 
     Args:
         user: User object
@@ -246,16 +240,16 @@ def post_article_to_mastodon(user, article, mastodon_client, delay_seconds=None)
             msg = f"Posted article {article.id} for user {user.username}"
             logging.info(msg)
 
-        # Mark as read (even in dry run mode)
+        # Mark as published (even in dry run mode)
         article_simple = Articles.objects.get(pk=article.id)
         user_article_status, _ = UserArticles.objects.get_or_create(
             user=user,
             article=article_simple,
         )
-        user_article_status.read = True
+        user_article_status.published = True
         user_article_status.save()
         logging.info(
-            f"Marked article {article.id} as read for user {user.username}",
+            f"Marked article {article.id} as published for user {user.username}",
         )
     except Exception:
         msg = f"Error posting article {article.id} for user {user.username}"
@@ -267,7 +261,7 @@ def post_article_to_mastodon(user, article, mastodon_client, delay_seconds=None)
 def main(user_id, max_articles=None, delay_seconds=None):
     """
     Main function for the Mastodon bot.
-    Fetches unread articles for a user and posts them to Mastodon.
+    Fetches unpublished articles for a user and posts them to Mastodon.
 
     Args:
         user_id: The ID of the user to process articles for
@@ -280,18 +274,21 @@ def main(user_id, max_articles=None, delay_seconds=None):
         return
 
     # Initialize Mastodon client
-    mastodon_client = initialize_mastodon_client(user, profile)
-    if not mastodon_client:
+    mastodon_client = None
+    if not DRY_RUN:
+        mastodon_client = initialize_mastodon_client(user, profile)
+        if not mastodon_client:
+            return
+
+    # Get unpublished articles
+    unpublished_articles = get_unpublished_articles(user)
+    if not unpublished_articles:
         return
 
-    # Get unread articles
-    unread_articles = get_unread_articles(user)
-    if not unread_articles:
-        return
-
-    # Post to Mastodon and Mark as Read (up to MAX_ARTICLES_PER_RUN or custom limit)
+    # Post to Mastodon and Mark as published
+    # (up to MAX_ARTICLES_PER_RUN or custom limit)
     max_to_post = max_articles if max_articles is not None else MAX_ARTICLES_PER_RUN
-    articles_to_post = unread_articles[:max_to_post]
+    articles_to_post = unpublished_articles[:max_to_post]
 
     successfully_posted = 0
     failed_posts = 0
@@ -317,14 +314,14 @@ def main(user_id, max_articles=None, delay_seconds=None):
         f"{dry_run_prefix}Summary for user {user.username}: "
         f"{successfully_posted} new articles {action_verb} posted successfully, "
         f"{failed_posts} failed posts, "
-        f"{len(unread_articles) - len(articles_to_post)} new articles queued.",
+        f"{len(unpublished_articles) - len(articles_to_post)} new articles queued.",
     )
 
 
 if __name__ == "__main__":
     # Set up argument parser
     parser = argparse.ArgumentParser(
-        description="Mastodon bot for posting unread articles to Mastodon",
+        description="Mastodon bot for posting unpublished articles to Mastodon",
     )
 
     # Add arguments

@@ -555,6 +555,32 @@
         }
       }
     },
+    "/api/articles/favorites/": {
+      "get": {
+        "operationId": "articles_favorites_retrieve",
+        "tags": ["articles"],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "tokenAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArticleRead"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/auth-token/": {
       "post": {
         "operationId": "auth_token_create",
@@ -2939,6 +2965,10 @@
           },
           "mastodon_api_base_url": {
             "type": "string"
+          },
+          "mastodon_list_name": {
+            "type": "string",
+            "description": "The name of the UserArticleList to publish to Mastodon."
           }
         }
       },
@@ -3109,6 +3139,10 @@
           },
           "mastodon_api_base_url": {
             "type": "string"
+          },
+          "mastodon_list_name": {
+            "type": "string",
+            "description": "The name of the UserArticleList to publish to Mastodon."
           }
         },
         "required": ["id"]

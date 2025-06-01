@@ -27,18 +27,19 @@ flash - User Guide
 
 12. **Mastodon Bot** – Flash can automatically post new articles from a user's newsfeed to a specified Mastodon account. To enable this feature for a user:
 
-    *   Navigate to the user's Profile in the Django admin interface.
-    *   Check the `Is bot user` flag.
-    *   Fill in the Mastodon API credentials (in Mastodon, go to your Account Preferences -> Development -> New Application, create a new application, fill in Name and Website, with `read`, `profile` and `write:statuses` scopes):
-        *   `Mastodon client id`
-        *   `Mastodon client secret`
-        *   `Mastodon access token`
-        *   `Mastodon API base url` (e.g., `https://mastodon.social` or your instance's URL)
+    * Navigate to the user's Profile in the Django admin interface.
+    * Check the `Is bot user` flag.
+    * Enter the name of the user articles list that should get published. If you want to publish the "For you" automatic newsfeed, set it to `newsfeed`.
+    * Fill in the Mastodon API credentials (in Mastodon, go to your Account Preferences -> Development -> New Application, create a new application, fill in Name and Website, with `read`, `profile` and `write:statuses` scopes):
+      * `Mastodon client id`
+      * `Mastodon client secret`
+      * `Mastodon access token`
+      * `Mastodon API base url` (e.g., `https://mastodon.social` or your instance's URL)
 
     Bot Functionality:
 
     * The bot runs automatically every hour via a Celery Beat schedule.
-    * It scans the personalized newsfeed of the configured bot user for new (unread) articles.
+    * It scans the selected article list of the configured bot user for new (unread) articles.
     * New articles found are posted to the Mastodon account associated with the provided credentials.
     * After successfully posting an article, it is marked as 'read' for the bot user to prevent reposting.
     * To avoid spamming, the bot will post a maximum of 5 articles per hour.

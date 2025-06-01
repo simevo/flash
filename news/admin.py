@@ -62,6 +62,7 @@ class ProfileAdmin(admin.ModelAdmin):
                     "mastodon_client_id",
                     "mastodon_client_secret",
                     "mastodon_access_token",
+                    "mastodon_list_name",
                 ),
             },
         ),
