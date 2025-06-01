@@ -302,6 +302,8 @@ watch(
         quill.setText("") // Clear the main editor
         article.value.content_original = currentContent
         article.value.content = ""
+        article.value.title_original = article.value.title
+        article.value.title = ""
       }
     } else if (oldLanguage !== base_language && newLanguage === base_language) {
       if (article.value && quill && quill_original) {
@@ -328,6 +330,8 @@ watch(
         quill_original.setText("")
         article.value.content = originalContent
         article.value.content_original = ""
+        article.value.title = article.value.title_original
+        article.value.title_original = ""
       }
     }
   },
