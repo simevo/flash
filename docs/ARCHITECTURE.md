@@ -9,13 +9,17 @@ The architecture is the classical **three-tier** architecture for webapps:
 
 ![architecture](./architecture.png "Architecture")
 
-1. The **back-end** service is implemented in the Python 3.12 language as an "API only" [Django](https://www.djangoproject.com/) project based on [Django REST framework (DRF)](https://www.django-rest-framework.org/); there are no app forms/visual interfaces except the admin interface and the API playground provided by DRF.
+1. The **back-end** service is implemented in the Python 3.12 language as a [Django](https://www.djangoproject.com/) project which handles:
 
-2. The **front-end** service executes the nginx web server which serves a bundle of static, "compiled" HTML5 / CSS /JavaScript file produced with the [vite](https://vite.dev/) build tool from TypeScript sources making use of:
+   - Authentication
+   - The Server Side Rendered (SSR), publicly accessible pages
+   - The RESTful API, using the [Django REST framework (DRF)](https://www.django-rest-framework.org/); its OpenApi 3 specification is in 
+the JSON file `frontend/src/generated/flash_api.json` and can be viewed with the [Swagger Editor](https://editor.swagger.io) by loading it.
 
-   - the [Bootstrap CSS framework](https://getbootstrap.com/) version 5.3
+2. The **front-end** service executes the nginx web server which serves a bundle of static, "compiled" HTML5 / CSS / JavaScript files produced with the [vite](https://vite.dev/) build tool from TypeScript sources making use of:
 
-   - and [Vue.js front end JavaScript framework](https://vuejs.org/) version 3;
+   - the [Vue.js front end JavaScript framework](https://vuejs.org/) version 3;
+   - and the [Bootstrap CSS framework](https://getbootstrap.com/) version 5.3.
 
    Additionally nginx proxies the backend API as `/api`. In development mode nginx also proxies the vite development server.
 

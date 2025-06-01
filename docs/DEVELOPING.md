@@ -150,6 +150,15 @@ To **add a new dependency**, install it with `yarnpkg add ...` or `yarnpkg add -
 
 Dont't forget to commit your changes!
 
+## Updating API Documentation
+
+Whenever there are changes to the API, the OpenAPI schema and the TypeScript definitions should be regenerated.
+This can be done by running the following script from the root of the project:
+
+```bash
+./update_openapi.sh
+```
+
 ## Deployment
 
 The following details how to deploy this application.
