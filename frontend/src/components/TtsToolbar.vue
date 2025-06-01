@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted, defineProps, defineEmits } from "vue"
+import { toast } from "vue3-toastify"
 import { fetch_wrapper, find_voice } from "../utils"
 
 import type { components } from "../generated/schema.d.ts"
@@ -226,7 +227,11 @@ async function read_article() {
       tts_forward_internal() // internal skip to next if current is empty
     }
   } else {
-    alert("Nessuna voce disponibile per la lingua: " + lang + " (Toolbar)")
+    toast(`Nessuna voce disponibile per la lingua: ${lang}`, {
+      theme: "auto",
+      type: "error",
+      dangerouslyHTMLString: true,
+    })
     // Skip to the next article
     tts_forward_internal() // internal skip to next if no voice
   }

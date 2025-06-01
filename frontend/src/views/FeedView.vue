@@ -122,6 +122,7 @@
 
 <script setup lang="ts">
 import { fetch_wrapper } from "../utils"
+import { toast } from "vue3-toastify"
 import { onActivated, watch, computed } from "vue"
 import { useRoute } from "vue-router"
 import { ref, onMounted, type Ref } from "vue"
@@ -351,7 +352,11 @@ async function refresh_feed(feed_id: number) {
     document.location = "/accounts/"
   } else if (response.ok) {
     const data = await response.json()
-    alert(`Fonte aggiornata: ${JSON.stringify(data)}`)
+    toast(`Fonte aggiornata: ${JSON.stringify(data)}`, {
+      theme: "auto",
+      type: "success",
+      dangerouslyHTMLString: true,
+    })
     fetchArticles() // This will decrement count_fetch
     fetchFeeds() // This will also decrement count_fetch
     if (isStaffUser.value) {
@@ -359,7 +364,11 @@ async function refresh_feed(feed_id: number) {
       fetchFeedPollingData(props.feed_id).finally(() => (count_fetch.value -= 1))
     }
   } else {
-    alert(`Errore durante l'aggiornamento della fonte.`)
+    toast(`Errore durante l'aggiornamento della fonte.`, {
+      theme: "auto",
+      type: "error",
+      dangerouslyHTMLString: true,
+    })
     // Still decrement count_fetch as the main operations might have partially succeeded or failed
     // and we need to allow the UI to potentially render error states or existing data.
     count_fetch.value = 0 // Reset to show UI

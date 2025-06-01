@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, inject, onMounted, type Ref, ref } from "vue"
 import { copy_link, fetch_wrapper } from "../utils"
+import { toast } from "vue3-toastify"
 import type { components } from "../generated/schema.js"
 import { useProfileStore } from "../stores/profile.store"
 import { useAuthStore } from "../stores/auth.store"
@@ -46,7 +47,11 @@ async function translate() {
   if (props.article.language != base_language && !props.article.content) {
     emit("translate")
   } else {
-    alert("Articolo già tradotto")
+    toast("Articolo già tradotto", {
+      theme: "auto",
+      type: "info",
+      dangerouslyHTMLString: true,
+    })
   }
 }
 

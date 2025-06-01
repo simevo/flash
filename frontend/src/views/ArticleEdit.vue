@@ -222,6 +222,7 @@
 
 <script setup lang="ts">
 import { fetch_wrapper } from "../utils"
+import { toast } from "vue3-toastify"
 import { inject, nextTick, onActivated, onMounted, ref, watch, type Ref } from "vue"
 import type { components } from "../generated/schema.d.ts"
 import Quill from "quill"
@@ -368,16 +369,28 @@ async function save() {
       if (response.status == 403) {
         document.location = "/accounts/"
       } else if (response.status == 200) {
-        alert("Articolo modificato con successo")
+        toast("Articolo modificato con successo", {
+          theme: "auto",
+          type: "success",
+          dangerouslyHTMLString: true,
+        })
         document.location = "/res/article/" + id
       } else {
         response.json().then((data) => {
-          alert("Errore: " + response.statusText + "; " + JSON.stringify(data))
+          toast("Errore: " + response.statusText + "; " + JSON.stringify(data), {
+            theme: "auto",
+            type: "error",
+            dangerouslyHTMLString: true,
+          })
         })
       }
     })
     .catch((error) => {
-      alert("Errore di rete: " + error)
+      toast("Errore di rete: " + error, {
+        theme: "auto",
+        type: "error",
+        dangerouslyHTMLString: true,
+      })
     })
 }
 

@@ -26,6 +26,7 @@
 
 <script setup lang="ts">
 import { fetch_wrapper } from "../utils"
+import { toast } from "vue3-toastify"
 import type { components } from "../generated/schema.d.ts"
 type Feed = components["schemas"]["Feed"]
 type PatchedFeed = Feed & { my_rating: number | undefined }
@@ -70,18 +71,34 @@ function set(item: PatchedFeed, rating: number, endpoint: string) {
           window.location.href = "/accounts/"
         }
       } else if (response.status == 200) {
-        alert("Rating aggiornato con successo")
+        toast("Rating aggiornato con successo", {
+          theme: "auto",
+          type: "success",
+          dangerouslyHTMLString: true,
+        })
       } else if (response.status == 201) {
-        alert("Rating inserito con successo")
+        toast("Rating inserito con successo", {
+          theme: "auto",
+          type: "success",
+          dangerouslyHTMLString: true,
+        })
       } else {
         response.json().then((data) => {
-          alert("Errore: " + response.statusText + "; " + JSON.stringify(data))
+          toast("Errore: " + response.statusText + "; " + JSON.stringify(data), {
+            theme: "auto",
+            type: "error",
+            dangerouslyHTMLString: true,
+          })
         })
       }
       emit("updating", false)
     })
     .catch((error) => {
-      alert("Errore di rete: " + error)
+      toast("Errore di rete: " + error, {
+        theme: "auto",
+        type: "error",
+        dangerouslyHTMLString: true,
+      })
       emit("updating", false)
     })
 }

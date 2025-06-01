@@ -405,6 +405,7 @@
 
 <script setup lang="ts">
 import { fetch_wrapper, getCookie } from "../utils"
+import { toast } from "vue3-toastify"
 import { computed, onActivated, watch } from "vue"
 import { ref, onMounted, type Ref } from "vue"
 
@@ -505,16 +506,28 @@ async function save() {
       if (response.status == 403) {
         document.location = "/accounts/"
       } else if (response.status == 200) {
-        alert("Fonte modificata con successo")
+        toast("Fonte modificata con successo", {
+          theme: "auto",
+          type: "success",
+          dangerouslyHTMLString: true,
+        })
         document.location = "/res/feed/" + id
       } else {
         response.json().then((data) => {
-          alert("Errore: " + response.statusText + "; " + JSON.stringify(data))
+          toast("Errore: " + response.statusText + "; " + JSON.stringify(data), {
+            theme: "auto",
+            type: "error",
+            dangerouslyHTMLString: true,
+          })
         })
       }
     })
     .catch((error) => {
-      alert("Errore di rete: " + error)
+      toast("Errore di rete: " + error, {
+        theme: "auto",
+        type: "error",
+        dangerouslyHTMLString: true,
+      })
     })
 }
 
@@ -578,7 +591,11 @@ async function handleFileSelect(event: Event) {
     const data = await response.json()
     handleSuccess(data)
   } catch (error) {
-    alert(`Impossibile caricare l'immagine: ${error}`)
+    toast(`Impossibile caricare l'immagine: ${error}`, {
+      theme: "auto",
+      type: "error",
+      dangerouslyHTMLString: true,
+    })
   }
 }
 

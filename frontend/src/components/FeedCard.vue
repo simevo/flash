@@ -3,6 +3,7 @@
 
 import { RouterLink } from "vue-router"
 import { computed } from "vue"
+import { toast } from "vue3-toastify"
 import { secondsToString } from "./sts"
 import { useAuthStore } from "../stores/auth.store"
 import { fetch_wrapper } from "../utils"
@@ -85,19 +86,35 @@ async function cycleRatingState() {
     })
 
     if (response.ok) {
-      alert(
+      toast(
         `Impostazione per la fonte ${props.feed.id} aggiornata; ci potrebbe volere fino ad un'ora affinché la modifica abbia effetto.`,
+        {
+          theme: "auto",
+          type: "success",
+          dangerouslyHTMLString: true,
+        },
       )
     } else {
       // Revert optimistic update on failure
       ;(props.feed as any).my_rating = originalRating
       const errorData = await response.text()
-      alert(`Errore di aggiornamento del rating: ${response.statusText} - ${errorData}`)
+      toast(
+        `Errore di aggiornamento del rating: ${response.statusText} - ${errorData}`,
+        {
+          theme: "auto",
+          type: "error",
+          dangerouslyHTMLString: true,
+        },
+      )
     }
   } catch (error) {
     // Revert optimistic update on failure
     ;(props.feed as any).my_rating = originalRating
-    alert(`Errore di rete: ${error}`)
+    toast(`Errore di rete: ${error}`, {
+      theme: "auto",
+      type: "error",
+      dangerouslyHTMLString: true,
+    })
   } finally {
     emit("updating", false)
   }
