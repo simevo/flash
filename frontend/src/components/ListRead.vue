@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { fetch_wrapper } from "../utils"
-import { onActivated, onDeactivated, onMounted, onUnmounted, ref, type Ref } from "vue"
+import { onActivated, onDeactivated, onMounted, onUnmounted, ref, watch, type Ref } from "vue" // Added watch
+import { useAuthStore } from '../../stores/auth.store'; // Added import
 
 import ArticleCard from "./ArticleCard.vue"
 
@@ -13,6 +14,8 @@ const ready = ref(false)
 const fetching = ref<boolean>(false)
 const articles: Ref<ArticleRead[]> = ref([])
 const next = ref<string>("")
+const onlyShowUserArticles = ref(false); // Added ref
+const authStore = useAuthStore(); // Added authStore
 
 defineProps<{
   feeds: FeedSerializerSimple[]
@@ -21,7 +24,8 @@ defineProps<{
 
 async function fetchArticles() {
   ready.value = false
-  const response = await fetch_wrapper(`../../api/articles/?read=true`)
+  const url = `../../api/articles/?read=true`
+  const response = await fetch_wrapper(url)
   if (response.status == 403) {
     document.location = "/accounts/"
   } else {
@@ -52,6 +56,36 @@ onMounted(async () => {
   fetchArticles()
 })
 
+async function fetchUserArticles() {
+  ready.value = false
+  const userId = authStore.user?.id;
+  if (!userId) {
+    // Handle case where user is not logged in or user id is not available
+    console.warn("User ID not available for fetching user articles.");
+    articles.value = [];
+    next.value = "";
+    ready.value = true;
+    return;
+  }
+  const response = await fetch_wrapper(`../../api/articles/?read=true&user_id=${userId}`)
+  if (response.status == 403) {
+    document.location = "/accounts/"
+  } else {
+    const data: PaginatedArticleReadList = await response.json()
+    articles.value = data.results
+    next.value = data.next ? data.next : ""
+    ready.value = true
+  }
+}
+
+watch(onlyShowUserArticles, (newValue) => {
+  if (newValue) {
+    fetchUserArticles();
+  } else {
+    fetchArticles();
+  }
+});
+
 onUnmounted(() => {
   console.log("ListRead unmounted")
 })
@@ -68,6 +102,12 @@ onDeactivated(() => {
 <template>
   <div v-if="ready">
     <p>Gli articoli più recenti già letti da altri e/o da te</p>
+    <div class="my-3">
+      <label>
+        <input type="checkbox" v-model="onlyShowUserArticles" />
+        Only show articles read by you
+      </label>
+    </div>
     <div class="row my-3" v-if="articles.length == 0">
       <div class="col-md-12">
         <div class="alert alert-warning text-center" role="alert">
