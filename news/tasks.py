@@ -76,14 +76,18 @@ def precompute_user(user, start_timestamp, embedding_service):
 
     if len(user.profile.whitelist) > 0:
         terms = " ".join(user.profile.whitelist)
-        logger.info(f"== filtering by whitelist: {terms}")
+        logger.info(f"== filtering and sorting by whitelist: {terms}")
         embedding = embedding_service.get_embedding(terms)
-        qs = qs.order_by(
-            CosineDistance(
-                "use_cmlm_multilingual",
-                embedding,
-            ),
-        )[:10000]
+        qs = (
+            qs.alias(
+                distance=CosineDistance(
+                    "use_cmlm_multilingual",
+                    embedding,
+                ),
+            )
+            .filter(distance__lt=0.2)
+            .order_by("distance")[:10000]
+        )
         filtered = True
 
     if filtered:
@@ -97,13 +101,16 @@ def precompute_user(user, start_timestamp, embedding_service):
 @shared_task(time_limit=1750, soft_time_limit=1600)
 def precompute():
     logger.info("Precomputing started")
-    one_month_ago = datetime.datetime.now(tz=datetime.UTC) - datetime.timedelta(days=30)
+    two_months_ago = datetime.datetime.now(tz=datetime.UTC) - datetime.timedelta(
+        days=60,
+    )
     embedding_service = TextEmbeddingService()
     users = get_user_model().objects.all()
     for user in users:
-        precompute_user(user, one_month_ago, embedding_service)
+        precompute_user(user, two_months_ago, embedding_service)
 
     logger.info("Precomputing finished")
+    cache.clear()
 
 
 def clean_html(raw_html):
