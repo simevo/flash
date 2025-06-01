@@ -33,6 +33,10 @@ The full documentation, built with Sphinx, can be accessed [here](docs/_build/ht
 - `news/`: Django app responsible for news aggregation, articles, feeds, and related models and views.
 - `requirements/`: Stores Python dependency files for different environments (e.g., `base.txt`, `local.txt`, `production.txt`).
 
+## Contributing
+
+Contributions are welcome! Please read our [contributing guidelines](CONTRIBUTING.md) to learn how you can help.
+
 ## License
 
 **flash** an open-source news platform with aggregation and ranking
