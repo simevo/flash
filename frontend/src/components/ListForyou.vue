@@ -131,13 +131,11 @@ onDeactivated(() => {
 </script>
 
 <template>
-  <p>
+  <div>
     Gli articoli scelti per te. Personalizza questo newsfeed scegliendo le parole (prioritarie o
     vietate) e le lingue preferite nella
     <RouterLink to="/settings">pagina "Impostazioni"</RouterLink>.
-  </p>
-  <div v-if="ready && Object.keys(feed_dict).length > 0">
-    <div style="position: absolute; right: 1em" class="btn-group">
+    <div class="btn-group float-end">
       <button
         type="button"
         class="btn btn-primary ms-3"
@@ -239,7 +237,9 @@ onDeactivated(() => {
         </span>
       </span>
     </div>
-    <div class="row my-3" v-if="articles.length == 0">
+  </div>
+  <div v-if="ready && Object.keys(feed_dict).length > 0">
+    <div class="row my-5" v-if="articles.length == 0">
       <div class="col-md-12">
         <div class="alert alert-warning text-center" role="alert">
           Non ci sono articoli per te da visualizzare.
