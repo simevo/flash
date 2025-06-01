@@ -228,9 +228,7 @@ async function read_article() {
     }
   } else {
     toast(`Nessuna voce disponibile per la lingua: ${lang}`, {
-      theme: "auto",
       type: "error",
-      dangerouslyHTMLString: true,
     })
     // Skip to the next article
     tts_forward_internal() // internal skip to next if no voice

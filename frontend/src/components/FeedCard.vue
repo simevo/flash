@@ -89,31 +89,22 @@ async function cycleRatingState() {
       toast(
         `Impostazione per la fonte ${props.feed.id} aggiornata; ci potrebbe volere fino ad un'ora affinché la modifica abbia effetto.`,
         {
-          theme: "auto",
           type: "success",
-          dangerouslyHTMLString: true,
         },
       )
     } else {
       // Revert optimistic update on failure
       ;(props.feed as any).my_rating = originalRating
       const errorData = await response.text()
-      toast(
-        `Errore di aggiornamento del rating: ${response.statusText} - ${errorData}`,
-        {
-          theme: "auto",
-          type: "error",
-          dangerouslyHTMLString: true,
-        },
-      )
+      toast(`Errore di aggiornamento del rating: ${response.statusText} - ${errorData}`, {
+        type: "error",
+      })
     }
   } catch (error) {
     // Revert optimistic update on failure
     ;(props.feed as any).my_rating = originalRating
     toast(`Errore di rete: ${error}`, {
-      theme: "auto",
       type: "error",
-      dangerouslyHTMLString: true,
     })
   } finally {
     emit("updating", false)

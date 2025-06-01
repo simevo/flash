@@ -506,27 +506,19 @@ async function save() {
       if (response.status == 403) {
         document.location = "/accounts/"
       } else if (response.status == 200) {
-        toast("Fonte modificata con successo", {
-          theme: "auto",
-          type: "success",
-          dangerouslyHTMLString: true,
-        })
+        alert("Fonte modificata con successo")
         document.location = "/res/feed/" + id
       } else {
         response.json().then((data) => {
           toast("Errore: " + response.statusText + "; " + JSON.stringify(data), {
-            theme: "auto",
             type: "error",
-            dangerouslyHTMLString: true,
           })
         })
       }
     })
     .catch((error) => {
       toast("Errore di rete: " + error, {
-        theme: "auto",
         type: "error",
-        dangerouslyHTMLString: true,
       })
     })
 }
@@ -592,9 +584,7 @@ async function handleFileSelect(event: Event) {
     handleSuccess(data)
   } catch (error) {
     toast(`Impossibile caricare l'immagine: ${error}`, {
-      theme: "auto",
       type: "error",
-      dangerouslyHTMLString: true,
     })
   }
 }

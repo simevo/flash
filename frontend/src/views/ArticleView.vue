@@ -241,7 +241,6 @@
 
 <script setup lang="ts">
 import { fetch_wrapper, find_voice } from "../utils"
-import { toast } from "vue3-toastify"
 import { computed, nextTick, onActivated, onMounted, ref, watch, type Ref } from "vue"
 import { RouterLink, useRoute } from "vue-router"
 import type { components } from "../generated/schema.d.ts"

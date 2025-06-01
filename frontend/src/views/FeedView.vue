@@ -352,11 +352,7 @@ async function refresh_feed(feed_id: number) {
     document.location = "/accounts/"
   } else if (response.ok) {
     const data = await response.json()
-    toast(`Fonte aggiornata: ${JSON.stringify(data)}`, {
-      theme: "auto",
-      type: "success",
-      dangerouslyHTMLString: true,
-    })
+    alert(`Fonte aggiornata: ${JSON.stringify(data)}`)
     fetchArticles() // This will decrement count_fetch
     fetchFeeds() // This will also decrement count_fetch
     if (isStaffUser.value) {
@@ -365,9 +361,7 @@ async function refresh_feed(feed_id: number) {
     }
   } else {
     toast(`Errore durante l'aggiornamento della fonte.`, {
-      theme: "auto",
       type: "error",
-      dangerouslyHTMLString: true,
     })
     // Still decrement count_fetch as the main operations might have partially succeeded or failed
     // and we need to allow the UI to potentially render error states or existing data.

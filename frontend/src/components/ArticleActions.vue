@@ -48,9 +48,7 @@ async function translate() {
     emit("translate")
   } else {
     toast("Articolo già tradotto", {
-      theme: "auto",
       type: "info",
-      dangerouslyHTMLString: true,
     })
   }
 }

@@ -370,26 +370,20 @@ async function save() {
         document.location = "/accounts/"
       } else if (response.status == 200) {
         toast("Articolo modificato con successo", {
-          theme: "auto",
           type: "success",
-          dangerouslyHTMLString: true,
         })
         document.location = "/res/article/" + id
       } else {
         response.json().then((data) => {
           toast("Errore: " + response.statusText + "; " + JSON.stringify(data), {
-            theme: "auto",
             type: "error",
-            dangerouslyHTMLString: true,
           })
         })
       }
     })
     .catch((error) => {
       toast("Errore di rete: " + error, {
-        theme: "auto",
         type: "error",
-        dangerouslyHTMLString: true,
       })
     })
 }
