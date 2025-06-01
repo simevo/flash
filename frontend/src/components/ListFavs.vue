@@ -77,16 +77,23 @@ onDeactivated(() => {
 </script>
 
 <template>
+  <p>
+    Gli articoli provenienti dalle tue fonti preferite. Personalizza questo newsfeed scegliendo le
+    fonti preferite
+    <img
+      class="icon"
+      src="~bootstrap-icons/icons/heart-fill.svg"
+      alt="filled heart icon"
+      width="18"
+      height="18"
+    />
+    nella <RouterLink to="/feeds">pagina "Fonti"</RouterLink>.
+  </p>
   <div v-if="ready">
-    <p>
-      Gli articoli provenienti dalle tue fonti preferite. Personalizza questo newsfeed scegliendo le
-      fonti preferite nella
-      <RouterLink to="/feeds">pagina "Fonti"</RouterLink>.
-    </p>
     <div class="row my-3" v-if="articles.length == 0">
       <div class="col-md-12">
         <div class="alert alert-warning text-center" role="alert">
-          Non hai ancora fonti preferite.
+          Non hai ancora definito le tue fonti preferite.
         </div>
       </div>
     </div>
@@ -126,9 +133,7 @@ onDeactivated(() => {
   <div class="container my-3" v-else>
     <div class="row">
       <div class="text-center col-md-8 offset-md-2">
-        <p class="mb-3">
-          Recupero la lista degli articoli provenienti dalle tue fonti preferite ...
-        </p>
+        <p class="mb-3">Recupero gli articoli ...</p>
         <div class="spinner-border text-primary" role="status">
           <span class="visually-hidden">Loading...</span>
         </div>

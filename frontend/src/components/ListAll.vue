@@ -245,10 +245,10 @@ watch(
       height="18"
     />
   </button>
+  <p>
+    Gli articoli più recenti.<span v-if="!not_filtering">{{ filters_summary }}</span>
+  </p>
   <div v-if="ready">
-    <p>
-      Gli articoli più recenti.<span v-if="!not_filtering">{{ filters_summary }}</span>
-    </p>
     <div class="row my-3" v-if="filtered_articles.length == 0">
       <div class="col-md-12">
         <div class="alert alert-warning text-center" role="alert">
@@ -304,10 +304,7 @@ watch(
   <div class="container my-3" v-else>
     <div class="row">
       <div class="text-center col-md-8 offset-md-2">
-        <p class="mb-3">
-          Recupero la lista di tutti gli articoli recenti ...
-          <span v-if="!not_filtering">{{ filters_summary }}</span>
-        </p>
+        <p class="mb-3">Recupero gli articoli ...</p>
         <div class="spinner-border text-primary" role="status">
           <span class="visually-hidden">Loading...</span>
         </div>

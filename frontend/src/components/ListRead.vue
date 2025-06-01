@@ -100,14 +100,14 @@ onDeactivated(() => {
 </script>
 
 <template>
+  <p>
+    Gli articoli più recenti già letti da altri e/o da te
+    <label class="float-end form-check">
+      <input type="checkbox" v-model="onlyShowUserArticles" class="form-check-input" />
+      Mostra solo gli articoli letti da te
+    </label>
+  </p>
   <div v-if="ready">
-    <p>Gli articoli più recenti già letti da altri e/o da te</p>
-    <div class="my-3">
-      <label>
-        <input type="checkbox" v-model="onlyShowUserArticles" />
-        Only show articles read by you
-      </label>
-    </div>
     <div class="row my-3" v-if="articles.length == 0">
       <div class="col-md-12">
         <div class="alert alert-warning text-center" role="alert">
@@ -151,7 +151,7 @@ onDeactivated(() => {
   <div class="container my-3" v-else>
     <div class="row">
       <div class="text-center col-md-8 offset-md-2">
-        <p class="mb-3">Recupero la lista di tutti gli articoli letti ...</p>
+        <p class="mb-3">Recupero gli articoli ...</p>
         <div class="spinner-border text-primary" role="status">
           <span class="visually-hidden">Loading...</span>
         </div>
