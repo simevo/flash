@@ -35,7 +35,7 @@ The full documentation, built with Sphinx, can be accessed [here](docs/_build/ht
 
 ## Contributing
 
-Contributions are welcome! Please read our [contributing guidelines](CONTRIBUTING.md) to learn how you can help.
+Contributions are welcome! Please read the [contributing guidelines](CONTRIBUTING.md) to learn how you can help.
 
 ## License
 
