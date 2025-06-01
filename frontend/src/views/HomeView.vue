@@ -34,8 +34,8 @@ const tabs = {
   "Per te": ListForyou,
   Preferiti: ListFavs,
 }
-const currentTab = shallowRef(ListAll)
-const currentTabName: Ref<Tabs> = ref("Tutti")
+const activeTab = shallowRef(ListAll)
+const activeTabName: Ref<Tabs> = ref("Tutti")
 
 // --- Fetching Functions ---
 
@@ -60,8 +60,8 @@ const feed_dict = computed(() => {
 })
 
 async function activateTab(tab: "Tutti" | "Letti" | "Per te" | "Preferiti") {
-  currentTabName.value = tab
-  currentTab.value = tabs[tab]
+  activeTabName.value = tab
+  activeTab.value = tabs[tab]
 }
 
 onMounted(async () => {
@@ -89,12 +89,12 @@ onDeactivated(() => {
       <li class="nav-item" role="presentation" v-for="tab in Object.keys(tabs)" :key="tab">
         <button
           class="nav-link"
-          :class="{ active: currentTabName === tab }"
+          :class="{ active: activeTabName === tab }"
           id="all-tab"
           type="button"
           role="tab"
           aria-controls="all-pane"
-          :aria-selected="currentTabName === tab"
+          :aria-selected="activeTabName === tab"
           @click="activateTab(tab as Tabs)"
         >
           {{ tab }}
@@ -110,7 +110,7 @@ onDeactivated(() => {
         tabindex="0"
       >
         <KeepAlive>
-          <component :is="currentTab" :feeds="feeds" :feed_dict="feed_dict" />
+          <component :is="activeTab" :feeds="feeds" :feed_dict="feed_dict" />
         </KeepAlive>
       </div>
     </div>
