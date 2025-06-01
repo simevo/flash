@@ -75,6 +75,8 @@ def precompute_user(user, start_timestamp, embedding_service):
         filtered = True
 
     if len(user.profile.whitelist) > 0:
+        # temporarily abusing gravity to store what actually is a threshold
+        gravity = user.profile.gravity
         terms = " ".join(user.profile.whitelist)
         logger.info(f"== filtering and sorting by whitelist: {terms}")
         embedding = embedding_service.get_embedding(terms)
@@ -85,7 +87,7 @@ def precompute_user(user, start_timestamp, embedding_service):
                     embedding,
                 ),
             )
-            .filter(distance__lt=0.2)
+            .filter(distance__lt=gravity)
             .order_by("distance")[:10000]
         )
         filtered = True
