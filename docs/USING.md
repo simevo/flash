@@ -48,13 +48,17 @@ flash - User Guide
 
 ## Basic usage
 
-Flash offers two distinct experiences depending on whether you are logged in or not.
+Flash offers two distinct experiences depending on whether you are logged in as a user or not ("guest").
 
-Guest pages are easy to recognize by the gray color of the header. After logging in, the header color changes to "dark" ([Mocha Mousse](https://www.pantone.com/eu/it/color-of-the-year/2025)) for the SPA.
+Guest pages are easy to recognize by the gray color of the header:
+![gray color](gray.png)
+
+After logging in, the header color changes to "dark" ([Mocha Mousse](https://www.pantone.com/eu/it/color-of-the-year/2025)):
+![dark Mocha Mousse](dark_mocha_mousse.png)
 
 ### Guest visitor
 
-The aggregator presents to the anonymous visitor a restricted list of news items (only articles which some logged-in user has already read). This page is server-rendered by Django.
+The aggregator presents to the anonymous visitor a restricted list of news items (only articles which some logged-in user has already read). This page is server-side-rendered by Django.
 
 ![Home page](homepage.jpeg)
 
