@@ -89,7 +89,7 @@ onDeactivated(() => {
     />
     nella <RouterLink to="/feeds">pagina "Fonti"</RouterLink>.
   </p>
-  <div v-if="ready">
+  <div v-if="ready && Object.keys(feed_dict).length > 0">
     <div class="row my-3" v-if="articles.length == 0">
       <div class="col-md-12">
         <div class="alert alert-warning text-center" role="alert">

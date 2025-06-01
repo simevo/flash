@@ -136,7 +136,7 @@ onDeactivated(() => {
     vietate) e le lingue preferite nella
     <RouterLink to="/settings">pagina "Impostazioni"</RouterLink>.
   </p>
-  <div v-if="ready">
+  <div v-if="ready && Object.keys(feed_dict).length > 0">
     <div style="position: absolute; right: 1em" class="btn-group">
       <button
         type="button"

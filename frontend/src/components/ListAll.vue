@@ -248,7 +248,7 @@ watch(
   <p>
     Gli articoli più recenti.<span v-if="!not_filtering">{{ filters_summary }}</span>
   </p>
-  <div v-if="ready">
+  <div v-if="ready && Object.keys(feed_dict).length > 0">
     <div class="row my-3" v-if="filtered_articles.length == 0">
       <div class="col-md-12">
         <div class="alert alert-warning text-center" role="alert">
