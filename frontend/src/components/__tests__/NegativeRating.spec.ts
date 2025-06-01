@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
-import { toast } from "vue3-toastify";
+import { toast } from "vue3-toastify"
 import { mount, VueWrapper } from "@vue/test-utils"
 import NegativeRating from "../NegativeRating.vue"
 import { fetch_wrapper } from "../../utils"
@@ -13,7 +13,7 @@ vi.mock("../../utils", () => ({
 }))
 
 // Mock vue3-toastify
-vi.mock("vue3-toastify", () => ({ toast: vi.fn() }));
+vi.mock("vue3-toastify", () => ({ toast: vi.fn() }))
 
 // To track the href for location mock
 let currentHref = ""
@@ -229,9 +229,9 @@ describe("NegativeRating.vue", () => {
 
       await wrapper.find("button").trigger("click")
 
-      expect(toast).toHaveBeenCalledWith(
-        "Errore: Server Error; " + JSON.stringify(errorResponse), { type: "error" }
-      )
+      expect(toast).toHaveBeenCalledWith("Errore: Server Error; " + JSON.stringify(errorResponse), {
+        type: "error",
+      })
       expect(wrapper.emitted("updating")).toEqual([[true], [false]])
     })
 
