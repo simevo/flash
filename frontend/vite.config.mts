@@ -13,33 +13,38 @@ export default defineConfig({
     vue(),
     vueDevTools(),
     VitePWA({
-      registerType: 'autoUpdate',
-      includeAssets: [], // Adjusted as favicon.ico, apple-touch-icon.png, logo.svg are not present
+      registerType: "autoUpdate",
+      includeAssets: ["src/assets/favicon.ico", "src/assets/logo.svg"],
       manifest: {
-        name: 'Flash',
-        short_name: 'Flash',
-        description: 'Flash PWA',
-        theme_color: '#ffffff',
+        name: "Flash",
+        short_name: "Flash",
+        description: "The open-source news platform with aggregation and ranking",
+        theme_color: "#7b5140", // "dark" Mocha Mousse
         icons: [
           {
-            src: 'pwa-192x192.png', // Placeholder created
-            sizes: '192x192',
-            type: 'image/png'
+            src: "pwa-64x64.png",
+            sizes: "64x64",
+            type: "image/png",
           },
           {
-            src: 'pwa-512x512.png', // Placeholder created
-            sizes: '512x512',
-            type: 'image/png'
+            src: "pwa-192x192.png",
+            sizes: "192x192",
+            type: "image/png",
           },
           {
-            src: 'pwa-512x512.png', // Placeholder created
-            sizes: '512x512',
-            type: 'image/png',
-            purpose: 'any maskable'
-          }
-        ]
-      }
-    })
+            src: "pwa-512x512.png",
+            sizes: "512x512",
+            type: "image/png",
+          },
+          {
+            src: "maskable-icon-512x512.png",
+            sizes: "512x512",
+            type: "image/png",
+            purpose: "maskable",
+          },
+        ],
+      },
+    }),
   ],
   build: {
     rollupOptions: {
