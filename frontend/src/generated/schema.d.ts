@@ -768,6 +768,7 @@ export interface components {
       mastodon_list_name?: string
     }
     PatchedUser: {
+      readonly id?: number
       /** @description Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only. */
       username?: string
       /** Name of User */
@@ -824,6 +825,7 @@ export interface components {
       mastodon_list_name?: string
     }
     User: {
+      readonly id: number
       /** @description Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only. */
       username: string
       /** Name of User */
@@ -877,6 +879,8 @@ export interface operations {
         read?: boolean
         search_author?: string
         url?: string
+        /** @description Articoli letti dall'utente */
+        user_id?: number
       }
       header?: never
       path?: never

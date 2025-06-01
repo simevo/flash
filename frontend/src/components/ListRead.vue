@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { fetch_wrapper } from "../utils"
 import { onActivated, onDeactivated, onMounted, onUnmounted, ref, watch, type Ref } from "vue" // Added watch
-import { useAuthStore } from '../../stores/auth.store'; // Added import
+import { useAuthStore } from "../stores/auth.store"
 
 import ArticleCard from "./ArticleCard.vue"
 
@@ -14,8 +14,8 @@ const ready = ref(false)
 const fetching = ref<boolean>(false)
 const articles: Ref<ArticleRead[]> = ref([])
 const next = ref<string>("")
-const onlyShowUserArticles = ref(false); // Added ref
-const authStore = useAuthStore(); // Added authStore
+const onlyShowUserArticles = ref(false)
+const authStore = useAuthStore()
 
 defineProps<{
   feeds: FeedSerializerSimple[]
@@ -58,14 +58,14 @@ onMounted(async () => {
 
 async function fetchUserArticles() {
   ready.value = false
-  const userId = authStore.user?.id;
+  const userId = authStore.user?.id
   if (!userId) {
     // Handle case where user is not logged in or user id is not available
-    console.warn("User ID not available for fetching user articles.");
-    articles.value = [];
-    next.value = "";
-    ready.value = true;
-    return;
+    console.warn("User ID not available for fetching user articles.")
+    articles.value = []
+    next.value = ""
+    ready.value = true
+    return
   }
   const response = await fetch_wrapper(`../../api/articles/?read=true&user_id=${userId}`)
   if (response.status == 403) {
@@ -80,11 +80,11 @@ async function fetchUserArticles() {
 
 watch(onlyShowUserArticles, (newValue) => {
   if (newValue) {
-    fetchUserArticles();
+    fetchUserArticles()
   } else {
-    fetchArticles();
+    fetchArticles()
   }
-});
+})
 
 onUnmounted(() => {
   console.log("ListRead unmounted")

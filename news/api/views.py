@@ -53,7 +53,7 @@ from news.models import FeedPolling
 from news.models import Feeds
 from news.models import FeedsCombined
 from news.models import UserArticleLists
-from news.models import UserArticles  # Added import
+from news.models import UserArticles
 from news.models import UserFeeds
 from news.services import TextEmbeddingService
 
@@ -216,7 +216,7 @@ class ArticlesFilter(filters.FilterSet):
         label="Cerca",
     )
     user_id = filters.NumberFilter(
-        method="filter_user_articles", # Added filter
+        method="filter_user_articles",
         label="Articoli letti dall'utente",
     )
 
@@ -236,8 +236,12 @@ class ArticlesFilter(filters.FilterSet):
             params=[value],
         )
 
-    def filter_user_articles(self, queryset, name, value): # Added method
-        return queryset.filter(userarticles__user_id=value, userarticles__read=True)
+    def filter_user_articles(self, queryset, name, value):
+        article_ids = UserArticles.objects.filter(user_id=value, read=True).values_list(
+            "article_id",
+            flat=True,
+        )
+        return queryset.filter(id__in=list(article_ids))
 
     class Meta:
         model = ArticlesCombined

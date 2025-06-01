@@ -71,6 +71,14 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "in": "query",
+            "name": "user_id",
+            "schema": {
+              "type": "number"
+            },
+            "description": "Articoli letti dall'utente"
           }
         ],
         "tags": ["articles"],
@@ -2974,6 +2982,10 @@
       "PatchedUser": {
         "type": "object",
         "properties": {
+          "id": {
+            "type": "integer",
+            "readOnly": true
+          },
           "username": {
             "type": "string",
             "description": "Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.",
@@ -3149,6 +3161,10 @@
       "User": {
         "type": "object",
         "properties": {
+          "id": {
+            "type": "integer",
+            "readOnly": true
+          },
           "username": {
             "type": "string",
             "description": "Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.",
@@ -3171,7 +3187,7 @@
             "description": "Designates whether the user can log into this admin site."
           }
         },
-        "required": ["url", "username"]
+        "required": ["id", "url", "username"]
       },
       "UserArticleLists": {
         "type": "object",
