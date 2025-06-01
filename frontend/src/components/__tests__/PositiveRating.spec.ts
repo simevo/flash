@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
+import { toast } from "vue3-toastify";
 import { mount, VueWrapper } from "@vue/test-utils"
 import PositiveRating from "../PositiveRating.vue"
 import { fetch_wrapper } from "../../utils"
@@ -11,8 +12,8 @@ vi.mock("../../utils", () => ({
   fetch_wrapper: vi.fn(),
 }))
 
-// Mock global alert
-global.alert = vi.fn()
+// Mock vue3-toastify
+vi.mock("vue3-toastify", () => ({ toast: vi.fn() }));
 
 // To track the href for location mock
 let currentHref = ""
@@ -172,7 +173,7 @@ describe("PositiveRating.vue", () => {
       })
 
       // 4. Shows alert for 201 status
-      expect(global.alert).toHaveBeenCalledWith("Rating inserito con successo")
+      expect(toast).toHaveBeenCalledWith("Rating inserito con successo", { type: "success" })
 
       // 5. Dynamic classes
       expect(wrapper.find("button").classes()).toContain("icon-success")
@@ -195,7 +196,7 @@ describe("PositiveRating.vue", () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ feed: mockItem.id, rating: 0 }),
       })
-      expect(global.alert).toHaveBeenCalledWith("Rating aggiornato con successo")
+      expect(toast).toHaveBeenCalledWith("Rating aggiornato con successo", { type: "success" })
       expect(wrapper.find("button").classes()).toContain("icon-light")
     })
 
@@ -214,7 +215,7 @@ describe("PositiveRating.vue", () => {
       // However, we can confirm other behaviors around it.
       expect(fetch_wrapper as ReturnType<typeof vi.fn>).toHaveBeenCalledTimes(1) // Ensure API call was made
       expect(wrapper.emitted("updating")).toEqual([[true], [false]]) // Still emits updating
-      expect(global.alert).not.toHaveBeenCalled() // No alert on 403 for this component's logic
+      expect(toast).not.toHaveBeenCalled() // No toast on 403 for this component's logic
     })
 
     it("handles generic API error with alert", async () => {
@@ -229,8 +230,8 @@ describe("PositiveRating.vue", () => {
 
       await wrapper.find("button").trigger("click")
 
-      expect(global.alert).toHaveBeenCalledWith(
-        "Errore: Server Error; " + JSON.stringify(errorResponse),
+      expect(toast).toHaveBeenCalledWith(
+        "Errore: Server Error; " + JSON.stringify(errorResponse), { type: "error" }
       )
       expect(wrapper.emitted("updating")).toEqual([[true], [false]])
     })
@@ -243,7 +244,7 @@ describe("PositiveRating.vue", () => {
 
       await wrapper.find("button").trigger("click")
 
-      expect(global.alert).toHaveBeenCalledWith("Errore di rete: " + networkError)
+      expect(toast).toHaveBeenCalledWith("Errore di rete: " + networkError, { type: "error" })
       expect(wrapper.emitted("updating")).toEqual([[true], [false]])
     })
   })
