@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { copy_link, fetch_wrapper } from "../utils" // Removed find_voice
+import { toast } from "vue3-toastify"
 import {
   computed,
   inject,
@@ -158,7 +159,7 @@ onDeactivated(() => {
 function tts_speak() {
   if (!tts_available.value) {
     console.log("TTS not available")
-    alert("La funzionalità Text-to-Speech non è disponibile su questo browser.")
+    toast("La funzionalità Text-to-Speech non è disponibile su questo browser.", { type: "error" })
     return
   }
   console.log("ListsView tts_speak: showing toolbar")

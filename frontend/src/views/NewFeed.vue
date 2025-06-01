@@ -354,6 +354,7 @@
 <script setup lang="ts">
 import { fetch_wrapper } from "../utils"
 import { computed } from "vue"
+import { toast } from "vue3-toastify"
 import { ref, onMounted, type Ref } from "vue"
 
 import type { components } from "../generated/schema.d.ts"
@@ -438,19 +439,19 @@ async function send() {
       if (response.status == 403) {
         document.location = "/accounts/"
       } else if (response.status == 201) {
-        alert("Fonte aggiunta con successo")
+        toast("Fonte aggiunta con successo", { type: "success" })
         clean()
         response.json().then((data) => {
           document.location = "/res/feed/" + data.id
         })
       } else {
         response.json().then((data) => {
-          alert("Errore: " + response.statusText + "; " + JSON.stringify(data))
+          toast("Errore: " + response.statusText + "; " + JSON.stringify(data), { type: "error" })
         })
       }
     })
     .catch((error) => {
-      alert("Errore di rete: " + error)
+      toast("Errore di rete: " + error, { type: "error" })
     })
 }
 

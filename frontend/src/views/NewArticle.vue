@@ -180,6 +180,7 @@
 <script setup lang="ts">
 import { fetch_wrapper } from "../utils"
 import { computed, inject, nextTick, onActivated, onMounted, ref } from "vue"
+import { toast } from "vue3-toastify"
 import { franc } from "franc"
 import { Readability } from "@mozilla/readability"
 import Quill from "quill"
@@ -400,19 +401,19 @@ function send() {
       if (response.status == 403) {
         document.location = "/accounts/"
       } else if (response.status == 201) {
-        alert("Articolo inviato con successo")
+        toast("Articolo inviato con successo", { type: "success" })
         clean()
         response.json().then((data) => {
           document.location = "/res/article/" + data.id
         })
       } else {
         response.json().then((data) => {
-          alert("Errore: " + response.statusText + "; " + JSON.stringify(data))
+          toast("Errore: " + response.statusText + "; " + JSON.stringify(data), { type: "error" })
         })
       }
     })
     .catch((error) => {
-      alert("Errore di rete: " + error)
+      toast("Errore di rete: " + error, { type: "error" })
     })
 }
 
@@ -475,7 +476,7 @@ function prefill() {
   fetch_wrapper("/api/articles/?url=" + escaped, { method: "GET" })
     .then((response) => {
       if (!response.ok) {
-        alert("Errore di rete")
+        toast("Errore di rete", { type: "error" })
       }
       return response.json()
     })
@@ -485,7 +486,7 @@ function prefill() {
         fetch_wrapper("/proxy/" + escaped, { method: "GET" })
           .then((response) => {
             if (!response.ok) {
-              alert("Errore di rete")
+              toast("Errore di rete", { type: "error" })
             }
             return response.text()
           })
@@ -505,13 +506,13 @@ function prefill() {
                 guess_language()
               }
             } catch (error) {
-              alert("Impossibile estrarre il contenuto: " + error)
+              toast("Impossibile estrarre il contenuto: " + error, { type: "error" })
             }
             trying.value = false
             received.value = true
           })
           .catch((error) => {
-            alert("La pagina non risponde: " + error)
+            toast("La pagina non risponde: " + error, { type: "error" })
             trying.value = false
             received.value = true
           })
