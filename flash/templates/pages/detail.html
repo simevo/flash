@@ -88,7 +88,8 @@
     <div class="alert alert-info mt-5 text-center" role="alert">
       <h4 class="alert-heading">{% trans "Beware!" %}</h4>
       <p>
-        {% trans "This is a preview of the article. To access the full text click on the <b>source link</b> or " %}<a href="{% url "account_login" %}" title="Login">{% trans "Sign In" %}</a>.
+        {% trans "This is a preview of the article. To access the full text click on the <b>source link</b> or " %}<a href="{% url "account_login" %}?next=/res{{ request.path }}"
+   title="Login">{% trans "Sign In" %}</a>.
       </p>
     </div>
   </div>
