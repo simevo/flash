@@ -4,7 +4,7 @@ import { fetch_wrapper } from "./utils"
 import type { components } from "./generated/schema.d.ts"
 type PatchedUser = components["schemas"]["PatchedUser"]
 import { useAuthStore } from "./stores/auth.store"
-import { onMounted } from "vue"
+import { onMounted, ref } from "vue"
 
 const auth = useAuthStore()
 
@@ -28,6 +28,8 @@ function logout() {
   auth.logout()
   document.location = "/accounts/logout/"
 }
+
+const vue_app_version = ref(VUE_APP_VERSION)
 </script>
 
 <template>
@@ -175,6 +177,13 @@ function logout() {
       </KeepAlive>
     </RouterView>
   </main>
+  <footer>
+    <hr />
+    <div class="container-fluid text-center">
+      Powered by <a href="https://gitlab.com/simevo/flash" target="_blank">flash</a>
+      {{ vue_app_version }} - An open-source news platform with aggregation and ranking.
+    </div>
+  </footer>
 </template>
 
 <style lang="scss">

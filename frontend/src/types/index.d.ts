@@ -4,4 +4,8 @@ declare module "@vue/runtime-core" {
   }
 }
 
+declare global {
+  const VUE_APP_VERSION: string
+}
+
 export {}

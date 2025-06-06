@@ -5,6 +5,7 @@ import { defineConfig } from "vite"
 import vue from "@vitejs/plugin-vue"
 import vueDevTools from "vite-plugin-vue-devtools"
 import { VitePWA } from "vite-plugin-pwa"
+import package_json from "./package.json"
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -61,4 +62,7 @@ export default defineConfig({
   server: {
     allowedHosts: ["flash"],
   },
+  define: {
+      VUE_APP_VERSION: JSON.stringify(package_json.version),
+    },
 })

@@ -197,6 +197,7 @@ TEMPLATES = [
                 "django.template.context_processors.tz",
                 "django.contrib.messages.context_processors.messages",
                 "flash.users.context_processors.allauth_settings",
+                "flash.context_processors.add_variables_to_context",
             ],
         },
     },
