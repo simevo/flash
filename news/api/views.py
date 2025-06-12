@@ -217,7 +217,11 @@ class ArticlesFilter(filters.FilterSet):
     )
     user_id = filters.NumberFilter(
         method="filter_user_articles",
-        label="Articoli letti dall'utente",
+        label="Articoli letti dall'utenteeeee",
+    )
+    not_user_id = filters.NumberFilter(
+        method="filter_not_user_articles",
+        label="Articoli letti da utenti diversi dall'utente indicato",
     )
 
     def filter_search_author(self, queryset, name, value):
@@ -240,6 +244,17 @@ class ArticlesFilter(filters.FilterSet):
         article_ids = UserArticles.objects.filter(user_id=value, read=True).values_list(
             "article_id",
             flat=True,
+        )
+        return queryset.filter(id__in=list(article_ids))
+
+    def filter_not_user_articles(self, queryset, name, value):
+        article_ids = (
+            UserArticles.objects.exclude(user_id=value)
+            .filter(read=True)
+            .values_list(
+                "article_id",
+                flat=True,
+            )
         )
         return queryset.filter(id__in=list(article_ids))
 

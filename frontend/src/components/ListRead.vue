@@ -14,6 +14,7 @@ const ready = ref(false)
 const fetching = ref<boolean>(false)
 const articles: Ref<ArticleRead[]> = ref([])
 const next = ref<string>("")
+const onlyShowOtherArticles = ref(false)
 const onlyShowUserArticles = ref(false)
 const authStore = useAuthStore()
 
@@ -56,7 +57,7 @@ onMounted(async () => {
   fetchArticles()
 })
 
-async function fetchUserArticles() {
+async function fetchUserArticles(user: boolean) {
   ready.value = false
   const userId = authStore.user?.id
   if (!userId) {
@@ -67,7 +68,8 @@ async function fetchUserArticles() {
     ready.value = true
     return
   }
-  const response = await fetch_wrapper(`../../api/articles/?read=true&user_id=${userId}`)
+  const url = `../../api/articles/?read=true&${user ? "" : "not_"}user_id=${userId}`
+  const response = await fetch_wrapper(url)
   if (response.status == 403) {
     document.location = "/accounts/"
   } else {
@@ -78,9 +80,9 @@ async function fetchUserArticles() {
   }
 }
 
-watch(onlyShowUserArticles, (newValue) => {
-  if (newValue) {
-    fetchUserArticles()
+watch([onlyShowUserArticles, onlyShowOtherArticles], ([newUser, newOther]) => {
+  if (newUser || newOther) {
+    fetchUserArticles(onlyShowUserArticles.value || !onlyShowOtherArticles.value)
   } else {
     fetchArticles()
   }
@@ -101,11 +103,20 @@ onDeactivated(() => {
 
 <template>
   <p>
-    Gli articoli più recenti già letti da altri e/o da te
-    <label class="float-end form-check">
-      <input type="checkbox" v-model="onlyShowUserArticles" class="form-check-input" />
-      Mostra solo gli articoli letti da te
-    </label>
+    Gli articoli più recenti già letti da altri
+    <input
+      type="checkbox"
+      :disabled="onlyShowUserArticles"
+      v-model="onlyShowOtherArticles"
+      class="form-check-input"
+    />
+    e/o da te
+    <input
+      type="checkbox"
+      :disabled="onlyShowOtherArticles"
+      v-model="onlyShowUserArticles"
+      class="form-check-input"
+    />
   </p>
   <div v-if="ready && Object.keys(feed_dict).length > 0">
     <div class="row my-3" v-if="articles.length == 0">
