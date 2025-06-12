@@ -131,7 +131,7 @@ function sort(articles: ArticleRead[]) {
   return articles.sort((a, b) => {
     const val_a = sorting_key(a)
     const val_b = sorting_key(b)
-    return val_a - val_b
+    return val_b - val_a
   })
 }
 
