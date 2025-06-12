@@ -752,7 +752,7 @@ class UserArticleListsView(viewsets.ModelViewSet):
             title = article.title_original or article.title
             fe.title(title)
             fe.link(href=f"https://notizie.calomelano.it/article/{article.id}")
-            content = article.content_original or article.content
+            content = article.content_original or article.content or ""
             # remove html tags
             content = re.sub(r"<[^>]*>", "", content)
             # convert html entities to unicode
