@@ -121,15 +121,21 @@ const vue_app_version = ref(VUE_APP_VERSION)
             </RouterLink>
           </li>
           <li class="nav-item">
-            <a href="/about" class="btn btn-primary nav-link me-2" title="About">
+            <RouterLink
+              class="btn btn-primary nav-link me-2"
+              title="Guida all'uso"
+              role="button"
+              type="button"
+              to="/about"
+            >
               <img
                 class="inverted-icon icon me-2"
                 src="~bootstrap-icons/icons/question.svg"
                 alt="question icon"
                 width="18"
                 height="18"
-              />Info
-            </a>
+              />Guida
+            </RouterLink>
           </li>
           <li class="nav-item" v-if="auth.user?.is_staff">
             <a

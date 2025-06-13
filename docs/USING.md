@@ -1,17 +1,71 @@
 flash - User Guide
 ==================
 
+## Basic usage
+
+Flash offers two distinct experiences depending on whether you are logged in as a user or not ("guest").
+
+Guest pages are easy to recognize by the gray color of the header:
+![gray color](gray.png)
+
+After logging in, the header color changes to "dark" ([Mocha Mousse](https://www.pantone.com/eu/it/color-of-the-year/2025)):
+![dark Mocha Mousse](dark_mocha_mousse.png)
+
+### Guest visitor
+
+The aggregator presents to the guest visitor a restricted list of news items (only articles which some logged-in user has already read):
+
+![Home page](homepage.jpeg)
+
+Clicking on an article opens an interstitial page:
+
+![Article detail](article_detail.jpeg)
+
+which teases the user to log in to read the full text.
+
+### Logged-in user
+
+Once logged in, users are presented with a different layout.
+
+The homepage features a tabbed layout for navigating different article views:
+
+![Home page](res_homepage.jpeg)
+
+The available views are:
+
+- **Tutti** (All Articles): Shows all available articles, paginated and filtered (by language, date, length and full-text search).
+- **Letti** (Read Articles): Displays articles that you or others have previously read, paginated.
+- **Per te** (Personalized Newsfeed): Your algorithmic newsfeed, tailored to your preferences and feed ratings (see Feature 5).
+- **Preferiti** (Favorites): Shows articles from your preferred feeds, paginated.
+
+Articles within these tabbed views are displayed as cards, showing:
+
+- The feed's logo (linking to the feed's page/source).
+- The article title. If the article has been translated, both original and translated titles might be shown.
+- A short excerpt of the article content.
+- The author's name (linking to a page showing other articles by the same author).
+- The publication time, displayed as a relative time (e.g., "2 hours ago").
+- An estimated reading time for the article.
+
+The all articles, read and favorites lists are paginated, and you can load more articles using a "Load more articles" button. 
+
+Clickin on any article leads to the article detail page:
+
+![Reserved article detail](res_article_detail.jpeg)
+
+which shows the full text (if available), the optional translation, and the related articles.
+
 ## Features
 
-1. **Filtering** – from the main article list (e.g., "Tutti") on the homepage, click on the "filter" button (a floating button with a funnel icon, located on the right side of the screen) to expand an off-canvas sidebar. This sidebar offers several client-side filtering criteria: by language, date, and length. As the filtering criteria are changed, the article list is updated in (almost) real time. Full-text search is also available and is server-side: once you enter one or more keywords, while you wait for the refreshed data to be loaded from the backend a spinner is shown with a reminder that the current list is filtered. All filtering settings are persisted on the device, meaning if you use Flash from two devices, you may see different newsfeeds based on your local filter settings.
+1. **Filtering** – from the main article list (e.g., "Tutti") on the homepage, click on the "filter" button (a floating button with a funnel icon, located on the right side of the screen) to expand an off-canvas sidebar. This sidebar offers several client-side filtering criteria: by language, date, and length. As the filtering criteria are changed, the article list is updated in (almost) real time. Full-text search is also available and is server-side: once you enter two or more keywords, while you wait for the refreshed data to be loaded from the backend a spinner is shown with a reminder that the current list is filtered. All filtering settings are persisted on the device, meaning if you use Flash from two devices, you may see different newsfeeds based on your local filter settings.
 
-2. **Sharing** on social media – from the article detail page, click on the “share” icon and open the link to the article in your favorite social network (Bluesky, Facebook, Linkedin, Mastodon, Reddit, Telegram, Twitter and Whatsapp). You also have the option "Copy link to clipboard" for SMS / email sharing.
+2. **Sharing** on social media – from the article detail page, click on the “share” icon and open the link to the article in your favorite social network (Bluesky, Facebook, Linkedin, Mastodon, Reddit, Telegram, Twitter and Whatsapp). For Mastodon, the first time you share an article you will be prompted to selectypur instance (this setting is saved n the device). Finally, you also have the option "Copy link to clipboard" for sharing on other apps like SMS and email.
 
 3. Saving articles to **lists** – you can create one or more lists then save articles for reading later, bookmarking and exporting. These are managed from the “Saved articles” (heart icon) page.
 
-4. Article **similarity**: the title and content of each article are converted to a vector embedding using the [`use-cmlm-multilingual` sentence transformer](https://huggingface.co/sentence-transformers/use-cmlm-multilingual). This 2020 model is based on LaBSE (Google Language-agnostic BERT sentence embedding model supporting 109 languages), has 472M parameters, embedding dimension 768 and size 1.89G (single-precision floating point FP32). The vector embeddings make it possible to suggest related articles (these are shown below the contents in the articles detail page) and to generate a personalized newsfeed (see next item).
+4. Articles **similarity**: the title and content of each article are used to compute the similarity. This makes it possible to suggest related articles (these are shown below the contents in the articles detail page) and to generate a personalized newsfeed (see next item).
 
-5. **Algorithmic newsfeed** – the "Per te" (Personalized Newsfeed) tab of the homepage displays an article list automatically updated every hour by an algorithm based on your preferences. The newsfeed personalization options are: languages and whitelisted / blacklisted keywords, from the “Settings” page. The algorithm is based on the similarity between vector embeddings of the article and of the whitelisted words.
+5. **Algorithmic newsfeed** – the "Per te" (Personalized Newsfeed) tab of the homepage displays an article list automatically updated every hour by an algorithm based on your preferences. The newsfeed personalization options are set from the “Settings” page: languages and whitelisted / blacklisted keywords. The algorithm is based on the similarity between the article and the whitelisted words.
 
 6. **Preferred Feeds** – the "Preferiti" (Favorites) tab of the homepage displays articles from feeds which have been marked with as favorites (heart icon) in the "Feeds" page.
 
@@ -38,64 +92,10 @@ flash - User Guide
 
     Bot Functionality:
 
-    * The bot runs automatically every hour via a Celery Beat schedule.
+    * The bot runs automatically every hour.
     * It scans the selected article list of the configured bot user for new (unread) articles.
     * New articles found are posted to the Mastodon account associated with the provided credentials.
     * After successfully posting an article, it is marked as 'read' for the bot user to prevent reposting.
     * To avoid spamming, the bot will post a maximum of 5 articles per hour.
 
 13. **OPML export**: Export the [OPML (Outline Processor Markup Language)](https://en.wikipedia.org/wiki/OPML) file containing the list of aggregated feeds from the public URL `/api/feeds/opml/`. This file can be imported into other RSS readers or aggregators.
-
-## Basic usage
-
-Flash offers two distinct experiences depending on whether you are logged in as a user or not ("guest").
-
-Guest pages are easy to recognize by the gray color of the header:
-![gray color](gray.png)
-
-After logging in, the header color changes to "dark" ([Mocha Mousse](https://www.pantone.com/eu/it/color-of-the-year/2025)):
-![dark Mocha Mousse](dark_mocha_mousse.png)
-
-### Guest visitor
-
-The aggregator presents to the anonymous visitor a restricted list of news items (only articles which some logged-in user has already read). This page is server-side-rendered by Django.
-
-![Home page](homepage.jpeg)
-
-Clicking on an article opens an interstitial page:
-
-![Article detail](article_detail.jpeg)
-
-which teases the user to log in to read the full text.
-
-### Logged-in user
-
-Once logged in, users are presented with a client-rendered Single Page Application (SPA).
-
-The homepage features a tabbed layout for navigating different article views:
-
-![Home page](res_homepage.jpeg)
-
-The primary tabs include:
-
-- **Tutti** (All Articles): Shows all available articles, paginated and filtered (by language, date, length and full-text search).
-- **Letti** (Read Articles): Displays articles you have previously read, paginated.
-- **Per te** (Personalized Newsfeed): Your algorithmic newsfeed, tailored to your preferences and feed ratings (see Feature 5).
-- **Preferiti** (Favorites): Shows articles from your preferred feeds, paginated.
-
-Articles within these tabbed views are displayed as cards, showing:
-
-- The feed's logo (linking to the feed's page/source).
-- The article title. If the article has been translated, both original and translated titles might be shown.
-- A short excerpt of the article content.
-- The author's name (linking to a page showing other articles by the same author).
-- The publication time, displayed as a relative time (e.g., "2 hours ago").
-- An estimated reading time for the article.
-
-The all articles, read and favorites lists are paginated, and you can load more articles using a "Load more articles" button. 
-
-Clickin on any article leads to the article detail page:
-
-![Reserved article detail](res_article_detail.jpeg)
-
-which shows the full text (if available), the optional translation, and the related articles.
