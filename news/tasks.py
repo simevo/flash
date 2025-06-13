@@ -282,15 +282,12 @@ def run_mastodon_bots():
     """
     logger.info("Starting Mastodon bots run...")
 
-    # Import here to avoid circular dependencies if models are initializing
-    # and because this task is the primary user of these models in this file.
-    from django.contrib.auth.models import User
-
     from flash.bots.mastodon_bot import main as run_bot_for_user
 
     # Filter users who are bot users and have all Mastodon credentials configured
     eligible_users = (
-        User.objects.filter(
+        get_user_model()
+        .objects.filter(
             profile__is_bot_user=True,
             profile__mastodon_client_id__isnull=False,
             profile__mastodon_client_secret__isnull=False,
