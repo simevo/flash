@@ -8,7 +8,7 @@ import type {
   Ufd,
 } from "../types/Filters"
 
-import { computed, onMounted } from "vue"
+import { computed, onMounted, ref } from "vue"
 
 import type { components } from "../generated/schema.d.ts"
 
@@ -31,6 +31,21 @@ const emit = defineEmits<{
   (e: "update_when", value: WhenFilter): void
   (e: "update_length", value: LengthFilter): void
 }>()
+
+const local_what = ref(props.filters.what)
+
+function update_what(value: string) {
+  local_what.value = value
+  if (value && value.trim().split(" ").length < 2) {
+    return
+  }
+  emit("update_what", value)
+}
+
+function clearFilters() {
+  emit("clear")
+  local_what.value = ""
+}
 
 const mergedFeedCounts = computed(() => {
   const mfc = props.feedCounts
@@ -58,7 +73,7 @@ onMounted(() => {
       type="button"
       class="btn btn-primary mb-3"
       :disabled="notFiltering"
-      @click="emit('clear')"
+      @click="clearFilters"
     >
       <img
         class="icon"
@@ -70,14 +85,18 @@ onMounted(() => {
       Rimuovi tutti i filtri
     </button>
     <input
-      :value="filters.what"
+      :value="local_what"
       class="form-control mb-1"
+      :class="{ 'is-invalid': local_what && local_what.trim().split(' ').length < 2 }"
       type="search"
-      placeholder="parola1 parola2 parola3"
-      aria-label="Filtra gli articoli che contengono tutte le parole chiave; inserisci una o più parole separate da spazi"
+      placeholder="parola1 parola2"
+      aria-label="Filtra gli articoli che contengono tutte le parole chiave; inserisci due o più parole separate da spazi"
       title="Filtra gli articoli che contengono tutte le parole chiave; inserisci una o più parole separate da spazi"
-      @change="emit('update_what', ($event.target as HTMLInputElement).value)"
+      @change="update_what(($event.target as HTMLInputElement).value)"
     />
+    <div id="validationServerUsernameFeedback" class="invalid-feedback">
+      Almeno due parole chiave
+    </div>
   </div>
   <select
     :value="filters.language"
