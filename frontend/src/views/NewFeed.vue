@@ -445,13 +445,11 @@ async function send() {
           document.location = "/res/feed/" + data.id
         })
       } else {
-        response.json().then((data) => {
-          toast("Errore: " + response.statusText + "; " + JSON.stringify(data), { type: "error" })
-        })
+        toast("Errore HTTP nel salvataggio della fonte: " + response.statusText, { type: "error" })
       }
     })
     .catch((error) => {
-      toast("Errore di rete: " + error, { type: "error" })
+      toast("Eccezine durante il salvataggio della fonte: " + error, { type: "error" })
     })
 }
 

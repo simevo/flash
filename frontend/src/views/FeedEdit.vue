@@ -509,15 +509,13 @@ async function save() {
         alert("Fonte modificata con successo")
         document.location = "/res/feed/" + id
       } else {
-        response.json().then((data) => {
-          toast("Errore: " + response.statusText + "; " + JSON.stringify(data), {
-            type: "error",
-          })
+        toast("Errore HTTP nel salvataggio della fonte: " + response.statusText, {
+          type: "error",
         })
       }
     })
     .catch((error) => {
-      toast("Errore di rete: " + error, {
+      toast("Eccezione durante il salvataggio della fonte: " + error, {
         type: "error",
       })
     })

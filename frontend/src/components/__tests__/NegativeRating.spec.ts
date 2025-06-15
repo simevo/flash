@@ -229,9 +229,12 @@ describe("NegativeRating.vue", () => {
 
       await wrapper.find("button").trigger("click")
 
-      expect(toast).toHaveBeenCalledWith("Errore: Server Error; " + JSON.stringify(errorResponse), {
-        type: "error",
-      })
+      expect(toast).toHaveBeenCalledWith(
+        "Errore HTTP nell'aggiornamento del rating: Server Error",
+        {
+          type: "error",
+        },
+      )
       expect(wrapper.emitted("updating")).toEqual([[true], [false]])
     })
 
@@ -243,7 +246,10 @@ describe("NegativeRating.vue", () => {
 
       await wrapper.find("button").trigger("click")
 
-      expect(toast).toHaveBeenCalledWith("Errore di rete: " + networkError, { type: "error" })
+      expect(toast).toHaveBeenCalledWith(
+        "Eccezione nell'aggiornamento del rating: " + networkError,
+        { type: "error" },
+      )
       expect(wrapper.emitted("updating")).toEqual([[true], [false]])
     })
   })

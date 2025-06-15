@@ -407,13 +407,13 @@ function send() {
           document.location = "/res/article/" + data.id
         })
       } else {
-        response.json().then((data) => {
-          toast("Errore: " + response.statusText + "; " + JSON.stringify(data), { type: "error" })
+        toast("Errore HTTP nel salvataggio dell'articolo: " + response.statusText, {
+          type: "error",
         })
       }
     })
     .catch((error) => {
-      toast("Errore di rete: " + error, { type: "error" })
+      toast("Eccezione durante il salvataggio dell'articolo: " + error, { type: "error" })
     })
 }
 
@@ -476,7 +476,7 @@ function prefill() {
   fetch_wrapper("/api/articles/?url=" + escaped, { method: "GET" })
     .then((response) => {
       if (!response.ok) {
-        toast("Errore di rete", { type: "error" })
+        toast("Errore HTTP nel caricamento dell'articolo:" + response.statusText, { type: "error" })
       }
       return response.json()
     })
@@ -486,7 +486,9 @@ function prefill() {
         fetch_wrapper("/proxy/" + escaped, { method: "GET" })
           .then((response) => {
             if (!response.ok) {
-              toast("Errore di rete", { type: "error" })
+              toast("Errore HTTP nel proxying dell'articolo:" + response.statusText, {
+                type: "error",
+              })
             }
             return response.text()
           })

@@ -372,15 +372,13 @@ async function save() {
         alert("Articolo modificato con successo")
         document.location = "/res/article/" + id
       } else {
-        response.json().then((data) => {
-          toast("Errore: " + response.statusText + "; " + JSON.stringify(data), {
-            type: "error",
-          })
+        toast("Errore HTTP nell'aggiornamento dell'articolo: " + response.statusText, {
+          type: "error",
         })
       }
     })
     .catch((error) => {
-      toast("Errore di rete: " + error, {
+      toast("Eccezione nell'aggiornamento dell'articolo: " + error, {
         type: "error",
       })
     })
