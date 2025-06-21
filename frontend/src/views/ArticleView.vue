@@ -245,6 +245,7 @@ import { computed, nextTick, onActivated, onMounted, ref, watch, type Ref } from
 import { RouterLink, useRoute } from "vue-router"
 import type { components } from "../generated/schema.d.ts"
 import { secondsToString, secondsToString1 } from "@/components/sts"
+import { toast } from "vue3-toastify"
 
 import ArticleActions from "@/components/ArticleActions.vue"
 import ArticleCard from "@/components/ArticleCard.vue"
@@ -288,34 +289,57 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 async function fetchArticle() {
+  article.value = null
   const response = await fetch_wrapper(`../../api/articles/${props.article_id}/`)
   if (response.status == 403) {
     document.location = "/accounts/"
-  } else {
+  } else if (response.status == 404) {
+    count_fetch.value -= 1
+    return
+  }
+  if (response.ok) {
     const data: Article = await response.json()
     article.value = data
     count_fetch.value -= 1
+  } else {
+    toast("Errore HTTP nel caricamento dell'articolo: " + response.statusText, {
+      type: "error",
+    })
   }
 }
 
 async function fetchFeeds() {
+  feeds.value = []
   const response = await fetch_wrapper(`../../api/feeds/simple/`)
   if (response.status == 403) {
     document.location = "/accounts/"
-  } else {
+    return
+  }
+  if (response.ok) {
     const data: FeedSerializerSimple[] = await response.json()
     feeds.value = data
     count_fetch.value -= 1
+  } else {
+    toast("Errore HTTP nel caricamento delle fonti: " + response.statusText, {
+      type: "error",
+    })
   }
 }
 
 async function fetchRelated() {
+  related_articles.value = []
   const url = `../../api/articles/${props.article_id}/related/`
   const response = await fetch_wrapper(url)
   if (response.status == 403) {
     document.location = "/accounts/"
-  } else {
+    return
+  }
+  if (response.ok) {
     related_articles.value = await response.json()
+  } else {
+    toast("Errore HTTP nel caricamento degli articoli correlati: " + response.statusText, {
+      type: "error",
+    })
   }
 }
 

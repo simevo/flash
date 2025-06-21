@@ -95,15 +95,14 @@ async function cycleRatingState() {
     } else {
       // Revert optimistic update on failure
       ;(props.feed as any).my_rating = originalRating
-      const errorData = await response.text()
-      toast(`Errore di aggiornamento del rating: ${response.statusText} - ${errorData}`, {
+      toast(`Errore HTTP di aggiornamento del rating: ${response.statusText}`, {
         type: "error",
       })
     }
   } catch (error) {
     // Revert optimistic update on failure
     ;(props.feed as any).my_rating = originalRating
-    toast(`Errore di rete: ${error}`, {
+    toast(`Eccezione durante l'aggiornamento del rating: ${error}`, {
       type: "error",
     })
   } finally {

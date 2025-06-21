@@ -79,16 +79,14 @@ function set(item: PatchedFeed, rating: number, endpoint: string) {
           type: "success",
         })
       } else {
-        response.json().then((data) => {
-          toast("Errore: " + response.statusText + "; " + JSON.stringify(data), {
-            type: "error",
-          })
+        toast("Errore HTTP nell'aggiornamento del rating: " + response.statusText, {
+          type: "error",
         })
       }
       emit("updating", false)
     })
     .catch((error) => {
-      toast("Errore di rete: " + error, {
+      toast("Eccezione nell'aggiornamento del rating: " + error, {
         type: "error",
       })
       emit("updating", false)

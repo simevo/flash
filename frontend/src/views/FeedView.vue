@@ -1,110 +1,118 @@
 <template>
   <div class="container-fluid my-3" v-if="count_fetch == 0">
-    <FeedCard v-if="feed" :feed="feed" :clickable="false" @refresh_feed="refresh_feed" />
-    <hr />
-
-    <!-- Accordion for Staff Users -->
-    <div class="accordion my-3" v-if="isStaffUser">
-      <div class="accordion-item">
-        <h2 class="accordion-header" id="feedPollingAccordionHeader">
-          <button
-            class="accordion-button collapsed"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#feedPollingCollapse"
-            aria-expanded="false"
-            aria-controls="feedPollingCollapse"
-            title="Statistiche di articoli aggregati (funzione riservata agli utenti di staff)"
+    <div class="row my-3" v-if="feed == null">
+      <div class="col-md-12">
+        <div class="alert alert-danger text-center" role="alert">Fonte non trovata.</div>
+      </div>
+    </div>
+    <div v-else>
+      <FeedCard v-if="feed" :feed="feed" :clickable="false" @refresh_feed="refresh_feed" />
+      <hr />
+      <!-- Accordion for Staff Users -->
+      <div class="accordion my-3" v-if="isStaffUser">
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="feedPollingAccordionHeader">
+            <button
+              class="accordion-button collapsed"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#feedPollingCollapse"
+              aria-expanded="false"
+              aria-controls="feedPollingCollapse"
+              title="Statistiche di articoli aggregati (funzione riservata agli utenti di staff)"
+            >
+              <img
+                class="icon me-2"
+                src="~bootstrap-icons/icons/lock.svg"
+                alt="lock icon"
+                width="18"
+                height="18"
+              />
+              Monitoraggio
+            </button>
+          </h2>
+          <div
+            id="feedPollingCollapse"
+            class="accordion-collapse collapse"
+            aria-labelledby="feedPollingAccordionHeader"
           >
-            <img
-              class="icon me-2"
-              src="~bootstrap-icons/icons/lock.svg"
-              alt="lock icon"
-              width="18"
-              height="18"
-            />
-            Monitoraggio
-          </button>
-        </h2>
-        <div
-          id="feedPollingCollapse"
-          class="accordion-collapse collapse"
-          aria-labelledby="feedPollingAccordionHeader"
-        >
-          <div class="accordion-body">
-            <!-- Paginated Table -->
-            <div v-if="feedPollingData.length > 0">
-              <table class="table table-striped table-sm">
-                <thead>
-                  <tr>
-                    <th>Avvio</th>
-                    <th>Fine</th>
-                    <th>Codice di stato HTTP</th>
-                    <th>Articoli acquisiti</th>
-                    <th>Articoli errati</th>
-                    <th>Articoli salvati</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="record in paginatedFeedPollingData" :key="record.id">
-                    <td>{{ formatDate(record.poll_start_time) }}</td>
-                    <td>{{ formatDate(record.poll_end_time) }}</td>
-                    <td>{{ record.http_status_code }}</td>
-                    <td>{{ record.articles_retrieved }}</td>
-                    <td>{{ record.articles_failed }}</td>
-                    <td>{{ record.articles_stored }}</td>
-                  </tr>
-                </tbody>
-              </table>
-              <!-- Pagination Controls -->
-              <nav aria-label="Feed polling pagination">
-                <ul class="pagination pagination-sm justify-content-center">
-                  <li class="page-item" :class="{ disabled: currentPage === 1 }">
-                    <button class="page-link" @click="changePage(currentPage - 1)">Previous</button>
-                  </li>
-                  <li
-                    class="page-item"
-                    v-for="page in totalPages"
-                    :key="page"
-                    :class="{ active: currentPage === page }"
-                  >
-                    <button class="page-link" @click="changePage(page)">
-                      {{ page }}
-                    </button>
-                  </li>
-                  <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-                    <button class="page-link" @click="changePage(currentPage + 1)">Next</button>
-                  </li>
-                </ul>
-              </nav>
-            </div>
-            <div v-else class="alert alert-info text-center" role="alert">
-              No polling data available for this feed.
+            <div class="accordion-body">
+              <!-- Paginated Table -->
+              <div v-if="feedPollingData.length > 0">
+                <table class="table table-striped table-sm">
+                  <thead>
+                    <tr>
+                      <th>Avvio</th>
+                      <th>Fine</th>
+                      <th>Codice di stato HTTP</th>
+                      <th>Articoli acquisiti</th>
+                      <th>Articoli errati</th>
+                      <th>Articoli salvati</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="record in paginatedFeedPollingData" :key="record.id">
+                      <td>{{ formatDate(record.poll_start_time) }}</td>
+                      <td>{{ formatDate(record.poll_end_time) }}</td>
+                      <td>{{ record.http_status_code }}</td>
+                      <td>{{ record.articles_retrieved }}</td>
+                      <td>{{ record.articles_failed }}</td>
+                      <td>{{ record.articles_stored }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+                <!-- Pagination Controls -->
+                <nav aria-label="Feed polling pagination">
+                  <ul class="pagination pagination-sm justify-content-center">
+                    <li class="page-item" :class="{ disabled: currentPage === 1 }">
+                      <button class="page-link" @click="changePage(currentPage - 1)">
+                        Previous
+                      </button>
+                    </li>
+                    <li
+                      class="page-item"
+                      v-for="page in totalPages"
+                      :key="page"
+                      :class="{ active: currentPage === page }"
+                    >
+                      <button class="page-link" @click="changePage(page)">
+                        {{ page }}
+                      </button>
+                    </li>
+                    <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+                      <button class="page-link" @click="changePage(currentPage + 1)">Next</button>
+                    </li>
+                  </ul>
+                </nav>
+              </div>
+              <div v-else class="alert alert-info text-center" role="alert">
+                No polling data available for this feed.
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-    <!-- End Accordion -->
+      <!-- End Accordion -->
 
-    <div class="row" v-if="articles.length == 0 && count_fetch == 0">
-      <div class="col-md-12">
-        <div class="alert alert-warning text-center" role="alert">
-          Non ci sono articoli da visualizzare.
+      <div class="row" v-if="articles.length == 0 && count_fetch == 0">
+        <div class="col-md-12">
+          <div class="alert alert-warning text-center" role="alert">
+            Non ci sono articoli da visualizzare.
+          </div>
         </div>
       </div>
-    </div>
-    <div class="row" v-else-if="articles.length > 0">
-      <div class="col-md-12">
-        <div class="wrapper">
-          <ArticleCard
-            v-for="article in articles"
-            :key="article.id"
-            :article="article"
-            :feed_dict="feed_dict"
-            :index="1"
-            :list_id="null"
-          />
+      <div class="row" v-else-if="articles.length > 0">
+        <div class="col-md-12">
+          <div class="wrapper">
+            <ArticleCard
+              v-for="article in articles"
+              :key="article.id"
+              :article="article"
+              :feed_dict="feed_dict"
+              :index="1"
+              :list_id="null"
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -209,13 +217,16 @@ async function fetchArticles() {
 
 async function fetchFeeds() {
   try {
+    feed.value = null
     const response = await fetch_wrapper(`../../api/feeds/`)
     if (response.status == 403) {
       document.location = "/accounts/"
       return
     }
     if (!response.ok) {
-      console.error("Failed to fetch feeds:", response.statusText)
+      toast("Errore HTTP nel caricamento delle fonti: " + response.statusText, {
+        type: "error",
+      })
       count_fetch.value -= 1 // Decrement even on error to allow UI to render
       return
     }
@@ -223,17 +234,21 @@ async function fetchFeeds() {
 
     const response2 = await fetch_wrapper(`../../api/user-feeds/`)
     if (!response2.ok) {
-      console.error("Failed to fetch user feeds:", response2.statusText)
-      // Proceed with feeds data even if user-feeds fails for now
+      toast("Errore HTTP nel caricamento delle fonti dell'utente: " + response.statusText, {
+        type: "error",
+      })
     } else {
       const ufs: UserFeed[] = await response2.json()
       const ufd: { [key: number]: number | undefined } = {}
       ufs.forEach((element) => {
         ufd[element.feed_id] = element.rating
       })
-      feed.value = <PatchedFeed>{
-        ...data.find((f) => f.id === Number(props.feed_id)), // More robust way to find the feed
-        my_rating: ufd[Number(props.feed_id)],
+      const the_feed = data.find((f) => f.id === Number(props.feed_id))
+      if (the_feed) {
+        feed.value = <PatchedFeed>{
+          ...the_feed,
+          my_rating: ufd[Number(props.feed_id)],
+        }
       }
     }
 
@@ -249,7 +264,7 @@ async function fetchFeeds() {
       }
     }
   } catch (error) {
-    console.error("Error in fetchFeeds:", error)
+    console.error("Eccezione durante il caricamento delle fontig:", error)
   } finally {
     count_fetch.value -= 1
   }
@@ -262,12 +277,15 @@ async function fetchUserData() {
       const userData: User = await response.json()
       isStaffUser.value = userData.is_staff || false
     } else {
-      console.error("Failed to fetch user data:", response.statusText)
-      // If user data fails, assume not staff
+      toast("Errore HTTP nel caricamento dei dati utente: " + response.statusText, {
+        type: "error",
+      })
       isStaffUser.value = false
     }
   } catch (error) {
-    console.error("Error fetching user data:", error)
+    toast("Eccezione durante il caricamento dei dati utente: " + error, {
+      type: "error",
+    })
     isStaffUser.value = false
   } finally {
     count_fetch.value -= 1
@@ -275,23 +293,23 @@ async function fetchUserData() {
 }
 
 async function fetchFeedPollingData(feedId: string) {
+  feedPollingData.value = []
   if (!feedId) return
-  // count_fetch.value += 1; // Increment for this specific fetch
   try {
     const response = await fetch_wrapper(`../../api/feed-polling/?feed_id=${feedId}`)
     if (response.ok) {
       const data: FeedPolling[] = await response.json()
       feedPollingData.value = data
-      currentPage.value = 1 // Reset to first page on new data
+      currentPage.value = 1
     } else {
-      console.error("Failed to fetch feed polling data:", response.statusText)
-      feedPollingData.value = [] // Clear data on error
+      toast("Errore HTTP nel caricamento dei dati di monitoraggio: " + response.statusText, {
+        type: "error",
+      })
     }
   } catch (error) {
-    console.error("Error fetching feed polling data:", error)
-    feedPollingData.value = [] // Clear data on error
-  } finally {
-    // count_fetch.value -=1;
+    toast("Eccezione nel caricamento dei dati di monitoraggio: " + error, {
+      type: "error",
+    })
   }
 }
 

@@ -206,6 +206,7 @@ def normalize_structure(soup, exclude):
         "source",
         "object",
         "video",
+        "iframe",
         "audio",
         "track",
         "embed",
@@ -307,6 +308,11 @@ def normalize_content(
     # remove comments
     comments = soup.find_all(string=lambda text: isinstance(text, Comment))
     [comment.extract() for comment in comments]
+
+    # remove style attributes from all tags
+    for tag in soup.find_all(True):
+        if tag.has_attr("style"):
+            del tag["style"]
 
     # identify top-level element
     if soup.body:

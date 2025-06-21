@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { fetch_wrapper } from "../utils"
 import { onActivated, onDeactivated, onMounted, onUnmounted, ref, type Ref } from "vue"
+import { toast } from "vue3-toastify"
 
 import ArticleCard from "./ArticleCard.vue"
 
@@ -36,7 +37,7 @@ async function fetchArticles(isLoadMore = false) {
     }
     next.value = data.next ? data.next : ""
   } catch (error) {
-    console.error("Error fetching favorite articles:", error)
+    toast("Errore HTTP durante il recupero dei favoriti:" + error, { type: "error" })
     // Potentially set an error state here
   } finally {
     ready.value = true
