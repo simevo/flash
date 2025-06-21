@@ -7,7 +7,6 @@ from io import BytesIO
 from urllib.parse import urlparse
 from xml.etree import ElementTree as ET
 
-from bs4 import BeautifulSoup
 from django.conf import settings
 from django.contrib.postgres.aggregates import ArrayAgg
 from django.contrib.postgres.search import SearchVector
@@ -263,13 +262,6 @@ class ArticlesFilter(filters.FilterSet):
     class Meta:
         model = ArticlesCombined
         fields = ["feed_id", "url"]
-
-def clean_html(raw_html):
-    # Remove HTML tags
-    soup = BeautifulSoup(raw_html, "html.parser")
-    text = soup.get_text()
-    # Convert HTML entities to characters
-    return html.unescape(text)
 
 
 def extract_protocol_host_port(url):
