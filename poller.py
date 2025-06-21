@@ -309,6 +309,11 @@ def normalize_content(
     comments = soup.find_all(string=lambda text: isinstance(text, Comment))
     [comment.extract() for comment in comments]
 
+    # remove style attributes from all tags
+    for tag in soup.find_all(True):
+        if tag.has_attr("style"):
+            del tag["style"]
+
     # identify top-level element
     if soup.body:
         top = soup.body
