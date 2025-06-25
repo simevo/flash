@@ -1,6 +1,7 @@
 ---
 
 volumes:
+  production_postgres_data: {}
   production_django_media: {}
   production_django_static: {}
   production_redis_data: {}
@@ -16,12 +17,24 @@ services:
       - production_django_static:/app/staticfiles
     depends_on:
       - redis
+      - postgres
     env_file:
       - ./.envs/.production/.django
       - ./.envs/.production/.postgres
     command: /start
     extra_hosts:
       - "host.docker.internal:host-gateway"
+
+  postgres:
+    build:
+      context: .
+      dockerfile: ./compose/production/postgres/Dockerfile
+    image: flash_production_postgres
+    volumes:
+      - production_postgres_data:/var/lib/postgresql/data
+      - ./sql:/docker-entrypoint-initdb.d
+    env_file:
+      - ./.envs/.production/.postgres
 
   redis:
     image: docker.io/redis:6
@@ -67,3 +80,15 @@ services:
     volumes:
       - production_django_media:/usr/share/nginx/media:ro
       - production_django_static:/usr/share/nginx/static:ro
+
+  mkfd:
+    container_name: flash_local_mkfd
+    image: tbosk/mkfd:23
+    ports:
+      - 5000:5000
+    environment:
+      - PASSKEY=your_passkey
+      - COOKIE_SECRET=your_cookie_secret
+      - ENCRYPTION_KEY=your__encryption
+    volumes:
+      - ./mkfd:/configs:z
