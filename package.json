@@ -8,8 +8,7 @@
   "license": "AGPL-3.0-or-later",
   "private": false,
   "dependencies": {
-    "bootstrap": "^5.3.6",
-    "bootstrap-icons": "^1.13.1",
-    "vue3-toastify": "^0.1.14"
+    "bootstrap": "^5.3.7",
+    "bootstrap-icons": "^1.13.1"
   }
 }
