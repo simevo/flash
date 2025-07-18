@@ -474,7 +474,15 @@ class ArticlesView(
         article = get_object_or_404(queryset, pk=pk)
         serializer = ArticleSerializerFull(article)
         articles = [serializer.data]
-        book = get_epub(articles)
+        length = article.length
+        seconds = (60 * length) / 6 / 300
+        estimated_reading_time = seconds_to_string1(seconds)
+        book = get_epub(
+            articles,
+            "",
+            1,
+            estimated_reading_time,
+        )
         response = HttpResponse(content_type="application/epub+zip")
         response["Content-Disposition"] = (
             f'attachment; filename="article_{article.id}.epub"'
