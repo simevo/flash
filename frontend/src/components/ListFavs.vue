@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { fetch_wrapper } from "../utils"
-import { onActivated, onDeactivated, onMounted, onUnmounted, ref, type Ref } from "vue"
+import { computed, onActivated, onDeactivated, onMounted, onUnmounted, ref, type Ref } from "vue"
 import { toast } from "vue3-toastify"
 
 import ArticleCard from "./ArticleCard.vue"
@@ -20,6 +20,27 @@ defineProps<{
   feed_dict: { [key: number]: FeedSerializerSimple }
 }>()
 
+const not_filtering = computed(() => true)
+
+function sorting_key(a: ArticleRead) {
+  if (not_filtering.value) {
+    // client-side deterministically perturbed chronological order, assuming:
+    // - 200 feeds and 2000 articles/day (on average 10 articles per day and feed)
+    // - average length 4000 chars
+    return a.stamp / 3600 / 24 - a.feed - a.length / 20
+  } else {
+    return a.stamp
+  }
+}
+
+function sort(articles: ArticleRead[]) {
+  return articles.sort((a, b) => {
+    const val_a = sorting_key(a)
+    const val_b = sorting_key(b)
+    return val_b - val_a
+  })
+}
+
 async function fetchArticles(isLoadMore = false) {
   ready.value = false
   const url = `../../api/articles/favorites/`
@@ -31,9 +52,9 @@ async function fetchArticles(isLoadMore = false) {
     }
     const data: PaginatedArticleReadList = await response.json()
     if (isLoadMore) {
-      articles.value = articles.value.concat(data.results)
+      articles.value = articles.value.concat(sort(data.results))
     } else {
-      articles.value = data.results
+      articles.value = sort(data.results)
     }
     next.value = data.next ? data.next : ""
   } catch (error) {
@@ -52,7 +73,7 @@ async function fetchMoreArticles() {
       document.location = "/accounts/"
     } else {
       const data: PaginatedArticleReadList = await response.json()
-      articles.value = articles.value.concat(data.results)
+      articles.value = articles.value.concat(sort(data.results))
       next.value = data.next ? data.next : ""
       fetching.value = false
     }
