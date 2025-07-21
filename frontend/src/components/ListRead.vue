@@ -1,15 +1,6 @@
 <script setup lang="ts">
 import { fetch_wrapper } from "../utils"
-import {
-  computed,
-  onActivated,
-  onDeactivated,
-  onMounted,
-  onUnmounted,
-  ref,
-  watch,
-  type Ref,
-} from "vue" // Added watch
+import { onActivated, onDeactivated, onMounted, onUnmounted, ref, watch, type Ref } from "vue" // Added watch
 import { useAuthStore } from "../stores/auth.store"
 
 import ArticleCard from "./ArticleCard.vue"
@@ -32,17 +23,11 @@ defineProps<{
   feed_dict: { [key: number]: FeedSerializerSimple }
 }>()
 
-const not_filtering = computed(() => true)
-
 function sorting_key(a: ArticleRead) {
-  if (not_filtering.value) {
-    // client-side deterministically perturbed chronological order, assuming:
-    // - 200 feeds and 2000 articles/day (on average 10 articles per day and feed)
-    // - average length 4000 chars
-    return a.stamp / 3600 / 24 - a.feed - a.length / 20
-  } else {
-    return a.stamp
-  }
+  // client-side deterministically perturbed chronological order, assuming:
+  // - 200 feeds and 2000 articles/day (on average 10 articles per day and feed)
+  // - average length 4000 chars
+  return a.stamp / 3600 / 24 - a.feed - a.length / 20
 }
 
 function sort(articles: ArticleRead[]) {
