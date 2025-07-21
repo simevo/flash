@@ -97,6 +97,8 @@ def precompute_user(user, start_timestamp, embedding_service):
         for article in list(sorted_articles)[:200]:
             newsfeed_list.articles.add(article.id)
 
+    logger.info(f"= Precomputed user {user.id}, articles: {newsfeed_list.articles.count()}")
+
     newsfeed_list.save()
 
 
