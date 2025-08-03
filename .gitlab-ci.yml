@@ -139,7 +139,8 @@ frontend-lint:
   image: $CI_REGISTRY_IMAGE/deps-frontend:$DEPS_FRONTEND_TAG
   before_script:
     - cd frontend/
-    - yarn
+    # make the node_modules dir from the deps-frontend image available in the build dir
+    - ln -s /app/node_modules/ node_modules
   script:
     - yarn type-check
     - yarn lint
@@ -148,9 +149,11 @@ frontend-lint:
 frontend-test:
   stage: frontend-lint-and-test
   image: $CI_REGISTRY_IMAGE/deps-frontend:$DEPS_FRONTEND_TAG
-  script:
+  before_script:
     - cd frontend/
-    - yarn install
+    # make the node_modules dir from the deps-frontend image available in the build dir
+    - ln -s /app/node_modules/ node_modules
+  script:
     - yarn test:unit --reporter=verbose --reporter=html
   artifacts:
     paths:
