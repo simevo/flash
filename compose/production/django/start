@@ -7,8 +7,8 @@ set -o nounset
 echo "========== Migrate:"
 python /app/manage.py migrate --noinput
 
-echo "========== Processing superuser (if DJANGO_SUPERUSER_USERNAME is set):"
-if [ -n "$DJANGO_SUPERUSER_USERNAME" ]; then
+echo "========== Processing superuser (if the length of DJANGO_SUPERUSER_USERNAME is nonzero):"
+if [ -n "${DJANGO_SUPERUSER_USERNAME:-}" ]; then
     echo "Processing superuser (Username: $DJANGO_SUPERUSER_USERNAME):"
 
     # Initialize a variable to track if user was created in this run
