@@ -18,11 +18,14 @@ export function getCookie(name: string) {
   if (document.cookie && document.cookie !== "") {
     const cookies = document.cookie.split(";")
     for (let i = 0; i < cookies.length; i++) {
-      const cookie = cookies[i].trim()
-      // Does this cookie string begin with the name we want?
-      if (cookie.substring(0, name.length + 1) === name + "=") {
-        cookieValue = decodeURIComponent(cookie.substring(name.length + 1))
-        break
+      const cookie = cookies[i]
+      if (cookie) {
+        const trimmedCookie = cookie.trim()
+        // Does this cookie string begin with the name we want?
+        if (trimmedCookie.substring(0, name.length + 1) === name + "=") {
+          cookieValue = decodeURIComponent(trimmedCookie.substring(name.length + 1))
+          break
+        }
       }
     }
   }
@@ -122,7 +125,7 @@ export function find_voice(
   if (voices_filtered.length == 0) {
     return null
   } else if (voices_filtered.length == 1) {
-    return voices_filtered[0]
+    return voices_filtered[0] || null
   } else {
     if (detectApple()) {
       const voice_name = apple_voices[lang]
@@ -130,7 +133,7 @@ export function find_voice(
         return v.name == voice_name
       })
       if (voices_filtered_apple.length > 0) {
-        return voices_filtered_apple[0]
+        return voices_filtered_apple[0] || null
       }
     } // Apple-specific
     const voices_filtered_default = voices_filtered.filter(function (v) {
@@ -138,9 +141,9 @@ export function find_voice(
     })
     console.log("found " + voices_filtered_default.length + " " + lang + " default voices")
     if (voices_filtered_default.length > 0) {
-      return voices_filtered_default[0]
+      return voices_filtered_default[0] || null
     } else {
-      return voices_filtered[0]
+      return voices_filtered[0] || null
     }
   }
 } // find_voice

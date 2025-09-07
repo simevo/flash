@@ -111,7 +111,10 @@ describe("RatingToolbar.vue", () => {
       const positiveRatings = wrapper.findAllComponents(PositiveRatingStub)
 
       // Simulate event from the first negative rating child
-      await negativeRatings[0].vm.$emit("updating", true)
+      const firstNegativeRating = negativeRatings[0]
+      if (firstNegativeRating) {
+        await firstNegativeRating.vm.$emit("updating", true)
+      }
 
       negativeRatings.forEach((stubWrapper) => {
         expect(stubWrapper.props("readonly")).toBe(true)
@@ -125,13 +128,16 @@ describe("RatingToolbar.vue", () => {
       const negativeRatings = wrapper.findAllComponents(NegativeRatingStub)
       const positiveRatings = wrapper.findAllComponents(PositiveRatingStub)
 
-      // First, set to true
-      await negativeRatings[0].vm.$emit("updating", true)
-      negativeRatings.forEach((stubWrapper) => expect(stubWrapper.props("readonly")).toBe(true))
-      positiveRatings.forEach((stubWrapper) => expect(stubWrapper.props("readonly")).toBe(true))
+      const firstNegativeRating = negativeRatings[0]
+      if (firstNegativeRating) {
+        // First, set to true
+        await firstNegativeRating.vm.$emit("updating", true)
+        negativeRatings.forEach((stubWrapper) => expect(stubWrapper.props("readonly")).toBe(true))
+        positiveRatings.forEach((stubWrapper) => expect(stubWrapper.props("readonly")).toBe(true))
 
-      // Then, set back to false
-      await negativeRatings[0].vm.$emit("updating", false)
+        // Then, set back to false
+        await firstNegativeRating.vm.$emit("updating", false)
+      }
 
       negativeRatings.forEach((stubWrapper) => {
         expect(stubWrapper.props("readonly")).toBe(false)

@@ -8,20 +8,20 @@
     <div v-else>
       <div class="row">
         <div class="text-center col-md-8 offset-md-2">
-          <div>
+          <div v-if="feed_info">
             <router-link
               :to="`/feed/${article.feed}`"
               :href="`/feed/${article.feed}`"
-              :title="`vai a tutti gli articoli della fonte ${article.feed}`"
+              :title="`vai a tutti gli articoli della fonte ${feed_info.title}`"
             >
               <span class="h2">
                 <img
                   width="30"
                   height="30"
-                  :src="`${feed_dict[article.feed].image}`"
+                  :src="`${feed_info.image}`"
                   alt="feed logo"
                 />
-                {{ feed_dict[article.feed].title }}
+                {{ feed_info.title }}
               </span>
             </router-link>
           </div>
@@ -180,8 +180,8 @@
         </div>
       </div>
       <div class="row">
-        <div class="col-md-8 offset-md-2" v-if="feed_dict[article.feed].license">
-          <small class="text-muted">Licenza: {{ feed_dict[article.feed].license }}</small>
+        <div class="col-md-8 offset-md-2" v-if="feed_info && feed_info.license">
+          <small class="text-muted">Licenza: {{ feed_info.license }}</small>
         </div>
       </div>
       <div class="row mt-3" style="min-height: 50vh" v-if="article.language == base_language">
@@ -351,6 +351,13 @@ const feed_dict = computed(() => {
   return feed_dict
 })
 
+const feed_info = computed(() => {
+  if (article.value) {
+    return feed_dict.value[article.value.feed]
+  }
+  return undefined
+})
+
 const article_length = computed(() => {
   if (article.value) {
     if (article.value.content) {
@@ -457,7 +464,7 @@ function read_paragraph() {
     current_paragraph.value = 0
   }
   const paragraph = paragraphs.value[current_paragraph.value]
-  if (paragraph === null) {
+  if (!paragraph) {
     console.log("Null paragraph " + current_paragraph.value)
     current_paragraph.value += 1
     read_paragraph()

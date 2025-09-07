@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject } from "vue"
+import { computed, inject } from "vue"
 import type { components } from "../generated/schema.d.ts"
 import { secondsToString, secondsToString1 } from "./sts"
 import { fetch_wrapper } from "../utils"
@@ -18,6 +18,10 @@ const props = defineProps<{
   index: number
   list_id: string | null
 }>()
+
+const feed_info = computed(() => {
+  return props.feed_dict[props.article.feed]
+})
 
 const emit = defineEmits<{
   (e: "removeArticleFromList", article_id: number): void
@@ -51,20 +55,22 @@ async function removeArticleFromList(list_id: string): Promise<void> {
 <template>
   <div class="card m-1">
     <div class="card-body">
-      <router-link
-        :to="`/feed/${article.feed}`"
-        class="float-start"
-        :title="`vai a tutti gli articoli della fonte ${feed_dict[article.feed].title}`"
-      >
-        <img
-          style="margin: 5px"
-          class="card-img-start"
-          width="30"
-          height="30"
-          :src="`${feed_dict[article.feed].image}`"
-          alt="feed logo"
-        />
-      </router-link>
+      <span v-if="feed_info">
+        <router-link
+          :to="`/feed/${article.feed}`"
+          class="float-start"
+          :title="`vai a tutti gli articoli della fonte ${feed_info.title}`"
+        >
+          <img
+            style="margin: 5px"
+            class="card-img-start"
+            width="30"
+            height="30"
+            :src="`${feed_info.image}`"
+            alt="feed logo"
+          />
+        </router-link>
+      </span>
       <router-link :to="`/article/${article.id}`" exact class="text-decoration-none">
         <div>
           <h5 class="fw-bold">

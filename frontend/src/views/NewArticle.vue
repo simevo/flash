@@ -257,7 +257,7 @@ function find_candidates(elements: NodeListOf<Element>) {
   let j
   for (j = 0; j < elements.length; j++) {
     const e = elements[j]
-    if (e.textContent) candidates = candidates.concat([e.textContent])
+    if (e && e.textContent) candidates = candidates.concat([e.textContent])
   }
   candidates = candidates.filter(function (value, index, self) {
     return self.indexOf(value) === index
@@ -297,7 +297,7 @@ function guess_author(doc: Document) {
   // <a href="http://johnsplace.com" rel="author">John</a>
   const rel = doc.querySelectorAll('[rel="author"]')
   const c0 = find_candidates(rel)
-  if (c0.length == 1) {
+  if (c0.length == 1 && c0[0]) {
     candidate = c0[0].replace(/\s+/g, " ")
     if (candidate) {
       return candidate
@@ -307,7 +307,7 @@ function guess_author(doc: Document) {
   // <a ... title="guido smorto" itemprop="author"><strong>guido smorto</strong></a>
   const itemprop = doc.querySelectorAll('[itemprop="author"]')
   const c1 = find_candidates(itemprop)
-  if (c1.length == 1) {
+  if (c1.length == 1 && c1[0]) {
     candidate = c1[0].replace(/\s+/g, " ")
     if (candidate) {
       return candidate
@@ -326,13 +326,15 @@ function guess_author(doc: Document) {
   ]
   for (i = 0; i < classnames.length; i++) {
     const classname = classnames[i]
-    console.log("looking for ", classname)
-    const elements = doc.querySelectorAll(classname)
-    const c2 = find_candidates(elements)
-    if (c2.length == 1) {
-      candidate = c2[0].replace(/\s+/g, " ")
-      if (candidate) {
-        return candidate
+    if (classname) {
+      console.log("looking for ", classname)
+      const elements = doc.querySelectorAll(classname)
+      const c2 = find_candidates(elements)
+      if (c2.length == 1 && c2[0]) {
+        candidate = c2[0].replace(/\s+/g, " ")
+        if (candidate) {
+          return candidate
+        }
       }
     }
   }
@@ -459,12 +461,17 @@ function sanitize(doc: Document) {
   let i
   for (i = 0; i < blacklist.length; i++) {
     const tag = blacklist[i]
-    const elements = doc.getElementsByTagName(tag)
-    if (elements.length > 0) {
-      console.log(`sanitizing tag <${tag}>, found ${elements.length} occurrences`)
-      let index
-      for (index = elements.length - 1; index >= 0; index--) {
-        elements[index].parentNode?.removeChild(elements[index])
+    if (tag) {
+      const elements = doc.getElementsByTagName(tag)
+      if (elements.length > 0) {
+        console.log(`sanitizing tag <${tag}>, found ${elements.length} occurrences`)
+        let index
+        for (index = elements.length - 1; index >= 0; index--) {
+          const element = elements[index]
+          if (element) {
+            element.parentNode?.removeChild(element)
+          }
+        }
       }
     }
   }
@@ -503,8 +510,8 @@ function prefill() {
             try {
               const a = r.parse()
               if (a) {
-                article.value.title = a.title
-                if (quill) quill.clipboard.dangerouslyPasteHTML(0, a.content)
+                article.value.title = a.title || ""
+                if (quill) quill.clipboard.dangerouslyPasteHTML(0, a.content || "")
                 guess_language()
               }
             } catch (error) {

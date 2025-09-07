@@ -98,7 +98,7 @@ async function fetchLists() {
         // This might need adjustment based on desired behavior when only automatic lists are present.
         // A better approach: if displayableLists is empty, current_list_id might become null.
         current_list_id.value =
-          displayableLists.value.length > 0 ? displayableLists.value[0].id : null
+          displayableLists.value.length > 0 ? displayableLists.value[0]?.id || null : null
       } else {
         current_list_id.value = null // No lists at all
       }
@@ -232,7 +232,7 @@ watch(
   async (newId, oldId) => {
     console.log(`ListsView watch, newId = [${newId}] oldId = [${oldId}]`)
     if (newId && newId !== oldId) {
-      current_list_id.value = Array.isArray(newId) ? newId[0] : newId
+      current_list_id.value = (Array.isArray(newId) ? newId[0] : newId) || null
     }
   },
 )
