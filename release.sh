@@ -8,7 +8,7 @@
 # - commit all changes and ship
 #
 # To increment the mayor.minor part, tag a commit as in:
-#   git tag -a -m 'start of 1.0 version' 2.0 HEAD
+#   git tag -a -m 'start of 2.0 version' 2.0 HEAD
 #
 # Copyright (C) 2025 Paolo Greppi
 

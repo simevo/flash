@@ -1,7 +1,7 @@
 {
   "name": "flash",
   "license": "AGPL-3.0+",
-  "version": "2.0.23+f4e0fee",
+  "version": "2.0.28+d3a8cd8",
   "type": "module",
   "scripts": {
     "dev": "vite",
