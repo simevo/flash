@@ -113,7 +113,10 @@ const filtered_articles = computed(() => {
       }
       if (filters.length !== "all") {
         const [min, max] = filters.length.split("-")
-        found = found && article.length > parseInt(min || "0") && article.length <= parseInt(max || "Infinity")
+        found =
+          found &&
+          article.length > parseInt(min || "0") &&
+          article.length <= parseInt(max || "Infinity")
       }
       return found
     })

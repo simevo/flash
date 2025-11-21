@@ -461,7 +461,7 @@ function sanitize(doc: Document) {
       console.log(`sanitizing tag <${tag}>, found ${elements.length} occurrences`)
       let index
       for (index = elements.length - 1; index >= 0; index--) {
-        let element = elements[index]
+        const element = elements[index]
         if (element) {
           element.parentNode?.removeChild(element)
         }
