@@ -115,8 +115,6 @@ services:
     restart: always
     ports:
       - 8090:8080
-    links:
-      - postgres
     depends_on:
       - postgres
 
