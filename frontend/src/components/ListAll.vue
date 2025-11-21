@@ -51,12 +51,12 @@ const feed_counts = computed(() => {
     return feed_counts
   }
   for (const article of articles.value) {
-    if (article.feed in feed_counts) {
-      feed_counts[article.feed].count += 1
+    if (article.feed in feed_counts && feed_counts[article.feed]) {
+      feed_counts[article.feed]!.count += 1
     } else {
       feed_counts[article.feed] = {
-        feed: props.feed_dict[article.feed].title,
-        image: props.feed_dict[article.feed].image,
+        feed: props.feed_dict[article.feed]?.title || "",
+        image: props.feed_dict[article.feed]?.image || "",
         count: 1,
         feed_id: article.feed,
       }
@@ -106,14 +106,14 @@ const filtered_articles = computed(() => {
       if (filters.when !== "all") {
         const [max, min] = filters.when.split("-")
         const age = (new Date().getTime() / 1000 - article.stamp) / 3600
-        found = found && age > parseInt(min) && age <= parseInt(max)
+        found = found && age > parseInt(min || "0") && age <= parseInt(max || "Infinity")
       }
       if (filters.language !== "all") {
         found = found && article.language === filters.language
       }
       if (filters.length !== "all") {
         const [min, max] = filters.length.split("-")
-        found = found && article.length > parseInt(min) && article.length <= parseInt(max)
+        found = found && article.length > parseInt(min || "0") && article.length <= parseInt(max || "Infinity")
       }
       return found
     })

@@ -18,10 +18,10 @@
                 <img
                   width="30"
                   height="30"
-                  :src="`${feed_dict[article.feed].image}`"
+                  :src="`${feed_dict[article.feed]?.image}`"
                   alt="feed logo"
                 />
-                {{ feed_dict[article.feed].title }}
+                {{ feed_dict[article.feed]?.title }}
               </span>
             </router-link>
           </div>
@@ -180,8 +180,8 @@
         </div>
       </div>
       <div class="row">
-        <div class="col-md-8 offset-md-2" v-if="feed_dict[article.feed].license">
-          <small class="text-muted">Licenza: {{ feed_dict[article.feed].license }}</small>
+        <div class="col-md-8 offset-md-2" v-if="feed_dict[article.feed]?.license">
+          <small class="text-muted">Licenza: {{ feed_dict[article.feed]?.license }}</small>
         </div>
       </div>
       <div class="row mt-3" style="min-height: 50vh" v-if="article.language == base_language">
@@ -457,8 +457,8 @@ function read_paragraph() {
     current_paragraph.value = 0
   }
   const paragraph = paragraphs.value[current_paragraph.value]
-  if (paragraph === null) {
-    console.log("Null paragraph " + current_paragraph.value)
+  if (paragraph === null || paragraph === undefined) {
+    console.log("Null/undefined paragraph " + current_paragraph.value)
     current_paragraph.value += 1
     read_paragraph()
     return

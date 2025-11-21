@@ -364,7 +364,7 @@ function read(voice: SpeechSynthesisVoice, chunks: string[], lang: string) {
   current_chunk.value += 1
   emit(
     "article-progress",
-    props.articles[my_current_article_index].id,
+    props.articles[my_current_article_index]?.id || 0,
     Math.round((100 * current_chunk.value) / chunks.length),
   )
 
@@ -378,7 +378,7 @@ function read(voice: SpeechSynthesisVoice, chunks: string[], lang: string) {
     "Speaking chunk:",
     current_chunk.value - 1,
     "Text:",
-    chunk_text.substring(0, 50) + "...",
+    chunk_text?.substring(0, 50) + "...",
   )
   window.speechSynthesis.speak(utterance)
 }

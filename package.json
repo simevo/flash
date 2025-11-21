@@ -6,9 +6,9 @@
   "repository": "https://gitlab.com/simevo/flash",
   "author": "Paolo Greppi <paolo.greppi@libpf.com>",
   "license": "AGPL-3.0-or-later",
-  "private": false,
   "dependencies": {
-    "bootstrap": "^5.3.7",
+    "bootstrap": "^5.3.8",
     "bootstrap-icons": "^1.13.1"
-  }
+  },
+  "packageManager": "yarn@1.22.19"
 }

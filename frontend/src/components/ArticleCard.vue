@@ -54,14 +54,14 @@ async function removeArticleFromList(list_id: string): Promise<void> {
       <router-link
         :to="`/feed/${article.feed}`"
         class="float-start"
-        :title="`vai a tutti gli articoli della fonte ${feed_dict[article.feed].title}`"
+        :title="`vai a tutti gli articoli della fonte ${feed_dict[article.feed]?.title}`"
       >
         <img
           style="margin: 5px"
           class="card-img-start"
           width="30"
           height="30"
-          :src="`${feed_dict[article.feed].image}`"
+          :src="`${feed_dict[article.feed]?.image}`"
           alt="feed logo"
         />
       </router-link>
