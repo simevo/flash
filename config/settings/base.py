@@ -312,6 +312,8 @@ CELERY_WORKER_SEND_TASK_EVENTS = True
 CELERY_TASK_SEND_SENT_EVENT = True
 # https://docs.celeryq.dev/en/stable/userguide/configuration.html#worker-hijack-root-logger
 CELERY_WORKER_HIJACK_ROOT_LOGGER = False
+# https://docs.celeryq.dev/en/v5.5.3/userguide/configuration.html#std-setting-worker_concurrency
+CELERY_WORKER_CONCURRENCY = env.int("CELERY_WORKER_CONCURRENCY", default=1)
 
 # CACHES
 # ------------------------------------------------------------------------------
