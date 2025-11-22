@@ -18,6 +18,7 @@ from django.shortcuts import render
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django_filters import rest_framework as filters
+from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema
 from ebooklib import epub
 from feedgen.feed import FeedGenerator
@@ -27,9 +28,12 @@ from requests import Request
 from rest_framework import mixins
 from rest_framework import pagination
 from rest_framework import permissions
+from rest_framework import serializers
 from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.decorators import action
+from rest_framework.parsers import FormParser
+from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from xhtml2pdf import pisa
@@ -53,6 +57,7 @@ from news.models import FeedIcons
 from news.models import FeedPolling
 from news.models import Feeds
 from news.models import FeedsCombined
+from news.models import Profile
 from news.models import UserArticleLists
 from news.models import UserArticles
 from news.models import UserFeeds
@@ -627,6 +632,7 @@ class ProfileView(
 ):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = ProfileSerializer
+    queryset = Profile.objects.none()
 
     def get_object(self):
         return self.request.user.profile
@@ -974,6 +980,9 @@ class OPMLExportView(APIView):
 
     permission_classes = [permissions.AllowAny]
 
+    @extend_schema(
+        responses={200: OpenApiTypes.BINARY},
+    )
     def get(self, request, *args, **kwargs):
         feeds = Feeds.objects.all()
 
@@ -1007,7 +1016,22 @@ class FeedPollingViewSet(viewsets.ReadOnlyModelViewSet):
     filterset_fields = ["feed_id"]
 
 
+class ImageUploadInputSerializer(serializers.Serializer):
+    image = serializers.ImageField()
+
+
+class ImageUploadOutputSerializer(serializers.Serializer):
+    fileUrl = serializers.CharField()
+    filename = serializers.CharField()
+
+
 class ImageUploadView(APIView):
+    parser_classes = [MultiPartParser, FormParser]
+
+    @extend_schema(
+        request=ImageUploadInputSerializer,
+        responses={200: ImageUploadOutputSerializer},
+    )
     def post(self, request):
         # Get the uploaded file
         file = request.FILES.get("image")
