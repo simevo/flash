@@ -185,6 +185,9 @@ import { franc } from "franc"
 import { Readability } from "@mozilla/readability"
 import Quill from "quill"
 
+import type { components } from "../generated/schema.js"
+type Article = components["schemas"]["PatchedArticle"]
+
 let quill: Quill | null = null
 
 onMounted(() => {
@@ -370,7 +373,7 @@ function send() {
   if (errors_any.value) {
     return
   }
-  const data = {
+  const data: Article = {
     author: article.value.author,
     language: article.value.language,
     url: article.value.url,
