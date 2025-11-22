@@ -444,10 +444,12 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    /** @description OpenApi3 schema for this API. Format can be selected via content negotiation.
+    /**
+     * @description OpenApi3 schema for this API. Format can be selected via content negotiation.
      *
      *     - YAML: application/vnd.oai.openapi
-     *     - JSON: application/vnd.oai.openapi+json */
+     *     - JSON: application/vnd.oai.openapi+json
+     */
     get: operations["schema_retrieve"]
     put?: never
     post?: never
@@ -681,6 +683,14 @@ export interface components {
       image: string
       license?: string | null
     }
+    ImageUploadInput: {
+      /** Format: uri */
+      image: string
+    }
+    ImageUploadOutput: {
+      file_url: string
+      filename: string
+    }
     PaginatedArticleReadList: {
       /** @example 123 */
       count: number
@@ -871,6 +881,8 @@ export interface operations {
         feed_id?: number
         /** @description Multiple values may be separated by commas. */
         ids?: number[]
+        /** @description Articoli letti da utenti diversi dall'utente indicato */
+        not_user_id?: number
         /** @description A page number within the paginated result set. */
         page?: number
         /** @description Cerca */
@@ -1385,12 +1397,13 @@ export interface operations {
     }
     requestBody?: never
     responses: {
-      /** @description No response body */
       200: {
         headers: {
           [name: string]: unknown
         }
-        content?: never
+        content: {
+          "application/json": string
+        }
       }
     }
   }
@@ -1720,7 +1733,8 @@ export interface operations {
       query?: never
       header?: never
       path: {
-        id: string
+        /** @description A unique integer value identifying this profile. */
+        id: number
       }
       cookie?: never
     }
@@ -1741,7 +1755,8 @@ export interface operations {
       query?: never
       header?: never
       path: {
-        id: string
+        /** @description A unique integer value identifying this profile. */
+        id: number
       }
       cookie?: never
     }
@@ -1768,7 +1783,8 @@ export interface operations {
       query?: never
       header?: never
       path: {
-        id: string
+        /** @description A unique integer value identifying this profile. */
+        id: number
       }
       cookie?: never
     }
@@ -1830,14 +1846,20 @@ export interface operations {
       path?: never
       cookie?: never
     }
-    requestBody?: never
+    requestBody: {
+      content: {
+        "multipart/form-data": components["schemas"]["ImageUploadInput"]
+        "application/x-www-form-urlencoded": components["schemas"]["ImageUploadInput"]
+      }
+    }
     responses: {
-      /** @description No response body */
       200: {
         headers: {
           [name: string]: unknown
         }
-        content?: never
+        content: {
+          "application/json": components["schemas"]["ImageUploadOutput"]
+        }
       }
     }
   }

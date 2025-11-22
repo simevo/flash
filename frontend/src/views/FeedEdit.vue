@@ -588,13 +588,13 @@ async function handleFileSelect(event: Event) {
 }
 
 type SuccessResponse = {
-  fileUrl: string
+  file_url: string
   filename: string
 }
 
 function handleSuccess(data: SuccessResponse) {
   console.log("Upload successful:", data)
-  if (feed.value) feed.value.image = data.fileUrl
+  if (feed.value) feed.value.image = data.file_url
   // Update UI with success message
 }
 </script>

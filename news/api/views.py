@@ -223,7 +223,7 @@ class ArticlesFilter(filters.FilterSet):
     )
     user_id = filters.NumberFilter(
         method="filter_user_articles",
-        label="Articoli letti dall'utenteeeee",
+        label="Articoli letti dall'utente",
     )
     not_user_id = filters.NumberFilter(
         method="filter_not_user_articles",
@@ -1021,7 +1021,7 @@ class ImageUploadInputSerializer(serializers.Serializer):
 
 
 class ImageUploadOutputSerializer(serializers.Serializer):
-    fileUrl = serializers.CharField()
+    file_url = serializers.CharField()
     filename = serializers.CharField()
 
 
@@ -1081,7 +1081,7 @@ class ImageUploadView(APIView):
 
         return Response(
             {
-                "fileUrl": uploaded_file_url,
+                "file_url": uploaded_file_url,
                 "filename": filename,
             },
             status=status.HTTP_200_OK,
