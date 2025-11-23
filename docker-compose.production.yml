@@ -37,7 +37,7 @@ services:
       - ./.envs/.production/.postgres
 
   redis:
-    image: docker.io/redis:6
+    image: docker.io/redis:7.2
     volumes:
       - production_redis_data:/data
 
@@ -83,12 +83,12 @@ services:
 
   mkfd:
     container_name: flash_local_mkfd
-    image: tbosk/mkfd:23
+    image: docker.io/tbosk/mkfd:2.0.1
     ports:
       - 5000:5000
     environment:
-      - PASSKEY=your_passkey
-      - COOKIE_SECRET=your_cookie_secret
-      - ENCRYPTION_KEY=your__encryption
+      - PASSKEY=your_passkey_1234567890_very_secret
+      - COOKIE_SECRET=your_cookie_1234567890_very_secret
+      - ENCRYPTION_KEY=your_encryption_1234567890_very_secret
     volumes:
-      - ./mkfd:/configs:z
+      - ./mkfd:/app/configs:z

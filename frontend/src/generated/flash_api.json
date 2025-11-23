@@ -34,6 +34,14 @@
             "style": "form"
           },
           {
+            "in": "query",
+            "name": "not_user_id",
+            "schema": {
+              "type": "number"
+            },
+            "description": "Articoli letti da utenti diversi dall'utente indicato"
+          },
+          {
             "name": "page",
             "required": false,
             "in": "query",
@@ -1010,7 +1018,15 @@
         ],
         "responses": {
           "200": {
-            "description": "No response body"
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            },
+            "description": ""
           }
         }
       }
@@ -1586,8 +1602,9 @@
             "in": "path",
             "name": "id",
             "schema": {
-              "type": "string"
+              "type": "integer"
             },
+            "description": "A unique integer value identifying this profile.",
             "required": true
           }
         ],
@@ -1620,8 +1637,9 @@
             "in": "path",
             "name": "id",
             "schema": {
-              "type": "string"
+              "type": "integer"
             },
+            "description": "A unique integer value identifying this profile.",
             "required": true
           }
         ],
@@ -1673,8 +1691,9 @@
             "in": "path",
             "name": "id",
             "schema": {
-              "type": "string"
+              "type": "integer"
             },
+            "description": "A unique integer value identifying this profile.",
             "required": true
           }
         ],
@@ -1788,6 +1807,21 @@
       "post": {
         "operationId": "upload_create",
         "tags": ["upload"],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/ImageUploadInput"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/ImageUploadInput"
+              }
+            }
+          },
+          "required": true
+        },
         "security": [
           {
             "cookieAuth": []
@@ -1798,7 +1832,14 @@
         ],
         "responses": {
           "200": {
-            "description": "No response body"
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImageUploadOutput"
+                }
+              }
+            },
+            "description": ""
           }
         }
       }
@@ -2697,6 +2738,28 @@
           }
         },
         "required": ["id", "image", "title"]
+      },
+      "ImageUploadInput": {
+        "type": "object",
+        "properties": {
+          "image": {
+            "type": "string",
+            "format": "uri"
+          }
+        },
+        "required": ["image"]
+      },
+      "ImageUploadOutput": {
+        "type": "object",
+        "properties": {
+          "file_url": {
+            "type": "string"
+          },
+          "filename": {
+            "type": "string"
+          }
+        },
+        "required": ["file_url", "filename"]
       },
       "PaginatedArticleReadList": {
         "type": "object",

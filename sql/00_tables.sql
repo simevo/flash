@@ -41,8 +41,8 @@ CREATE OR REPLACE FUNCTION articles_tsv_trigger()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.tsv := to_tsvector('pg_catalog.simple',
-        coalesce(NEW.title, NEW.title_original) || ' ' ||
-        coalesce(NEW.content, NEW.content_original)
+        coalesce(NULLIF(NEW.title, ''), NEW.title_original) || ' ' ||
+        coalesce(NULLIF(NEW.content, ''), NEW.content_original)
     );
     RETURN NEW;
 END;

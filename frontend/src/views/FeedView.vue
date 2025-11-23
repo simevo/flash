@@ -62,28 +62,12 @@
                   </tbody>
                 </table>
                 <!-- Pagination Controls -->
-                <nav aria-label="Feed polling pagination">
-                  <ul class="pagination pagination-sm justify-content-center">
-                    <li class="page-item" :class="{ disabled: currentPage === 1 }">
-                      <button class="page-link" @click="changePage(currentPage - 1)">
-                        Previous
-                      </button>
-                    </li>
-                    <li
-                      class="page-item"
-                      v-for="page in totalPages"
-                      :key="page"
-                      :class="{ active: currentPage === page }"
-                    >
-                      <button class="page-link" @click="changePage(page)">
-                        {{ page }}
-                      </button>
-                    </li>
-                    <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-                      <button class="page-link" @click="changePage(currentPage + 1)">Next</button>
-                    </li>
-                  </ul>
-                </nav>
+                <PageNavigation
+                  :count="feedPollingData.length"
+                  :page="currentPage"
+                  :itemsPerPage="itemsPerPage"
+                  @page-change="changePage"
+                />
               </div>
               <div v-else class="alert alert-info text-center" role="alert">
                 No polling data available for this feed.
@@ -146,6 +130,7 @@ type FeedPolling = components["schemas"]["FeedPolling"]
 
 import ArticleCard from "../components/ArticleCard.vue"
 import FeedCard from "../components/FeedCard.vue"
+import PageNavigation from "../components/PageNavigation.vue"
 
 const articles: Ref<ArticleRead[]> = ref([])
 const feeds: Ref<Feed[]> = ref([])

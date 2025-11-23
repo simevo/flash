@@ -29,6 +29,21 @@ defineProps<{
   feed_dict: { [key: number]: FeedSerializerSimple }
 }>()
 
+function sorting_key(a: ArticleRead) {
+  // client-side deterministically perturbed chronological order, assuming:
+  // - 200 feeds and 2000 articles/day (on average 10 articles per day and feed)
+  // - average length 4000 chars
+  return a.stamp / 3600 / 24 - a.feed - a.length / 20
+}
+
+function sort(articles: ArticleRead[]) {
+  return articles.sort((a, b) => {
+    const val_a = sorting_key(a)
+    const val_b = sorting_key(b)
+    return val_b - val_a
+  })
+}
+
 async function fetchArticles() {
   ready.value = false
   const listsResponse = await fetch_wrapper(`../../api/lists/me/`)
@@ -48,7 +63,7 @@ async function fetchArticles() {
       document.location = "/accounts/"
     } else {
       const articlesData: PaginatedArticleReadList = await articlesResponse.json()
-      articles.value = articlesData.results
+      articles.value = sort(articlesData.results)
     }
   } else {
     articles.value = [] // Clear if no newsfeed or it's empty

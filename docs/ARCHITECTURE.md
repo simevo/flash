@@ -9,7 +9,7 @@ The architecture is the classical **three-tier** architecture for webapps:
 
 ![architecture](./architecture.png "Architecture")
 
-1. The **back-end** service is implemented in the Python 3.12 language as a [Django](https://www.djangoproject.com/) project which handles:
+1. The **back-end** service is implemented in the Python 3.13 language as a [Django](https://www.djangoproject.com/) project which handles:
 
    - Authentication
    - The Server Side Rendered (SSR), publicly accessible pages

@@ -42,7 +42,7 @@ services:
       - "5433:5432"
 
   redis:
-    image: docker.io/redis:6
+    image: docker.io/redis:7.2
     container_name: flash_local_redis
     volumes:
       - flash_local_redis_data:/data
@@ -100,7 +100,7 @@ services:
       - '8081:8081'
 
   flash:
-    image: nginx:1.27.3-bookworm
+    image: docker.io/nginx:1.29.3-trixie
     ports:
       - 8100:80
     depends_on:
@@ -110,7 +110,7 @@ services:
       - ./compose/local/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
 
   adminer:
-    image: adminer
+    image: docker.io/adminer
     container_name: flash_local_adminer
     restart: always
     ports:
@@ -120,12 +120,12 @@ services:
 
   mkfd:
     container_name: flash_local_mkfd
-    image: tbosk/mkfd:23
+    image: docker.io/tbosk/mkfd:2.0.5
     ports:
       - 5000:5000
     environment:
-      - PASSKEY=your_passkey
-      - COOKIE_SECRET=your_cookie_secret
-      - ENCRYPTION_KEY=your__encryption
+      - PASSKEY=your_passkey_1234567890_very_secret
+      - COOKIE_SECRET=your_cookie_1234567890_very_secret
+      - ENCRYPTION_KEY=your_encryption_1234567890_very_secret
     volumes:
-      - ./mkfd:/configs:z
+      - ./mkfd:/app/configs:z

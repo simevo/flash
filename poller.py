@@ -155,7 +155,7 @@ async def retrieve(
             stored += 1
             if verbose:
                 logger.info(
-                    f"=== new article {entry["link"]} asynchronously stored with id {article_id}",  # noqa: E501
+                    f"=== new article {entry['link']} asynchronously stored with id {article_id}",  # noqa: E501
                 )
         elif article_id < 0:
             failed += 1
@@ -459,6 +459,20 @@ def frequency_skip(frequency_string: str, feed_id: int) -> str | None:
     return None
 
 
+def prune_linkless(entries: list[dict[str, Any]]) -> int:
+    """
+    Prune in-place the entries without a 'link' key.
+    To remove elements from a list while iterating over it, you need to go backwards
+    http://stackoverflow.com/a/7573706
+    """
+    pruned = 0
+    for entry in entries[-1::-1]:
+        if "link" not in entry:
+            entries.remove(entry)
+            pruned += 1
+    return pruned
+
+
 def prune_duplicates(entries: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """
     Removes entries with duplicate 'link' values from a list of dictionaries.
@@ -484,7 +498,7 @@ def prune_already_retrieved(entries: list[dict[str, Any]]) -> int:
         article = Articles.objects.filter(url=entry["link"]).first()
         if article:
             logger.info(
-                f"=== article {entry["link"]} already retrieved with id = {article.id}",
+                f"=== article {entry['link']} already retrieved with id = {article.id}",
             )
             entries.remove(entry)
             pruned += 1
@@ -525,16 +539,16 @@ def generate_rss(json_data):
         # Add the item to the RSS feed
         rss += f"""
 <item>
-<title>{item['title']}</title>
-<link>{item['url']}</link>
-<description>{item['description']}</description>
+<title>{item["title"]}</title>
+<link>{item["url"]}</link>
+<description>{item["description"]}</description>
 <pubDate>{pub_date}</pubDate>
 <author>{author}</author>
 """
 
         # Add image if available
         if item.get("image"):
-            rss += f"""<enclosure url="{item['image']}" type="image/jpeg"/>"""
+            rss += f"""<enclosure url="{item["image"]}" type="image/jpeg"/>"""
 
         rss += "</item>\n"
 
@@ -605,6 +619,7 @@ def _parse_feed_content(feed, response):
 def _process_feed_entries(entries, *, verbose=True):
     """Process, filter and sort feed entries."""
     # Prune duplicate and already retrieved entries
+    prune_linkless(entries)
     entries = prune_duplicates(entries)
     prune_already_retrieved(entries)
 
