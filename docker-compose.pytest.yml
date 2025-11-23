@@ -27,7 +27,7 @@ services:
     command: /start
 
   redis:
-    image: docker.io/redis:6
+    image: docker.io/redis:7.2
     container_name: flash_local_redis
     volumes:
       - flash_local_redis_data:/data
@@ -49,7 +49,7 @@ services:
       - "5433:5432"
 
   adminer:
-    image: adminer
+    image: docker.io/adminer
     container_name: flash_local_adminer
     restart: always
     ports:

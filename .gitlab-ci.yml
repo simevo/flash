@@ -12,7 +12,7 @@ variables:
 
 precommit:
   stage: lint-and-prepare
-  image: python:3.12
+  image: docker.io/python:3.13
   variables:
     PRE_COMMIT_HOME: ${CI_PROJECT_DIR}/.cache/pre-commit
   cache:
@@ -25,7 +25,7 @@ precommit:
 
 lint-dockerfile:
   stage: lint-and-prepare
-  image: hadolint/hadolint:latest-debian
+  image: docker.io/hadolint/hadolint:latest-debian
   script:
     - hadolint --ignore DL3008 --ignore DL3006 compose/local/readability/Dockerfile
     - hadolint --ignore DL3008 --ignore DL3006 compose/production/django/Dockerfile
@@ -37,7 +37,7 @@ lint-dockerfile:
 prepare:
   stage: lint-and-prepare
   image:
-    name: alpine/git
+    name: docker.io/alpine/git
     entrypoint: [""]
   variables:
     # disable shallow cloning or `git rev-list --count` used below won't work
@@ -223,7 +223,7 @@ backend-test:
       alias: db
       variables:
         POSTGRES_DB: test_flash
-    - name: docker.io/redis:6
+    - name: docker.io/redis:7.2
       alias: redis
   before_script:
     - wait-for-it "${POSTGRES_HOST}:${POSTGRES_PORT}" -t 30
@@ -253,7 +253,7 @@ e2e-test:
   services:
     - name: $CI_REGISTRY_IMAGE/postgres:$TAG
       alias: db
-    - name: docker.io/redis:6
+    - name: docker.io/redis:7.2
       alias: redis
     - name: $CI_REGISTRY_IMAGE/backend:$TAG
       alias: django
@@ -284,7 +284,7 @@ e2e-test:
 
 tag-latest-docker-images:
   stage: tag
-  image: debian:bookworm-slim
+  image: docker.io/debian:trixie-slim
   before_script:
     - apt update && apt install -y --no-install-recommends
       skopeo

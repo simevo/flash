@@ -1,10 +1,10 @@
 ARG APP_BASE_IMAGE=deps-backend-base
 
 # define an alias for the specific python version used in this file.
-FROM docker.io/python:3.12.10-slim-bookworm AS python
+FROM docker.io/python:3.13.9-slim-trixie AS python
 
 # Python build stage
-FROM python as deps-backend-base
+FROM python AS deps-backend-base
 
 ARG APP_HOME=/app
 ARG BUILD_ENVIRONMENT=production
@@ -13,23 +13,25 @@ WORKDIR ${APP_HOME}
 
 # Install apt packages
 RUN apt-get update && apt-get install --no-install-recommends -y \
-  # dependencies for building Python packages
-  build-essential \
-  # psycopg dependencies
-  libpq-dev
+    # dependencies for building Python packages
+    build-essential \
+    # psycopg dependencies
+    libpq-dev \
+    libcairo-dev \
+    pkg-config
 
 # Requirements are installed here to ensure they will be cached.
 COPY ./requirements .
 
 # Create Python Dependency and Sub-Dependency Wheels.
 RUN pip wheel --wheel-dir /usr/src/app/wheels  \
-  -r ${BUILD_ENVIRONMENT}.txt
+    -r ${BUILD_ENVIRONMENT}.txt
 
 
 FROM ${APP_BASE_IMAGE} AS backend-base
 
 # Python 'run' stage
-FROM python as backend
+FROM python AS backend
 
 ARG BUILD_ENVIRONMENT=production
 ARG APP_HOME=/app
@@ -46,15 +48,15 @@ RUN addgroup --system django \
 
 # Install required system dependencies
 RUN apt-get update && apt-get install --no-install-recommends -y \
-  # psycopg dependencies
-  libpq-dev \
-  # Translations dependencies
-  gettext \
-  # entrypoint
-  wait-for-it \
-  # cleaning up unused files
-  && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
-  && rm -rf /var/lib/apt/lists/*
+    # psycopg dependencies
+    libpq-dev \
+    # Translations dependencies
+    gettext \
+    # entrypoint
+    wait-for-it \
+    # cleaning up unused files
+    && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
+    && rm -rf /var/lib/apt/lists/*
 
 # All absolute dir copies ignore workdir instruction. All relative dir copies are wrt to the workdir instruction
 # copy python dependency wheels from backend-base
@@ -62,7 +64,7 @@ COPY --from=backend-base /usr/src/app/wheels  /wheels/
 
 # use wheels to install python dependencies
 RUN pip install --no-cache-dir --no-index --find-links=/wheels/ /wheels/* \
-  && rm -rf /wheels/
+    && rm -rf /wheels/
 
 
 COPY --chown=django:django ./compose/production/django/entrypoint /entrypoint
@@ -96,13 +98,13 @@ COPY --chown=django:django locale/ ${APP_HOME}/locale/
 COPY --chown=django:django news/ ${APP_HOME}/news/
 COPY --chown=django:django tests/ ${APP_HOME}/tests/
 COPY --chown=django:django \
-  justfile \
-  load_models.py \
-  manage.py \
-  merge_production_dotenvs_in_dotenv.py \
-  poller.py \
-  pyproject.toml \
-  ${APP_HOME}/
+    justfile \
+    load_models.py \
+    manage.py \
+    merge_production_dotenvs_in_dotenv.py \
+    poller.py \
+    pyproject.toml \
+    ${APP_HOME}/
 
 # make django owner of the WORKDIR directory as well.
 RUN chown -R django:django ${APP_HOME}
@@ -110,8 +112,8 @@ RUN chown -R django:django ${APP_HOME}
 USER django
 
 RUN DATABASE_URL="" \
-  DJANGO_SETTINGS_MODULE="config.settings.test" \
-  python manage.py compilemessages
+    DJANGO_SETTINGS_MODULE="config.settings.test" \
+    python manage.py compilemessages
 
 ENTRYPOINT ["/entrypoint"]
 

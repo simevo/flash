@@ -19,7 +19,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.12"
+          python-version: "3.13"
 
       - name: Cache pre-commit
         uses: actions/cache@v3
@@ -220,7 +220,7 @@ jobs:
       # PLAYWRIGHT_TEST_BASE_URL is handled by playwright.config.ts using CI env var
     services:
       db:
-        image: pgvector/pgvector:pg15
+        image: docker.io/pgvector/pgvector:pg15
         env:
           POSTGRES_DB: ${{ env.POSTGRES_DB }}
           POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
@@ -372,7 +372,7 @@ jobs:
           --health-timeout 5s
           --health-retries 5
       redis:
-        image: docker.io/redis:6
+        image: docker.io/redis:7.2
         options: >-
           --health-cmd "redis-cli ping"
           --health-interval 10s

@@ -2,7 +2,7 @@
 
 # TL;DR
 
-On Debian 12 stable (bookworm) run:
+On Debian 13 stable (trixie) run:
 
     sudo apt install yarnpkg
     yarnpkg
