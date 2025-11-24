@@ -218,7 +218,7 @@ def embed(n):
             ) as copy:
                 # use set_types for binary copy
                 # https://www.psycopg.org/psycopg3/docs/basic/copy.html#binary-copy
-                copy.set_types(["integer", "halfvec", "halfvec"])
+                copy.set_types(["integer", "halfvec"])
 
                 for index, article in enumerate(articles):
                     copy.write_row(
