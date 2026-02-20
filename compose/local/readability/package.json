@@ -6,6 +6,6 @@
   "license": "MIT",
   "dependencies": {
     "@mozilla/readability": "^0.6.0",
-    "jsdom": "^26.1.0"
+    "jsdom": "^28.1.0"
   }
 }

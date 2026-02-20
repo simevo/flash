@@ -506,8 +506,8 @@ function prefill() {
             try {
               const a = r.parse()
               if (a) {
-                article.value.title = a.title
-                if (quill) quill.clipboard.dangerouslyPasteHTML(0, a.content)
+                article.value.title = a?.title || "[no title]"
+                if (quill && a.content) quill.clipboard.dangerouslyPasteHTML(0, a.content)
                 guess_language()
               }
             } catch (error) {
