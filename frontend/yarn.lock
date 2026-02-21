@@ -4444,6 +4444,11 @@ quill-delta@^5.1.0:
     lodash.clonedeep "^4.5.0"
     lodash.isequal "^4.5.0"
 
+quill-toggle-fullscreen-button@^0.1.4:
+  version "0.1.4"
+  resolved "https://registry.yarnpkg.com/quill-toggle-fullscreen-button/-/quill-toggle-fullscreen-button-0.1.4.tgz#3023e3dc9d6364328decb726806837e9ffe1b002"
+  integrity sha512-fWaxq76ENl+WXQhpXfcUt1lfgEM3hKqsLq6+OuSqRQt1fW0i4DGVHD4/750EgZ2FYJK8mI9akDuR4D0eP4YKAA==
+
 quill@^2.0.3:
   version "2.0.3"
   resolved "https://registry.yarnpkg.com/quill/-/quill-2.0.3.tgz#752765a31d5a535cdc5717dc49d4e50099365eb1"

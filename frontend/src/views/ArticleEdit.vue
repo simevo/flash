@@ -224,6 +224,9 @@ import { toast } from "vue3-toastify"
 import { inject, nextTick, onActivated, onMounted, ref, watch, type Ref } from "vue"
 import type { components } from "../generated/schema.d.ts"
 import Quill from "quill"
+import QuillToggleFullscreenButton from "quill-toggle-fullscreen-button"
+
+Quill.register("modules/toggleFullscreen", QuillToggleFullscreenButton)
 
 type Article = components["schemas"]["ArticleSerializerFull"]
 
@@ -249,10 +252,16 @@ async function fetchArticle() {
     nextTick(() => {
       quill = new Quill("#editor", {
         theme: "snow",
+        modules: {
+          toggleFullscreen: true,
+        },
       })
       setHtml(quill, article.value?.content || "")
       quill_original = new Quill("#editor_original", {
         theme: "snow",
+        modules: {
+          toggleFullscreen: true,
+        },
       })
       setHtml(quill_original, article.value?.content_original || "")
     })
