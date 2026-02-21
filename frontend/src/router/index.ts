@@ -19,7 +19,7 @@ const router = createRouter({
       name: "about",
       component: () => import("../views/AboutView.vue"),
       meta: {
-        title: "About",
+        title: "Guida",
       },
     },
     {
@@ -33,7 +33,7 @@ const router = createRouter({
       name: "edit_article",
       props: true,
       component: () => import("../views/ArticleEdit.vue"),
-      meta: { requiresAdmin: true },
+      meta: { requiresAdmin: true, title: "Modifica articolo" },
     },
     {
       path: "/lists/",
@@ -82,13 +82,13 @@ const router = createRouter({
       name: "edit_feed",
       props: true,
       component: () => import("../views/FeedEdit.vue"),
-      meta: { requiresAdmin: true },
+      meta: { requiresAdmin: true, title: "Modifica fonte" },
     },
     {
       path: "/new_feed/",
       name: "new_feed",
       component: () => import("../views/NewFeed.vue"),
-      meta: { requiresAdmin: true },
+      meta: { requiresAdmin: true, title: "Nuova fonte" },
     },
     {
       path: "/author/:author",
@@ -117,9 +117,9 @@ router.beforeEach((to, from, next) => {
     }
   }
   if (to.params.article_id) {
-    document.title = `Articolo ${to.params.article_id} - Flash`
+    document.title = `${to.meta?.title ?? "Articolo"} ${to.params.article_id} - Flash`
   } else if (to.params.feed_id) {
-    document.title = `Fonte ${to.params.feed_id} - Flash`
+    document.title = `${to.meta?.title ?? "Fonte"} ${to.params.feed_id} - Flash`
   } else if (to.params.author) {
     document.title = `Autore ${to.params.author} - Flash`
   } else {
