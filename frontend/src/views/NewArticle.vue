@@ -88,8 +88,10 @@
                 <button
                   type="button"
                   class="btn-close position-absolute"
-                  style="right: 0.5em"
-                  aria-label="Cancella"
+                  style="right: 0.5em; z-index: 1000"
+                  :disabled="!article.title"
+                  aria-label="Cancella il titolo"
+                  title="Cancella il titolo"
                   @click="resetTitle()"
                 ></button>
               </div>
@@ -117,9 +119,10 @@
                 <button
                   type="button"
                   class="btn-close position-absolute"
-                  style="right: 0.5em"
-                  aria-label="Cancella"
-                  title="Cancella"
+                  style="right: 0.5em; z-index: 1000"
+                  :disabled="!article.author"
+                  aria-label="Cancella l'autore"
+                  title="Cancella l'autore"
                   @click="resetAuthor()"
                 ></button>
               </div>
@@ -129,15 +132,17 @@
             </div>
             <!-- form-group -->
             <div class="form-group my-3">
-              <label for="language">Lingua</label>
-              <button
-                @click="guess_language()"
-                type="button"
-                class="btn btn-info btn-sm"
-                title="Indovina la lingua"
-              >
-                ?
-              </button>
+              <div class="d-flex justify-content-between mb-1">
+                <label for="language">Lingua</label>
+                <button
+                  @click="guess_language()"
+                  type="button"
+                  class="btn btn-info btn-sm"
+                  title="Indovina la lingua"
+                >
+                  ?
+                </button>
+              </div>
               <select class="form-control" id="language" v-model="article.language">
                 <option value="ar">Arabo</option>
                 <option value="ca">Catalano</option>
@@ -153,14 +158,16 @@
             </div>
             <!-- form-group -->
             <div class="form-group my-3">
-              <label for="content">Testo completo dell'articolo</label>
-              <button
-                type="button"
-                class="btn-close float-end me-1"
-                aria-label="Cancella"
-                title="Cancella"
-                @click="resetContent()"
-              ></button>
+              <div class="d-flex justify-content-between">
+                <label for="content">Testo completo dell'articolo</label>
+                <button
+                  type="button"
+                  class="btn-close float-end me-1"
+                  aria-label="Cancella"
+                  title="Cancella"
+                  @click="resetContent()"
+                ></button>
+              </div>
               <div class="mt-2">
                 <div id="editor"></div>
               </div>
