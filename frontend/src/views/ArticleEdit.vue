@@ -29,8 +29,10 @@
                 <button
                   type="button"
                   class="btn-close position-absolute"
-                  style="right: 0.5em"
+                  style="right: 0.5em; z-index: 1000"
+                  :disabled="!article.title"
                   aria-label="Cancella"
+                  title="Cancella il titolo"
                   @click="resetTitle()"
                 ></button>
               </div>
@@ -54,8 +56,10 @@
                 <button
                   type="button"
                   class="btn-close position-absolute"
-                  style="right: 0.5em"
-                  aria-label="Cancella"
+                  style="right: 0.5em; z-index: 1000"
+                  :disabled="!article.title_original"
+                  aria-label="Cancella il titolo in lingua originale"
+                  title="Cancella il titolo in lingua originale"
                   @click="resetTitleOriginal()"
                 ></button>
               </div>
@@ -80,9 +84,10 @@
               <button
                 type="button"
                 class="btn-close position-absolute"
-                style="right: 0.5em"
-                aria-label="Cancella"
-                title="Cancella"
+                style="right: 0.5em; z-index: 1000"
+                :disabled="!article.author"
+                aria-label="Cancella l'autore"
+                title="Cancella l'autore"
                 @click="resetAuthor()"
               ></button>
             </div>
@@ -105,11 +110,11 @@
               <button
                 type="button"
                 class="btn-close position-absolute"
-                style="right: 6em"
-                aria-label="Cancella"
-                title="Cancella"
-                @click="resetUrl()"
+                style="right: 6em; z-index: 1000"
                 :disabled="!article.url"
+                aria-label="Cancella l'URL"
+                title="Cancella l'URL"
+                @click="resetUrl()"
               ></button>
               <a
                 v-if="article.url"
@@ -151,28 +156,32 @@
           </div>
           <div class="row">
             <div class="form-group my-3 col">
-              <label for="content">Testo completo dell'articolo</label>
-              <button
-                type="button"
-                class="btn-close float-end me-1"
-                aria-label="Cancella"
-                title="Cancella"
-                @click="resetContent()"
-              ></button>
+              <div class="d-flex justify-content-between">
+                <label for="content">Testo completo dell'articolo</label>
+                <button
+                  type="button"
+                  class="btn-close me-1"
+                  aria-label="Cancella"
+                  title="Cancella"
+                  @click="resetContent()"
+                ></button>
+              </div>
               <div class="mt-2">
                 <div id="editor"></div>
               </div>
               <!-- collapsible -->
             </div>
             <div class="form-group my-3 col" v-show="article.language != base_language">
-              <label for="content">Testo completo dell'articolo in lingua originale</label>
-              <button
-                type="button"
-                class="btn-close float-end me-1"
-                aria-label="Cancella"
-                title="Cancella"
-                @click="resetContentOriginal()"
-              ></button>
+              <div class="d-flex justify-content-between">
+                <label for="content">Testo completo dell'articolo in lingua originale</label>
+                <button
+                  type="button"
+                  class="btn-close me-1"
+                  aria-label="Cancella"
+                  title="Cancella"
+                  @click="resetContentOriginal()"
+                ></button>
+              </div>
               <div class="mt-2">
                 <div id="editor_original"></div>
               </div>
