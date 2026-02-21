@@ -195,8 +195,7 @@
               </span>
               <button
                 type="button"
-                class="btn-close"
-                style="float: right; margin-right: 8px"
+                class="btn-close float-end me-1"
                 aria-label="ripristina"
                 title="ripistina selezione dei tag"
                 @click="resetTags()"

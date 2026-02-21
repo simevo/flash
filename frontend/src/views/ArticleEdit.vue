@@ -154,13 +154,12 @@
               <label for="content">Testo completo dell'articolo</label>
               <button
                 type="button"
-                class="btn-close"
-                style="float: right; margin-right: 8px"
+                class="btn-close float-end me-1"
                 aria-label="Cancella"
                 title="Cancella"
                 @click="resetContent()"
               ></button>
-              <div style="margin-top: 5px">
+              <div class="mt-2">
                 <div id="editor"></div>
               </div>
               <!-- collapsible -->
@@ -169,13 +168,12 @@
               <label for="content">Testo completo dell'articolo in lingua originale</label>
               <button
                 type="button"
-                class="btn-close"
-                style="float: right; margin-right: 8px"
+                class="btn-close float-end me-1"
                 aria-label="Cancella"
                 title="Cancella"
                 @click="resetContentOriginal()"
               ></button>
-              <div style="margin-top: 5px">
+              <div class="mt-2">
                 <div id="editor_original"></div>
               </div>
               <!-- collapsible -->
