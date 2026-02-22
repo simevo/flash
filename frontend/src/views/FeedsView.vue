@@ -32,22 +32,10 @@
             Azzera filtri
           </button>
         </h1>
-        <div class="input-group position-relative d-inline-flex align-items-center mb-3">
-          <label for="language" class="col-2">Lingua</label>
-          <select
-            v-model="language"
-            class="form-select"
-            aria-label="Filtra per lingua"
-            title="Filtra per lingua"
-            id="language"
-            name="language"
-          >
-            <option value="all" selected>Tutte le lingue</option>
-            <option v-for="code in Object.keys(languages)" :key="code" :value="code">
-              {{ languages[code] }}
-            </option>
-          </select>
-        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-6">
         <div class="input-group position-relative d-inline-flex align-items-center mb-3">
           <label for="text" class="col-2">Ricerca</label>
           <input
@@ -63,36 +51,15 @@
           <button
             type="button"
             class="btn-close position-absolute"
-            style="right: 0.5em; top: 0.5em"
-            aria-label="Cancella"
+            style="right: 0.5em; top: 0.5em; z-index: 1000"
+            aria-label="Cancella filtro"
+            title="Cancella filtro"
             :disabled="search == ''"
             @click="resetSearch()"
           ></button>
         </div>
         <div class="input-group position-relative d-inline-flex align-items-center mb-3">
-          <label class="col-2">Tags</label>
-          <span
-            v-for="[tag, value] of Object.entries(tags)"
-            :key="tag"
-            class="badge text-bg-secondary m-1 p-2"
-          >
-            <input
-              type="checkbox"
-              :checked="value"
-              @input="(event) => (tags[<tag_keys>tag] = !value)"
-            />
-            {{ tag }}
-          </span>
-          <button
-            type="button"
-            class="btn-close float-end me-1 ms-auto"
-            aria-label="ripristina"
-            title="ripistina selezione dei tag"
-            @click="resetTags()"
-          ></button>
-        </div>
-        <div class="input-group position-relative d-inline-flex align-items-center mb-3">
-          <label for="ordinamento" class="col-2">Ordinamento</label>
+          <label for="ordinamento" class="col-2">Ordine</label>
           <select
             v-model="sort_by"
             class="form-select"
@@ -131,6 +98,24 @@
             @click="toggle_sort()"
           />
         </div>
+      </div>
+      <div class="col-md-6">
+        <div class="input-group position-relative d-inline-flex align-items-center mb-3">
+          <label for="language" class="col-2">Lingua</label>
+          <select
+            v-model="language"
+            class="form-select"
+            aria-label="Filtra per lingua"
+            title="Filtra per lingua"
+            id="language"
+            name="language"
+          >
+            <option value="all" selected>Tutte le lingue</option>
+            <option v-for="code in Object.keys(languages)" :key="code" :value="code">
+              {{ languages[code] }}
+            </option>
+          </select>
+        </div>
         <div class="input-group position-relative d-inline-flex align-items-center mb-3">
           <input
             id="hidden"
@@ -141,15 +126,44 @@
           />
           <label for="hidden" class="col-5">Nascoste</label>
           <input
-            id="hidden"
-            name="hidden"
+            id="preferred"
+            name="preferred"
             type="checkbox"
             class="form-checkbox col-1"
             v-model="preferred"
           />
           <label for="preferred" class="col-2">Preferite</label>
         </div>
-
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12">
+        <div class="input-group position-relative d-inline-flex align-items-center mb-3">
+          <label class="col-1">Tags</label>
+          <div class="col-10">
+            <span
+              v-for="[tag, value] of Object.entries(tags)"
+              :key="tag"
+              class="badge text-bg-dark rounded-pill m-1 p-2"
+            >
+              <input
+                class="form-check-input"
+                type="checkbox"
+                :checked="value"
+                @input="(event) => (tags[<tag_keys>tag] = !value)"
+              />
+              {{ tag }}
+            </span>
+          </div>
+          <button
+            type="button"
+            :disabled="!Object.keys(tags).some((tag) => !tags[tag as tag_keys])"
+            class="btn-close col-md-1"
+            aria-label="Ripristina"
+            title="Ripristina selezione dei tag"
+            @click="resetTags()"
+          ></button>
+        </div>
         <hr />
         <div v-if="filtered_feeds.length == 0">
           <div class="alert alert-warning text-center" role="alert">
