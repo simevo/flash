@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, onMounted, onUnmounted, defineProps, defineEmits } from "vue"
+import { ref, watch, onMounted, onUnmounted } from "vue"
 import { toast } from "vue3-toastify"
 import { fetch_wrapper, find_voice } from "../utils"
 

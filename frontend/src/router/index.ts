@@ -19,7 +19,7 @@ const router = createRouter({
       name: "about",
       component: () => import("../views/AboutView.vue"),
       meta: {
-        title: "About",
+        title: "Guida",
       },
     },
     {
@@ -33,7 +33,7 @@ const router = createRouter({
       name: "edit_article",
       props: true,
       component: () => import("../views/ArticleEdit.vue"),
-      meta: { requiresAdmin: true },
+      meta: { requiresAdmin: true, title: "Modifica articolo" },
     },
     {
       path: "/lists/",
@@ -82,13 +82,13 @@ const router = createRouter({
       name: "edit_feed",
       props: true,
       component: () => import("../views/FeedEdit.vue"),
-      meta: { requiresAdmin: true },
+      meta: { requiresAdmin: true, title: "Modifica fonte" },
     },
     {
       path: "/new_feed/",
       name: "new_feed",
       component: () => import("../views/NewFeed.vue"),
-      meta: { requiresAdmin: true },
+      meta: { requiresAdmin: true, title: "Nuova fonte" },
     },
     {
       path: "/author/:author",
@@ -108,24 +108,23 @@ const router = createRouter({
   ],
 })
 
-router.beforeEach((to, from, next) => {
+router.beforeEach((to) => {
   if (to.matched.some((record) => record.meta.requiresAdmin)) {
     const auth = useAuthStore()
     if (!auth.user?.is_staff) {
       toast("Funzione riservata agli utenti di staff", { type: "error" })
-      return
+      return false
     }
   }
   if (to.params.article_id) {
-    document.title = `Articolo ${to.params.article_id} - Flash`
+    document.title = `${to.meta?.title ?? "Articolo"} ${to.params.article_id} - Flash`
   } else if (to.params.feed_id) {
-    document.title = `Fonte ${to.params.feed_id} - Flash`
+    document.title = `${to.meta?.title ?? "Fonte"} ${to.params.feed_id} - Flash`
   } else if (to.params.author) {
     document.title = `Autore ${to.params.author} - Flash`
   } else {
     document.title = `${to.meta?.title ?? ""} - Flash`
   }
-  next()
 })
 
 export default router

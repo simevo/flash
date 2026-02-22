@@ -57,8 +57,7 @@ async function removeArticleFromList(list_id: string): Promise<void> {
         :title="`vai a tutti gli articoli della fonte ${feed_dict[article.feed]?.title}`"
       >
         <img
-          style="margin: 5px"
-          class="card-img-start"
+          class="card-img-start m-1"
           width="30"
           height="30"
           :src="`${feed_dict[article.feed]?.image}`"
@@ -70,7 +69,7 @@ async function removeArticleFromList(list_id: string): Promise<void> {
           <h5 class="fw-bold">
             <span
               v-if="article.language != base_language && article.title"
-              style="margin-bottom: 0px"
+              class="mb-0"
               :lang="article.language || base_language"
               >{{ article.title_original }} &mdash; </span
             ><span :lang="article.title ? base_language : article.language || base_language">{{
