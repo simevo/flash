@@ -1,6 +1,15 @@
 <script setup lang="ts">
 import { fetch_wrapper } from "../utils"
-import { onActivated, onDeactivated, onMounted, onUnmounted, ref, watch, type Ref } from "vue" // Added watch
+import {
+  computed,
+  onActivated,
+  onDeactivated,
+  onMounted,
+  onUnmounted,
+  ref,
+  watch,
+  type Ref,
+} from "vue" // Added watch
 import { useAuthStore } from "../stores/auth.store"
 
 import ArticleCard from "./ArticleCard.vue"
@@ -14,43 +23,23 @@ const ready = ref(false)
 const fetching = ref<boolean>(false)
 const articles: Ref<ArticleRead[]> = ref([])
 const next = ref<string>("")
-const onlyShowOtherArticles = ref(false)
-const onlyShowUserArticles = ref(false)
 const authStore = useAuthStore()
+
+type Filter = "all" | "others" | "user"
+const filter: Ref<Filter> = ref("others")
+
+const onlyShowOtherArticles = computed(() => {
+  return filter.value == "others"
+})
+
+const onlyShowUserArticles = computed(() => {
+  return filter.value == "user"
+})
 
 defineProps<{
   feeds: FeedSerializerSimple[]
   feed_dict: { [key: number]: FeedSerializerSimple }
 }>()
-
-function sorting_key(a: ArticleRead) {
-  // client-side deterministically perturbed chronological order, assuming:
-  // - 200 feeds and 2000 articles/day (on average 10 articles per day and feed)
-  // - average length 4000 chars
-  return a.stamp / 3600 / 24 - a.feed - a.length / 20
-}
-
-function sort(articles: ArticleRead[]) {
-  return articles.sort((a, b) => {
-    const val_a = sorting_key(a)
-    const val_b = sorting_key(b)
-    return val_b - val_a
-  })
-}
-
-async function fetchArticles() {
-  ready.value = false
-  const url = `../../api/articles/?read=true`
-  const response = await fetch_wrapper(url)
-  if (response.status == 403) {
-    document.location = "/accounts/"
-  } else {
-    const data: PaginatedArticleReadList = await response.json()
-    articles.value = sort(data.results)
-    next.value = data.next ? data.next : ""
-    ready.value = true
-  }
-}
 
 async function fetchMoreArticles() {
   if (next.value) {
@@ -60,7 +49,7 @@ async function fetchMoreArticles() {
       document.location = "/accounts/"
     } else {
       const data: PaginatedArticleReadList = await response.json()
-      articles.value = articles.value.concat(sort(data.results))
+      articles.value = articles.value.concat(data.results)
       next.value = data.next ? data.next : ""
       fetching.value = false
     }
@@ -72,18 +61,21 @@ onMounted(async () => {
   fetchArticles()
 })
 
-async function fetchUserArticles(user: boolean) {
+async function fetchArticles(user: boolean = false) {
   ready.value = false
-  const userId = authStore.user?.id
-  if (!userId) {
-    // Handle case where user is not logged in or user id is not available
-    console.warn("User ID not available for fetching user articles.")
-    articles.value = []
-    next.value = ""
-    ready.value = true
-    return
+  let url = `../../api/articles/?read=true`
+  if (filter.value != "all") {
+    const userId = authStore.user?.id
+    if (!userId) {
+      // Handle case where user is not logged in or user id is not available
+      console.warn("User ID not available for fetching user articles.")
+      articles.value = []
+      next.value = ""
+      ready.value = true
+      return
+    }
+    url += `&${user ? "" : "not_"}user_id=${userId}`
   }
-  const url = `../../api/articles/?read=true&${user ? "" : "not_"}user_id=${userId}`
   const response = await fetch_wrapper(url)
   if (response.status == 403) {
     document.location = "/accounts/"
@@ -96,11 +88,7 @@ async function fetchUserArticles(user: boolean) {
 }
 
 watch([onlyShowUserArticles, onlyShowOtherArticles], ([newUser, newOther]) => {
-  if (newUser || newOther) {
-    fetchUserArticles(onlyShowUserArticles.value || !onlyShowOtherArticles.value)
-  } else {
-    fetchArticles()
-  }
+  fetchArticles(newUser || !newOther)
 })
 
 onUnmounted(() => {
@@ -117,22 +105,16 @@ onDeactivated(() => {
 </script>
 
 <template>
-  <p>
-    Gli articoli più recenti già letti da altri
-    <input
-      type="checkbox"
-      :disabled="onlyShowUserArticles"
-      v-model="onlyShowOtherArticles"
-      class="form-check-input"
-    />
-    e/o da te
-    <input
-      type="checkbox"
-      :disabled="onlyShowOtherArticles"
-      v-model="onlyShowUserArticles"
-      class="form-check-input"
-    />
-  </p>
+  <form class="row row-cols-lg-auto g-3 align-items-center">
+    <div class="col-12">Gli articoli più recenti già letti</div>
+    <div class="col-12">
+      <select class="form-select" v-model="filter">
+        <option value="others">da altri ma non ancora da te</option>
+        <option value="user">da te</option>
+        <option value="all">da altri o da te</option>
+      </select>
+    </div>
+  </form>
   <div v-if="ready && Object.keys(feed_dict).length > 0">
     <div class="row my-3" v-if="articles.length == 0">
       <div class="col-md-12">
