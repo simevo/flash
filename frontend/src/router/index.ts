@@ -108,12 +108,12 @@ const router = createRouter({
   ],
 })
 
-router.beforeEach((to, from, next) => {
+router.beforeEach((to) => {
   if (to.matched.some((record) => record.meta.requiresAdmin)) {
     const auth = useAuthStore()
     if (!auth.user?.is_staff) {
       toast("Funzione riservata agli utenti di staff", { type: "error" })
-      return
+      return false
     }
   }
   if (to.params.article_id) {
@@ -125,7 +125,6 @@ router.beforeEach((to, from, next) => {
   } else {
     document.title = `${to.meta?.title ?? ""} - Flash`
   }
-  next()
 })
 
 export default router
