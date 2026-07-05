@@ -31,7 +31,7 @@
             <img style="margin: 5px"
                  width="30"
                  height="30"
-                 src="{{ feed_image }}"
+                 src="{{ feed_image|default_if_none:'/static/images/unknown.png' }}"
                  alt="feed logo" />
             {{ object.feed.title }}
           </span>

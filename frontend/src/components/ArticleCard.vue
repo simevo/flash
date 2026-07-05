@@ -60,7 +60,7 @@ async function removeArticleFromList(list_id: string): Promise<void> {
           class="card-img-start m-1"
           width="30"
           height="30"
-          :src="`${feed_dict[article.feed]?.image}`"
+          :src="`${feed_dict[article.feed]?.image || '/static/images/unknown.png'}`"
           alt="feed logo"
         />
       </router-link>

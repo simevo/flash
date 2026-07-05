@@ -150,7 +150,13 @@ onMounted(() => {
   <h5>Frequenza delle fonti:</h5>
   <div v-for="feed in mergedFeedCounts" :key="feed.feed_id" class="my-3">
     <div v-if="!(feed.feed_id in ufd && ufd[feed.feed_id] == -5)">
-      <img class="me-2" width="30" height="30" :src="feed.image" alt="feed logo" />
+      <img
+        class="me-2"
+        width="30"
+        height="30"
+        :src="feed.image || '/static/images/unknown.png'"
+        alt="feed logo"
+      />
       <span class="text-muted">{{ feed.feed }} ({{ feed.count }})</span>
     </div>
   </div>

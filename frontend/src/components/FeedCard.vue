@@ -122,7 +122,12 @@ async function cycleRatingState() {
           :title="clickable ? 'vai a tutti gli articoli di ' + feed.title : ''"
           :style="{ cursor: clickable ? 'pointer' : '' }"
         >
-          <img width="100" :src="`${feed.image}`" class="img-fluid border" alt="feed logo" />
+          <img
+            width="100"
+            :src="`${feed.image || '/static/images/unknown.png'}`"
+            class="img-fluid border"
+            alt="feed logo"
+          />
         </component>
       </div>
       <div class="col-md-11">

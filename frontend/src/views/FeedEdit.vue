@@ -230,13 +230,14 @@
                         type="button"
                         class="btn-close"
                         aria-label="Cancella"
+                        :disabled="!feed.image"
                         @click="resetIcon()"
                       ></button>
                     </div>
                     <div class="col-md-8">
                       <img
                         width="100"
-                        :src="`${feed.image}`"
+                        :src="`${feed.image || '/static/images/unknown.png'}`"
                         class="img-fluid border"
                         alt="feed logo"
                       />

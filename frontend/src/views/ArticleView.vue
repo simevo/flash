@@ -18,7 +18,7 @@
                 <img
                   width="30"
                   height="30"
-                  :src="`${feed_dict[article.feed]?.image}`"
+                  :src="`${feed_dict[article.feed]?.image || '/static/images/unknown.png'}`"
                   alt="feed logo"
                 />
                 {{ feed_dict[article.feed]?.title }}
