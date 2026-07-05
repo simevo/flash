@@ -163,6 +163,24 @@ This can be done by running the following script from the root of the project:
 
 The title and content of each article are converted to a vector embedding using the [`use-cmlm-multilingual` sentence transformer](https://huggingface.co/sentence-transformers/use-cmlm-multilingual). This 2020 model is based on LaBSE (Google Language-agnostic BERT sentence embedding model supporting 109 languages), has 472M parameters, embedding dimension 768 and size 1.89G (single-precision floating point FP32). The vector embeddings make it possible to suggest related articles (these are shown below the contents in the articles detail page) and to generate a personalized newsfeed (see next item).
 
+## Code Quality Checks
+
+Run pre-commit checks:
+
+    docker-compose -f docker-compose.local.yml run --rm django pre-commit run --all-files
+
+Lint the frontend:
+
+    docker-compose -f docker-compose.local.yml run --rm frontend yarn lint
+
+Prettify the frontend:
+
+    docker-compose -f docker-compose.local.yml run --rm frontend yarn format
+
+Type-check the frontend:
+
+     docker-compose -f docker-compose.local.yml run --rm frontend yarn type-check
+    
 ## Deployment
 
 The following details how to deploy this application.
