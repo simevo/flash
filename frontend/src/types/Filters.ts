@@ -1,15 +1,5 @@
 export type LanguageFilter =
-  | "all"
-  | "ar"
-  | "ca"
-  | "fr"
-  | "en"
-  | "it"
-  | "nl"
-  | "pt"
-  | "ru"
-  | "es"
-  | "de"
+  "all" | "ar" | "ca" | "fr" | "en" | "it" | "nl" | "pt" | "ru" | "es" | "de"
 export type WhenFilter =
   | "all"
   | "24-0"

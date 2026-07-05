@@ -36,6 +36,6 @@ EbookLib==0.20  # https://github.com/aerkalov/ebooklib
 pgvector==0.4.2  # https://github.com/pgvector/pgvector-python
 numpy==2.4.2  # https://github.com/numpy/numpy
 sentence-transformers==5.2.3  # https://github.com/UKPLab/sentence-transformers/
-torch @ https://download.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp313-cp313-manylinux_2_28_x86_64.whl  # https://github.com/pytorch/pytorch
+torch @ https://download.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp314-cp314-manylinux_2_28_x86_64.whl  # https://github.com/pytorch/pytorch
 protobuf==6.33.5  # https://github.com/protocolbuffers/protobuf
 Mastodon.py==2.1.4  # https://github.com/halcy/Mastodon.py

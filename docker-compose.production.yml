@@ -37,7 +37,7 @@ services:
       - ./.envs/.production/.postgres
 
   redis:
-    image: docker.io/redis:7.2
+    image: docker.io/redis:8.8.0-trixie
     volumes:
       - production_redis_data:/data
 
@@ -83,7 +83,7 @@ services:
 
   mkfd:
     container_name: flash_local_mkfd
-    image: docker.io/tbosk/mkfd:2.0.1
+    image: docker.io/tbosk/mkfd:2.1.2
     ports:
       - 5000:5000
     environment:

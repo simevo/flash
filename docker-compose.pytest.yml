@@ -27,7 +27,7 @@ services:
     command: /start
 
   redis:
-    image: docker.io/redis:7.2
+    image: docker.io/redis:8.8.0-trixie
     container_name: flash_local_redis
     volumes:
       - flash_local_redis_data:/data

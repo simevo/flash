@@ -1,5 +1,5 @@
 # define an alias for the specific python version used in this file.
-FROM docker.io/python:3.13.12-slim-trixie AS python
+FROM docker.io/python:3.14.6-slim-trixie AS python
 
 
 # Python build stage

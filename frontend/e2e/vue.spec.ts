@@ -40,7 +40,6 @@ async function refresh_feed(page: Page, feed_id: number) {
   console.log(`start refreshing feed ${feed_id}`)
   await expect(page.getByRole('button', { name: 'rss iconFonti' })).toBeVisible();
   await page.getByRole('button', { name: 'rss iconFonti' }).click();
-  // await page.click('button[id="feeds"]')
   await expect(page.locator('h1')).toContainText('Fonti');
   await expect(page.locator(`#feed_${feed_id}`).getByRole('button', { name: 'Aggiorna la fonte' })).toBeVisible();
 
@@ -72,9 +71,9 @@ test.describe("Authenticated Article View", () => {
   test.beforeEach(async ({ page }) => {
     // Login before each test
     await page.goto("/accounts/login/")
-    await page.fill('input[name="login"]', "root")
-    await page.fill('input[name="password"]', "root")
-    await page.click('button[type="submit"]')
+    await page.locator('input[name="login"]').fill("root")
+    await page.locator('input[name="password"]').fill("root")
+    await page.locator('button[type="submit"]').click()
     // Wait for navigation to the reserved home page
     await page.waitForURL("/res/", { timeout: 10000 })
     await expect(page).toHaveURL("/res/")

@@ -42,7 +42,7 @@ services:
       - "5433:5432"
 
   redis:
-    image: docker.io/redis:7.2
+    image: docker.io/redis:8.8.0-trixie
     container_name: flash_local_redis
     volumes:
       - flash_local_redis_data:/data
@@ -100,7 +100,7 @@ services:
       - '8081:8081'
 
   flash:
-    image: docker.io/nginx:1.29.3-trixie
+    image: docker.io/nginx:1.31.2-trixie
     ports:
       - 8100:80
     depends_on:
@@ -120,7 +120,7 @@ services:
 
   mkfd:
     container_name: flash_local_mkfd
-    image: docker.io/tbosk/mkfd:2.0.5
+    image: docker.io/tbosk/mkfd:2.1.2
     ports:
       - 5000:5000
     environment:

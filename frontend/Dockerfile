@@ -1,7 +1,7 @@
 ARG FRONTEND_BASE_IMAGE=deps-frontend-base
 ARG VITE_BACKEND_HOST=backend
 
-FROM node:22 AS deps-frontend-base
+FROM node:24 AS deps-frontend-base
 # Requirements are installed here to ensure they will be cached.
 WORKDIR /app
 COPY ./package.json ./yarn.lock ./

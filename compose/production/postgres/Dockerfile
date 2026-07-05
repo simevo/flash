@@ -1,3 +1,3 @@
-FROM pgvector/pgvector:pg15
+FROM pgvector/pgvector:pg17
 
 COPY sql/ /docker-entrypoint-initdb.d

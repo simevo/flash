@@ -220,7 +220,7 @@ jobs:
       # PLAYWRIGHT_TEST_BASE_URL is handled by playwright.config.ts using CI env var
     services:
       db:
-        image: docker.io/pgvector/pgvector:pg15
+        image: docker.io/pgvector/pgvector:pg17
         env:
           POSTGRES_DB: ${{ env.POSTGRES_DB }}
           POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
@@ -372,7 +372,7 @@ jobs:
           --health-timeout 5s
           --health-retries 5
       redis:
-        image: docker.io/redis:7.2
+        image: docker.io/redis:8.8.0-trixie
         options: >-
           --health-cmd "redis-cli ping"
           --health-interval 10s
