@@ -615,6 +615,7 @@ class FeedsView(
         p.poll()
         data = {
             "retrieved": p.retrieved,
+            "skipped": p.skipped,
             "failed": p.failed,
             "stored": p.stored,
         }

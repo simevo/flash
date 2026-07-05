@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -e
+
 echo "Dowload OpenAPI schema"
 docker-compose -f docker-compose.local.yml exec django /entrypoint python3 manage.py spectacular --format openapi-json --file frontend/src/generated/flash_api.json
 

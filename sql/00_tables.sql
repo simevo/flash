@@ -11,6 +11,7 @@ CREATE TABLE feeds (
     tags text[] DEFAULT ARRAY[]::text[],
     salt_url boolean DEFAULT false,
     rating integer,
+    min_length integer,
     premium boolean DEFAULT false,
     cookies text,
     exclude text,

@@ -45,8 +45,9 @@
                       <th>Avvio</th>
                       <th>Fine</th>
                       <th>Codice di stato HTTP</th>
-                      <th>Articoli acquisiti</th>
-                      <th>Articoli errati</th>
+                      <th>Acquisiti</th>
+                      <th>Skippati</th>
+                      <th>Errati</th>
                       <th>Articoli salvati</th>
                     </tr>
                   </thead>
@@ -56,6 +57,7 @@
                       <td>{{ formatDate(record.poll_end_time) }}</td>
                       <td>{{ record.http_status_code }}</td>
                       <td>{{ record.articles_retrieved }}</td>
+                      <td>{{ record.articles_skipped }}</td>
                       <td>{{ record.articles_failed }}</td>
                       <td>{{ record.articles_stored }}</td>
                     </tr>

@@ -664,6 +664,7 @@ export interface components {
       script?: string | null
       frequency?: string | null
       tags?: string[] | null
+      min_length?: number | null
     }
     FeedPolling: {
       readonly id: number
@@ -675,6 +676,7 @@ export interface components {
       articles_retrieved: number
       articles_failed: number
       articles_stored: number
+      articles_skipped?: number
       feed: number
     }
     FeedSerializerSimple: {

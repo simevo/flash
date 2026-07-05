@@ -2664,6 +2664,12 @@
               "type": "string"
             },
             "nullable": true
+          },
+          "min_length": {
+            "type": "integer",
+            "maximum": 2147483647,
+            "minimum": -2147483648,
+            "nullable": true
           }
         },
         "required": ["homepage", "id", "language", "title", "url"]
@@ -2699,6 +2705,11 @@
             "minimum": -2147483648
           },
           "articles_stored": {
+            "type": "integer",
+            "maximum": 2147483647,
+            "minimum": -2147483648
+          },
+          "articles_skipped": {
             "type": "integer",
             "maximum": 2147483647,
             "minimum": -2147483648
