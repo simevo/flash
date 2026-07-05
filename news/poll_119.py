@@ -65,6 +65,7 @@ data["non_articles"] = 0
 data["retrieved"] = 0
 data["failed"] = 0
 data["stored"] = 0
+data["skipped"] = 0
 for e in entries:
     logger.info(f"== to retrieve: {e}")
     html = requests.get(e, cookies=cj, headers=headers, timeout=30).text
@@ -96,9 +97,9 @@ for e in entries:
             content += c1
         logger.info(f"=== {content[:100]}")
 
-        MIN_CONTENT_LENGTH = 50
+        min_length = feed.min_length if feed.min_length is not None else 50
 
-        if len(content) > MIN_CONTENT_LENGTH:
+        if len(content) > min_length:
             res = poller.store_article(
                 author=author,
                 title=title,
@@ -121,7 +122,7 @@ for e in entries:
             sys.stdout.write("\n")
         else:
             logger.info(f"=== skipping because length = {len(content)}")
-            data["failed"] += 1
+            data["skipped"] += 1
     except IndexError:
         logger.exception("=== skipping because could not find required keys")
         data["failed"] += 1
@@ -135,4 +136,6 @@ rewire.rewire_article(id0)
 feed.last_polled = datetime.datetime.now(datetime.UTC)
 feed.save()
 
-logger.info(f"== done: {data["retrieved"]} {data["failed"]} {data["stored"]}")
+logger.info(
+    f"== done: {data['retrieved']} {data['failed']} {data['stored']} {data['skipped']}",
+)

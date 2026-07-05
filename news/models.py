@@ -127,6 +127,7 @@ class Feeds(models.Model):
     script = models.TextField(blank=True, null=True)  # noqa: DJ001
     frequency = models.TextField(blank=True, null=True)  # noqa: DJ001
     tags = ArrayField(models.TextField(), blank=True, null=True)
+    min_length = models.IntegerField(blank=True, null=True)
 
     class Meta:
         managed = False
@@ -150,6 +151,7 @@ class FeedPolling(models.Model):
     articles_retrieved = models.IntegerField()
     articles_failed = models.IntegerField()
     articles_stored = models.IntegerField()
+    articles_skipped = models.IntegerField(default=0)
 
     class Meta:
         managed = True

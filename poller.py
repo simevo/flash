@@ -105,10 +105,11 @@ async def retrieve(
     feed: Any,
     *,
     verbose: bool,
-) -> tuple[int, int, int]:
+) -> tuple[int, int, int, int]:
     retrieved = 0
     failed = 0
     stored = 0
+    skipped = 0
     url = entry["link"]
     if feed.incomplete and entry["link"]:
         content, retrieved, failed = await download_content(
@@ -126,7 +127,7 @@ async def retrieve(
     else:
         failed += 1
         logger.error(f"=== url {url} has no content and no summary")
-        return (retrieved, failed, stored)
+        return (retrieved, failed, stored, skipped)
 
     decoded_content = content.decode() if isinstance(content, bytes) else content
 
@@ -140,6 +141,15 @@ async def retrieve(
         )
         author = clean(entry.get("author", "anonimo"))
         normalized_content = normalize_content(decoded_content, base_url, feed.exclude)
+
+        if feed.min_length and len(normalized_content) < feed.min_length:
+            skipped += 1
+            if verbose:
+                logger.info(
+                    f"=== skipping {entry['link']} because length {len(normalized_content)} < {feed.min_length}",  # noqa: E501
+                )
+            return (retrieved, failed, stored, skipped)
+
         title = clean(entry.get("title", ""))
         article: ArticleDict = {
             "author": author,
@@ -159,7 +169,7 @@ async def retrieve(
                 )
         elif article_id < 0:
             failed += 1
-    return (retrieved, failed, stored)
+    return (retrieved, failed, stored, skipped)
 
 
 async def main(
@@ -168,7 +178,7 @@ async def main(
     feed: Any,
     *,
     verbose: bool,
-) -> list[tuple[int, int, int]]:
+) -> list[tuple[int, int, int, int]]:
     cookies: dict[str, str] = {}
     if feed.cookies and feed.cookies != "":
         cookies_file = feed.cookies.replace("/srv/calo.news/", "/app/")
@@ -651,32 +661,33 @@ def _retrieve_and_process_entries(sorted_entries, feed, *, verbose=True):
         main(loop, sorted_entries, feed, verbose=verbose),
     )
 
-    retrieved, failed, stored = 0, 0, 0
+    retrieved, failed, stored, skipped = 0, 0, 0, 0
     for r_item in results:
         retrieved += r_item[0]
         failed += r_item[1]
         stored += r_item[2]
+        skipped += r_item[3]
 
-    return retrieved, failed, stored
+    return retrieved, failed, stored, skipped
 
 
 def _poll_feed(feed):
     verbose = True
 
     # Initialize variables that will be saved in FeedPoller
-    retrieved, failed, stored = 0, 0, 0
+    retrieved, failed, stored, skipped = 0, 0, 0, 0
 
     # Fetch feed response with error handling
     response, status_code = _fetch_feed_response(feed.url)
 
     # If response is None, return early with error status
     if not response:
-        return retrieved, failed, stored, status_code
+        return retrieved, failed, stored, skipped, status_code
 
     # Check for HTTP error status code
     if response.status_code != HTTP_SUCCESS_CODE:
         logger.error(f"== url {feed.url} returned error status {response.status_code}")
-        return retrieved, failed, stored, status_code
+        return retrieved, failed, stored, skipped, status_code
 
     # Parse feed content
     rss_feed = _parse_feed_content(feed, response)
@@ -685,13 +696,13 @@ def _poll_feed(feed):
     sorted_entries = _process_feed_entries(rss_feed["entries"], verbose=verbose)
 
     # Retrieve and process entries
-    retrieved, failed, stored = _retrieve_and_process_entries(
+    retrieved, failed, stored, skipped = _retrieve_and_process_entries(
         sorted_entries,
         feed,
         verbose=verbose,
     )
 
-    return retrieved, failed, stored, status_code
+    return retrieved, failed, stored, skipped, status_code
 
 
 class Poller:
@@ -699,6 +710,7 @@ class Poller:
         self.stored = 0
         self.retrieved = 0
         self.failed = 0
+        self.skipped = 0
         self.feed = feed
         self.p = None
 
@@ -744,6 +756,7 @@ class Poller:
         feed_polling_retrieved_count = 0
         feed_polling_failed_count = 0
         feed_polling_stored_count = 0
+        feed_polling_skipped_count = 0
         http_status_code = 0
 
         logger.info(f"== using script {script_path}")
@@ -758,11 +771,14 @@ class Poller:
                 self.p.returncode if self.p and self.p.returncode is not None else -2
             )
             # counts remain 0
-        elif results and len(results) == 3:  # noqa: PLR2004
+        elif results and (len(results) == 3 or len(results) == 4):  # noqa: PLR2004
             try:
                 feed_polling_retrieved_count = int(results[0])
                 feed_polling_failed_count = int(results[1])
                 feed_polling_stored_count = int(results[2])
+                if len(results) == 4:  # noqa: PLR2004
+                    feed_polling_skipped_count = int(results[3])
+
                 if self.p and self.p.returncode == 0:
                     http_status_code = 200
                 elif self.p and self.p.returncode is not None:
@@ -778,6 +794,7 @@ class Poller:
                 feed_polling_retrieved_count = 0  # Reset to be safe
                 feed_polling_failed_count = 0
                 feed_polling_stored_count = 0
+                feed_polling_skipped_count = 0
         else:
             logger.error(
                 f"== [{script_path}] did not return expected output: {results}",
@@ -790,6 +807,7 @@ class Poller:
             feed_polling_retrieved_count,
             feed_polling_failed_count,
             feed_polling_stored_count,
+            feed_polling_skipped_count,
             http_status_code,
         )
 
@@ -800,6 +818,7 @@ class Poller:
         feed_polling_retrieved_count = 0
         feed_polling_failed_count = 0
         feed_polling_stored_count = 0
+        feed_polling_skipped_count = 0
 
         # Check if polling should be skipped
         if self._should_skip_polling():
@@ -814,13 +833,21 @@ class Poller:
                 feed_polling_retrieved_count,
                 feed_polling_failed_count,
                 feed_polling_stored_count,
+                feed_polling_skipped_count,
                 http_status_code,
             ) = self._handle_script_polling(script_path)
         else:
-            retrieved, failed, stored, status_from_poll = _poll_feed(self.feed)
+            (
+                retrieved,
+                failed,
+                stored,
+                skipped,
+                status_from_poll,
+            ) = _poll_feed(self.feed)
             feed_polling_retrieved_count = retrieved
             feed_polling_failed_count = failed
             feed_polling_stored_count = stored
+            feed_polling_skipped_count = skipped
             http_status_code = status_from_poll
 
         poll_end_time = datetime.datetime.now(datetime.UTC)
@@ -831,6 +858,7 @@ class Poller:
         self.retrieved += feed_polling_retrieved_count
         self.failed += feed_polling_failed_count
         self.stored += feed_polling_stored_count
+        self.skipped += feed_polling_skipped_count
 
         FeedPolling.objects.create(
             feed=self.feed,
@@ -840,6 +868,7 @@ class Poller:
             articles_retrieved=feed_polling_retrieved_count,
             articles_failed=feed_polling_failed_count,
             articles_stored=feed_polling_stored_count,
+            articles_skipped=feed_polling_skipped_count,
         )
 
         self.feed.last_polled = poll_end_time  # Use poll_end_time for consistency
