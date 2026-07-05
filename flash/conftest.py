@@ -1,7 +1,13 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import pytest
 
-from flash.users.models import User
 from flash.users.tests.factories import UserFactory
+
+if TYPE_CHECKING:
+    from flash.users.models import User
 
 
 @pytest.fixture(autouse=True)
@@ -11,4 +17,4 @@ def _media_storage(settings, tmpdir) -> None:
 
 @pytest.fixture
 def user(db) -> User:
-    return UserFactory()
+    return UserFactory.create()
