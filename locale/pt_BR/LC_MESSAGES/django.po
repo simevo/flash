@@ -1,6 +1,5 @@
 # Translations for the flash project
-# Copyright (C) 2025 Paolo Greppi
-# Paolo Greppi <paolo.greppi@libpf.com>, 2025.
+# Copyright (C) 2025-2026 Paolo Greppi
 #
 #, fuzzy
 msgid ""

@@ -28,7 +28,7 @@ django.setup()
 # -- Project information -----------------------------------------------------
 
 project = "flash"
-copyright = """2025, Paolo Greppi"""
+copyright = """2025-2026, Paolo Greppi"""
 author = "Paolo Greppi"
 
 

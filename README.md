@@ -41,7 +41,7 @@ Contributions are welcome! Please read the [contributing guidelines](CONTRIBUTIN
 
 **flash** an open-source news platform with aggregation and ranking
 
-Copyright (C) 2017-2025 Paolo Greppi
+Copyright (C) 2017-2026 Paolo Greppi
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by

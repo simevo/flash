@@ -10,7 +10,7 @@
 # To increment the mayor.minor part, tag a commit as in:
 #   git tag -a -m 'start of 2.0 version' 2.0 HEAD
 #
-# Copyright (C) 2025 Paolo Greppi
+# Copyright (C) 2025-2026 Paolo Greppi
 
 set -e
 
