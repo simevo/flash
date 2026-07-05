@@ -38,7 +38,6 @@ headers = {
 }
 
 feed_id = 94
-length_threshold = 2000  # minimum acceptable length for an article
 language = "it"
 
 feed = Feeds.objects.filter(id=feed_id).first()
@@ -60,7 +59,9 @@ data = {
     "retrieved": 0,
     "failed": 0,
     "stored": 0,
+    "skipped": 0,
 }
+length_threshold = feed.min_length if feed.min_length is not None else 2000
 if len(content) > length_threshold:
     data["retrieved"] = 1
     res = poller.store_article(
@@ -77,10 +78,12 @@ if len(content) > length_threshold:
     else:
         data["failed"] = 1
 else:
-    data["failed"] = 1
+    data["skipped"] = 1
     logger.error(f"=== skipping because lenght = {len(content)}")
 
 feed.last_polled = datetime.datetime.now(datetime.UTC)
 feed.save()
 
-logger.info(f"== done: {data["retrieved"]} {data["failed"]} {data["stored"]}")
+logger.info(
+    f"== done: {data['retrieved']} {data['failed']} {data['stored']} {data['skipped']}",
+)

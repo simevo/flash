@@ -22,7 +22,6 @@ logger.info("== entering")
 
 base_url = "https://rep.repubblica.it/ws/cover.json"
 feed_id = 96
-length_threshold = 500  # minimum acceptable length for an article
 language = "it"
 
 feed = Feeds.objects.filter(id=feed_id).first()
@@ -66,6 +65,7 @@ data["non_articles"] = 0
 data["retrieved"] = 0
 data["failed"] = 0
 data["stored"] = 0
+data["skipped"] = 0
 for e in entries:
     logger.info(f"=== retrieving: {e["url"]}")
     html = requests.get(e["url"], cookies=cj, headers=headers, timeout=30).text
@@ -87,6 +87,7 @@ for e in entries:
         content += b.prettify()
     if isinstance(content, bytes):
         content = content.decode()
+    length_threshold = feed.min_length if feed.min_length is not None else 500
     if len(content) > length_threshold:
         updated_dt += datetime.timedelta(seconds=1)
         res = poller.store_article(
@@ -111,9 +112,11 @@ for e in entries:
         sys.stdout.write("\n")
     else:
         logger.error(f"=== skipping because lenght = {len(content)}")
-        data["failed"] += 1
+        data["skipped"] += 1
 
 feed.last_polled = datetime.datetime.now(datetime.UTC)
 feed.save()
 
-logger.info(f"== done: {data["retrieved"]} {data["failed"]} {data["stored"]}")
+logger.info(
+    f"== done: {data['retrieved']} {data['failed']} {data['stored']} {data['skipped']}",
+)
