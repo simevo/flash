@@ -10,7 +10,7 @@ import logging
 import subprocess
 import time
 import urllib
-from typing import Any
+from typing import Any, cast
 from typing import TypedDict
 
 import aiohttp
@@ -111,25 +111,35 @@ async def retrieve(
     stored = 0
     skipped = 0
     url = entry["link"]
+    decoded_content = ""
     if feed.incomplete and entry["link"]:
-        content, retrieved, failed = await download_content(
+        content_bytes, retrieved, failed = await download_content(
             client,
             entry,
             feed,
             verbose=verbose,
         )
+        decoded_content = content_bytes.decode()
     elif "content" in entry:
-        content = b"" if isinstance(entry["content"][0], bytes) else ""
-        for c in entry["content"]:
-            content += c.value
+        if isinstance(entry["content"][0].value, bytes):
+            content_bytes = b""
+            for c in entry["content"]:
+                content_bytes += c.value
+            decoded_content = content_bytes.decode()
+        else:
+            content_str = ""
+            for c in entry["content"]:
+                content_str += c.value
+            decoded_content = content_str
     elif "summary" in entry:
-        content = entry["summary"]
+        content_sum = entry["summary"]
+        decoded_content = (
+            content_sum.decode() if isinstance(content_sum, bytes) else content_sum
+        )
     else:
         failed += 1
         logger.error(f"=== url {url} has no content and no summary")
         return (retrieved, failed, stored, skipped)
-
-    decoded_content = content.decode() if isinstance(content, bytes) else content
 
     if feed.salt_url:
         # add some cruft to the urls so that they are unique
@@ -351,16 +361,19 @@ def normalize_content(
         "sup",
     ]
     for s in top.children:
-        if isinstance(s, NavigableString) or s.name in inline_tags:
+        if isinstance(s, NavigableString):
             current_paragraph.append(copy.copy(s))
-        elif s.name == "p":
-            current_paragraph = copy.copy(s)
-            new_soup.append(current_paragraph)
-        else:
-            current_paragraph = new_soup.new_tag("p")
-            t = copy.copy(s)
-            new_soup.append(t)
-            t.wrap(current_paragraph)
+        elif isinstance(s, Tag):
+            if s.name in inline_tags:
+                current_paragraph.append(copy.copy(s))
+            elif s.name == "p":
+                current_paragraph = copy.copy(s)
+                new_soup.append(current_paragraph)
+            else:
+                current_paragraph = new_soup.new_tag("p")
+                t = copy.copy(s)
+                new_soup.append(t)
+                t.wrap(current_paragraph)
 
     # get rid of br's
     fragment = "".join(str(c) for c in new_soup.contents)
@@ -373,8 +386,10 @@ def normalize_content(
             p.extract()
 
     # flatten
-    soup.html.body.unwrap()
-    soup.html.unwrap()
+    if soup.html:
+        if soup.html.body:
+            soup.html.body.unwrap()
+        soup.html.unwrap()
 
     prettified = soup.prettify(formatter="html5")
     decoded = (
@@ -388,7 +403,8 @@ def clean(s: str) -> str:
     if s:
         t = html.unescape(s)
         u = lxml.html.fromstring(t)
-        return u.text_content()
+        text = cast(Any, u).text_content()
+        return str(text) if text is not None else ""
     return s
 
 
@@ -397,7 +413,7 @@ class ArticleDict(TypedDict, total=False):
     content: str
     feed_id: int
     language: str
-    stamp: int
+    stamp: str | datetime.datetime | datetime.date
     title: str
     url: str
 

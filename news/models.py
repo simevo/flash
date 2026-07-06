@@ -267,7 +267,7 @@ class UserArticleLists(models.Model):
         on_delete=models.CASCADE,
     )
     name = models.TextField()
-    articles = models.ManyToManyField(Articles, through="ArticleLists")
+    articles: models.ManyToManyField[Articles, 'ArticleLists'] = models.ManyToManyField(Articles, through='ArticleLists')
     automatic = models.BooleanField(default=False)
 
     class Meta:

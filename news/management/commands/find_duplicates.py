@@ -78,8 +78,8 @@ class Command(BaseCommand):
         Process articles to find initial duplicate sets.
         Returns a list of sets, where each set contains IDs of duplicate articles.
         """
-        duplicate_sets = []
-        processed_article_ids = set()
+        duplicate_sets: list[set[int]] = []
+        processed_article_ids: set[int] = set()
         article_count = articles_to_process.count()
 
         for i, source_article in enumerate(articles_to_process):

@@ -1,24 +1,24 @@
 # ruff: noqa: S314, E501, UP031
 import json
 from pathlib import Path
+from typing import Any
 
 import requests
 
 base_language = "it"
 SEPARATOR = "||||||"
 
+_secret_cache: dict[str, str] = {}
 
-def secret(path):
-    if secret.cached.get(path, "") == "":
+
+def secret(path: str) -> str:
+    if _secret_cache.get(path, "") == "":
         with Path(path).open() as secret_file:
             encoded_secret = secret_file.read()
-        secret.cached[path] = (
+        _secret_cache[path] = (
             encoded_secret.strip()
         )  # Ensure no leading/trailing whitespace
-    return secret.cached[path]
-
-
-secret.cached = {}
+    return _secret_cache[path]
 
 
 class TranslationError(Exception):

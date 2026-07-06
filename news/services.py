@@ -1,8 +1,10 @@
+from typing import ClassVar, Optional
 from sentence_transformers import SentenceTransformer
 
 
 class TextEmbeddingService:
-    _instance = None
+    _instance: ClassVar[Optional['TextEmbeddingService']] = None
+    model: SentenceTransformer
 
     def __new__(cls):
         if cls._instance is None:
