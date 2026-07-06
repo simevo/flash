@@ -309,3 +309,28 @@ tag-latest-docker-images:
     - if: "$CI_DEFAULT_BRANCH == $CI_COMMIT_BRANCH"
       when: on_success
     - when: never
+
+mypy:
+  stage: test
+  image:
+    name: $CI_REGISTRY_IMAGE/backend-test:$TAG
+  variables:
+    POSTGRES_USER: flash
+    POSTGRES_PASSWORD: flash
+    POSTGRES_HOST: db
+    POSTGRES_DB: flash
+    POSTGRES_PORT: 5432
+    DATABASE_URL: postgres://flash:flash@db:5432/flash
+    CELERY_BROKER_URL: redis://redis:6379/0
+    USE_DOCKER: "yes"
+  services:
+    - name: $CI_REGISTRY_IMAGE/postgres:$TAG
+      alias: db
+      variables:
+        POSTGRES_DB: test_flash
+    - name: docker.io/redis:8.8.0-trixie
+      alias: redis
+  before_script:
+    - wait-for-it "${POSTGRES_HOST}:${POSTGRES_PORT}" -t 30
+  script:
+    - mypy flash news poller.py
