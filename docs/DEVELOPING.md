@@ -50,9 +50,9 @@ For convenience, you can keep your normal user logged in on Chrome and your supe
 
 ### Type checks
 
-Running type checks with mypy:
+Run static type checks with [mypy](https://www.mypy-lang.org):
 
-    $ mypy flash
+    docker-compose -f docker-compose.local.yml run --rm django mypy flash news poller.py
 
 ### Test coverage
 

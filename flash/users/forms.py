@@ -7,17 +7,17 @@ from .models import User
 
 
 class UserAdminChangeForm(admin_forms.UserChangeForm):
-    class Meta(admin_forms.UserChangeForm.Meta):  # type: ignore[name-defined]
+    class Meta(admin_forms.UserChangeForm.Meta):
         model = User
 
 
-class UserAdminCreationForm(admin_forms.AdminUserCreationForm):  # type: ignore[name-defined]  # django-stubs is missing the class, thats why the error is thrown: typeddjango/django-stubs#2555
+class UserAdminCreationForm(admin_forms.AdminUserCreationForm):    # django-stubs is missing the class, thats why the error is thrown: typeddjango/django-stubs#2555
     """
     Form for User Creation in the Admin Area.
     To change user signup, see UserSignupForm and UserSocialSignupForm.
     """
 
-    class Meta(admin_forms.UserCreationForm.Meta):  # type: ignore[name-defined]
+    class Meta(admin_forms.UserCreationForm.Meta):
         model = User
         error_messages = {
             "username": {"unique": _("This username has already been taken.")},

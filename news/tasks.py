@@ -1,3 +1,4 @@
+from typing import Any, cast
 import datetime
 import html
 import logging
@@ -149,7 +150,7 @@ def embed(n):
                 """,
             )
             before = cur.fetchone()
-            logger.info(f"  processed articles before: {before['count']}")
+            logger.info(f"  processed articles before: {cast(Any, before)[0]}")
 
             start_time = time.perf_counter()
             cur.execute(
@@ -249,7 +250,7 @@ def embed(n):
                 """,
             )
             after = cur.fetchone()
-            logger.info(f"  processed articles after: {after[0]}")
+            logger.info(f"  processed articles after: {cast(Any, after)[0]}")
             return len(articles)
 
 

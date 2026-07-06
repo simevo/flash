@@ -1,10 +1,12 @@
 # ruff: noqa: PLR2004, S106, S311
 import random
 import string
+from typing import Any
 from unittest import mock
 
 from django.core.cache import cache
 from django.urls import reverse
+from datetime import timedelta
 from django.utils import timezone
 from rest_framework.test import APITestCase
 
@@ -23,7 +25,7 @@ def create_articles(feed, n):
             title=f"Article F1 {i+1}",
             content_original=f"Content F1 {i+1}",
             url=f"http://example.com/article_f1_{i+1}",
-            stamp=timezone.now() - timezone.timedelta(hours=410 - i),
+            stamp=timezone.now() - timedelta(hours=410 - i),
         )
         article_data = ArticlesData.objects.get(id=article)
         # ArticlesData is created by the trogger; tweak data:
@@ -39,6 +41,11 @@ def create_articles(feed, n):
 
 
 class ArticleAPITests(APITestCase):
+    user: User
+    feed1: Feeds
+    feed2: Feeds
+    articles_feed1: list[Articles]
+    articles_feed2: list[Articles]
     @classmethod
     def setUpTestData(cls):
         cls.user = User.objects.create_user(
@@ -111,7 +118,7 @@ class ArticleAPITests(APITestCase):
             title="Article New",
             content_original="Content New",
             url="http://example.com/article_new",
-            stamp=timezone.now() + timezone.timedelta(seconds=1),  # Ensure it's newer
+            stamp=timezone.now() + timedelta(seconds=1),  # Ensure it's newer
         )
 
         # 3. Call the poll task. This task is expected to clear the cache.

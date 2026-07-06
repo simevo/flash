@@ -1,5 +1,6 @@
 # ruff: noqa: E501, PLR2004, PLR0915, C901, PLR0911, PLR0912
 
+from typing import Any, cast
 import html
 import re
 import uuid
@@ -118,7 +119,7 @@ def get_epub(
 
     # create chapters
     cs = []  # chapters
-    fs = {}  # chapters grouped by feed_id
+    fs: dict[int, tuple[Any, ...]] = {}  # chapters grouped by feed_id
     fn = {}  # feed name for each feed_id
     spine = [
         "nav",
@@ -179,7 +180,7 @@ def get_epub(
         spine.append(c)
 
     # define Table Of Contents
-    toc = ()
+    toc: Any = ()
     for f in list(fs.keys()):
         toc = (*toc, (epub.Section(fn[f]), fs[f]))
     book.toc = toc
@@ -408,12 +409,12 @@ class ArticlesView(
                 php,
             )
         return super().create(
-            Request(
+            cast(Any, Request(
                 request.method,
                 request.path,
                 data=modified_data,
                 headers=request.headers,
-            ),
+            )),
             *args,
             **kwargs,
         )
@@ -635,7 +636,7 @@ class ProfileView(
     queryset = Profile.objects.none()
 
     def get_object(self):
-        return self.request.user.profile
+        return cast(Any, self.request.user).profile
 
 
 class UserFeedsView(viewsets.ModelViewSet):
@@ -644,7 +645,7 @@ class UserFeedsView(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        return self.queryset.filter(user_id=self.request.user.id)
+        return self.queryset.filter(user_id=cast(int, self.request.user.id))
 
     def create(self, request, *args, **kwargs):
         user_id = request.user.id
@@ -731,13 +732,16 @@ class UserArticleListsView(viewsets.ModelViewSet):
     )
     @action(detail=False, methods=["GET"])
     def me(self, request, *args, **kwargs):
-        data = (
-            UserArticleLists.objects.filter(
-                user_id=request.user.id,
-            )
-            .order_by("-automatic")
-            .annotate(articles_set=ArrayAgg("articles"))
-            .values("id", "name", "automatic", "articles_set", "user")
+        data = cast(
+            list[dict[str, Any]],
+            list(
+                UserArticleLists.objects.filter(
+                    user_id=cast(int, request.user.id),
+                )
+                .order_by("-automatic")
+                .annotate(articles_set=ArrayAgg("articles"))
+                .values("id", "name", "automatic", "articles_set", "user"),
+            ),
         )
         for d in data:
             article_ids = d.pop("articles_set")
@@ -855,13 +859,13 @@ class UserArticleListsView(viewsets.ModelViewSet):
     @action(detail=True)
     def html(self, request, pk=None):
         queryset = UserArticleLists.objects.filter(
-            user_id=request.user.id,
+            user_id=cast(int, request.user.id),
         )
         article_list_obj = get_object_or_404(queryset, pk=pk)
         article_list = article_list_obj.articles.all()
         article_count = article_list.count()
         total_estimated_reading_time = ""
-        articles_data = []
+        articles_data: Any = []
         if article_count > 0:
             articles_data = ArticlesCombined.objects.filter(id__in=article_list)
             for article in articles_data:
@@ -889,13 +893,13 @@ class UserArticleListsView(viewsets.ModelViewSet):
     @action(detail=True)
     def pdf(self, request, pk=None):
         queryset = UserArticleLists.objects.filter(
-            user_id=request.user.id,
+            user_id=cast(int, request.user.id),
         )
         user_list = get_object_or_404(queryset, pk=pk)
         article_list = user_list.articles.all()
         article_count = article_list.count()
         total_estimated_reading_time = ""
-        articles_data = []
+        articles_data: Any = []
         if article_count > 0:
             articles_data = ArticlesCombined.objects.filter(id__in=article_list)
             for article in articles_data:
@@ -938,13 +942,13 @@ class UserArticleListsView(viewsets.ModelViewSet):
     @action(detail=True)
     def epub(self, request, pk=None):
         queryset = UserArticleLists.objects.filter(
-            user_id=request.user.id,
+            user_id=cast(int, request.user.id),
         )
         user_list = get_object_or_404(queryset, pk=pk)
         article_list = user_list.articles.all()
         article_count = article_list.count()
         total_estimated_reading_time = ""
-        articles_data = []
+        articles_data: Any = []
         if article_count > 0:
             articles_data = ArticlesCombined.objects.filter(id__in=article_list)
             for article in articles_data:
