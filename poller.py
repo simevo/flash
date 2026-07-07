@@ -10,8 +10,9 @@ import logging
 import subprocess
 import time
 import urllib
-from typing import Any, cast
+from typing import Any
 from typing import TypedDict
+from typing import cast
 
 import aiohttp
 import feedparser
@@ -58,7 +59,7 @@ async def download_content(
     feed: Any,
     *,
     verbose: bool,
-) -> tuple[bytes, int, int]:
+) -> tuple[str, int, int]:
     # use readability service to extract the content
     proxy = None
     try:
@@ -78,7 +79,7 @@ async def download_content(
                     data=content_sanitized.encode("utf-8"),
                     timeout=30,
                 )
-                content = r.content
+                content = r.content.decode()
             else:
                 content = ""
                 retrieved = 0
@@ -111,29 +112,26 @@ async def retrieve(
     stored = 0
     skipped = 0
     url = entry["link"]
-    decoded_content = ""
+    content = ""
     if feed.incomplete and entry["link"]:
-        content_bytes, retrieved, failed = await download_content(
+        content, retrieved, failed = await download_content(
             client,
             entry,
             feed,
             verbose=verbose,
         )
-        decoded_content = content_bytes.decode()
     elif "content" in entry:
         if isinstance(entry["content"][0].value, bytes):
             content_bytes = b""
             for c in entry["content"]:
                 content_bytes += c.value
-            decoded_content = content_bytes.decode()
+            content = content_bytes.decode()
         else:
-            content_str = ""
             for c in entry["content"]:
-                content_str += c.value
-            decoded_content = content_str
+                content += c.value
     elif "summary" in entry:
         content_sum = entry["summary"]
-        decoded_content = (
+        content = (
             content_sum.decode() if isinstance(content_sum, bytes) else content_sum
         )
     else:
@@ -144,13 +142,13 @@ async def retrieve(
     if feed.salt_url:
         # add some cruft to the urls so that they are unique
         url = f"{url}#{int(time.time())}"
-    if len(decoded_content) > 0:
+    if len(content) > 0:
         parsed_url = urllib.parse.urlparse(url)
         base_url = urllib.parse.urlunsplit(
             (parsed_url.scheme, parsed_url.netloc, "", "", ""),
         )
         author = clean(entry.get("author", "anonimo"))
-        normalized_content = normalize_content(decoded_content, base_url, feed.exclude)
+        normalized_content = normalize_content(content, base_url, feed.exclude)
 
         if feed.min_length and len(normalized_content) < feed.min_length:
             skipped += 1
@@ -392,11 +390,8 @@ def normalize_content(
         soup.html.unwrap()
 
     prettified = soup.prettify(formatter="html5")
-    decoded = (
-        prettified.decode("utf-8") if isinstance(prettified, bytes) else prettified
-    )
     # get rid of nbsp
-    return decoded.replace("&nbsp;", " ")
+    return prettified.replace("&nbsp;", " ")
 
 
 def clean(s: str) -> str:

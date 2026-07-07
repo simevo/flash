@@ -1,5 +1,5 @@
-from typing import cast
 from http import HTTPStatus
+from typing import cast
 
 import pytest
 from django.conf import settings

@@ -1,12 +1,11 @@
 # ruff: noqa: PLR2004, S106, S311
 import random
 import string
-from typing import Any
+from datetime import timedelta
 from unittest import mock
 
 from django.core.cache import cache
 from django.urls import reverse
-from datetime import timedelta
 from django.utils import timezone
 from rest_framework.test import APITestCase
 
@@ -46,6 +45,7 @@ class ArticleAPITests(APITestCase):
     feed2: Feeds
     articles_feed1: list[Articles]
     articles_feed2: list[Articles]
+
     @classmethod
     def setUpTestData(cls):
         cls.user = User.objects.create_user(

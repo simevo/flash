@@ -1,9 +1,10 @@
-from typing import Any, cast
 import datetime
 import html
 import logging
 import os
 import time
+from typing import Any
+from typing import cast
 
 import psycopg
 import torch
@@ -150,8 +151,7 @@ def embed(n):
                 """,
             )
             before = cur.fetchone()
-            logger.info(f"  processed articles before: {cast(Any, before)[0]}")
-
+            logger.info(f"  processed articles before: {cast(Any, before)['count']}")
             start_time = time.perf_counter()
             cur.execute(
                 """

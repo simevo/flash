@@ -1,10 +1,11 @@
 # ruff: noqa: E501, PLR2004, PLR0915, C901, PLR0911, PLR0912
 
-from typing import Any, cast
 import html
 import re
 import uuid
 from io import BytesIO
+from typing import Any
+from typing import cast
 from urllib.parse import urlparse
 from xml.etree import ElementTree as ET
 
@@ -409,12 +410,15 @@ class ArticlesView(
                 php,
             )
         return super().create(
-            cast(Any, Request(
-                request.method,
-                request.path,
-                data=modified_data,
-                headers=request.headers,
-            )),
+            cast(
+                Any,
+                Request(
+                    request.method,
+                    request.path,
+                    data=modified_data,
+                    headers=request.headers,
+                ),
+            ),
             *args,
             **kwargs,
         )

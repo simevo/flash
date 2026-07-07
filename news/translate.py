@@ -1,7 +1,6 @@
 # ruff: noqa: S314, E501, UP031
 import json
 from pathlib import Path
-from typing import Any
 
 import requests
 
